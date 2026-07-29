@@ -26,16 +26,16 @@ RUN pnpm --filter @ludico/contracts build \
   && pnpm --filter @ludico/domain build \
   && pnpm --filter @ludico/database build \
   && pnpm --filter @ludico/api build \
-  && pnpm prune --prod
+  && pnpm --filter @ludico/api deploy --legacy --prod /deploy
 
 FROM node:24-alpine AS api
 
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=api-build --chown=node:node /app /app
+COPY --from=api-build --chown=node:node /deploy /app
 USER node
 EXPOSE 4000
-CMD ["node", "apps/api/dist/server.js"]
+CMD ["node", "dist/server.js"]
 
 FROM source AS worker-build
 
@@ -43,30 +43,30 @@ RUN pnpm --filter @ludico/contracts build \
   && pnpm --filter @ludico/domain build \
   && pnpm --filter @ludico/database build \
   && pnpm --filter @ludico/worker build \
-  && pnpm prune --prod
+  && pnpm --filter @ludico/worker deploy --legacy --prod /deploy
 
 FROM node:24-alpine AS worker
 
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=worker-build --chown=node:node /app /app
+COPY --from=worker-build --chown=node:node /deploy /app
 USER node
-CMD ["node", "apps/worker/dist/main.js"]
+CMD ["node", "dist/main.js"]
 
 FROM source AS web-build
 
 RUN pnpm --filter @ludico/contracts build \
   && pnpm --filter @ludico/domain build \
   && pnpm --filter @ludico/web build \
-  && pnpm prune --prod
+  && pnpm --filter @ludico/web deploy --legacy --prod /deploy
 
 FROM node:24-alpine AS web
 
-WORKDIR /app/apps/web
+WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-COPY --from=web-build --chown=node:node /app /app
+COPY --from=web-build --chown=node:node /deploy /app
 USER node
 EXPOSE 3000
-CMD ["node", "../../node_modules/next/dist/bin/next", "start"]
+CMD ["node", "node_modules/next/dist/bin/next", "start"]
