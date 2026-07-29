@@ -8,6 +8,12 @@ export function ServiceWorkerRegister() {
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV !== "production") {
+      void navigator.serviceWorker.getRegistrations().then((registrations) => {
+        void Promise.all(registrations.map((registration) => registration.unregister()));
+      });
+      return;
+    }
     let refreshing = false;
     const onControllerChange = () => {
       if (!refreshRequested.current || refreshing) return;
