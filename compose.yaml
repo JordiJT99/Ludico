@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ludico
+      POSTGRES_USER: ludico
+      POSTGRES_PASSWORD: ludico
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ludico -d ludico"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    volumes:
+      - ludico-postgres:/var/lib/postgresql/data
+
+volumes:
+  ludico-postgres:
