@@ -10,7 +10,7 @@ Estado: `DRAFT-EVIDENCE` · La aplicación está preparada para staging; G5 no e
 |---|---|---|
 | especificación/trazabilidad | verificada | `pnpm docs:check` |
 | formato, lint y tipos | verificada | `pnpm format:check`, `pnpm lint`, `pnpm typecheck` |
-| CI remota | configurada, sin evidencia | el worktree aún no tiene commits ni remoto; falta primer push y ejecución GitHub Actions |
+| CI remota | verificada | [GitHub Actions #30495177167](https://github.com/JordiJT99/Ludico/actions/runs/30495177167), SHA `07df1ce131c8250979e7e5c7057f640ef7db51c4`: jobs `secrets` y `check` correctos; `check` migró PostgreSQL 18 efímero y ejecutó `pnpm check` |
 | dominio/API/DB/worker | verificada localmente | tests unitarios e integración PGlite serializados, más migración/seed, restore aislado y API diaria contra PostgreSQL 18 local |
 | web/PWA | verificada | build Next + E2E Chromium online/offline, caché sensible excluida |
 | Android/base iOS | verificada en compilación JS | Expo export Android/iOS/web; no equivale a build firmado ni prueba física |
@@ -22,20 +22,11 @@ Estado: `DRAFT-EVIDENCE` · La aplicación está preparada para staging; G5 no e
 
 ## Puertas externas obligatorias para G5
 
-### Activación inicial de CI
+### CI remota confirmada
 
-Este worktree aún no tiene commits ni remoto. Antes de tratar los workflows como evidencia, el responsable debe revisar el estado, crear el primer commit intencional, conectar el repositorio privado y hacer push a `main`:
+La primera ejecución con evidencia ya está completada: [GitHub Actions #30495177167](https://github.com/JordiJT99/Ludico/actions/runs/30495177167) sobre `07df1ce131c8250979e7e5c7057f640ef7db51c4`, con `secrets` y `check` verdes. `check` instaló dependencias bloqueadas, aplicó las migraciones en PostgreSQL 18 efímero, ejecutó la comprobación de seguridad, instaló Chromium y terminó `pnpm check` correctamente.
 
-```powershell
-git status --short
-git add --all
-git commit -m "chore: bootstrap ludico MVP"
-git branch -M main
-git remote add origin <URL_DEL_REPOSITORIO_PRIVADO>
-git push -u origin main
-```
-
-La primera ejecución debe mostrar verdes los jobs `secrets` y `check`; este último aplica las migraciones contra PostgreSQL 18 efímero antes de ejecutar la suite. Si el repositorio pertenece a una organización, configurar `GITLEAKS_LICENSE` antes del push. Conservar el enlace de la ejecución, SHA, logs de migración y resultado de los jobs como evidencia de G5.
+Cada cambio posterior en `main` debe conservar ambos jobs verdes. Si el repositorio pasa a una organización que lo requiera, configurar `GITLEAKS_LICENSE` antes del siguiente push.
 
 - Desplegar staging UE con PostgreSQL 18, TLS, secretos gestionados, backups/PITR y datos sintéticos aislados.
 - Ejecutar migración desde el artefacto anterior, restore aislado y medir RPO/RTO; adjuntar fecha, operador y resultado.

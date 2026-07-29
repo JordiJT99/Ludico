@@ -117,6 +117,7 @@ let adminRevision = null;
 let notificationPreferences = defaultNotificationPreferences();
 let pushEndpoints = [];
 const port = Number(process.env.E2E_API_PORT ?? 4100);
+const emptyCommandPath = /^\/v1\/(?:games\/[0-9a-f-]+\/attempts|attempts\/[0-9a-f-]+\/submit)$/i;
 
 createServer(async (request, response) => {
   const path = new URL(request.url, "http://localhost").pathname;
@@ -174,6 +175,13 @@ createServer(async (request, response) => {
     return json(response, 204);
   }
   if (unavailable) return json(response, 503, { code: "TEST_UNAVAILABLE" });
+  if (
+    request.method === "POST" &&
+    emptyCommandPath.test(path) &&
+    request.headers["content-type"]?.startsWith("application/json")
+  ) {
+    return json(response, 400, { code: "EMPTY_JSON_BODY" });
+  }
   if (request.method === "POST" && path === "/auth/v1/token") {
     return json(response, 200, authSession());
   }

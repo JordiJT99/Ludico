@@ -58,3 +58,5 @@
 - La suite PGlite de base se serializa para evitar agotamiento de memoria cuando coexiste con servicios de desarrollo.
 - Los E2E aíslan su API fake en el puerto 4100 para poder ejecutarse mientras la API de desarrollo ocupa el 4000.
 - Backup y restore aislado verificados con PostgreSQL 18 local, sin tocar la base de desarrollo.
+- La BFF web omite `Content-Type` cuando un comando no lleva cuerpo, evitando rechazos JSON vacíos al iniciar o enviar partidas; una sesión invitada inválida se renueva una vez al reanudar un juego.
+- CI remota verificada en GitHub Actions con secret scan, migración PostgreSQL 18 efímera y suite completa correctos.
