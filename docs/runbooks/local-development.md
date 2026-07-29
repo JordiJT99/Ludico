@@ -66,7 +66,7 @@ docker build --target worker --tag ludico-worker:local .
 docker build --target web --tag ludico-web:local .
 ```
 
-CI construye los tres objetivos después de `check`. Staging debe inyectar `DATABASE_URL`, `ADMIN_API_KEY`, `PUBLIC_WEB_URL`, `PUBLIC_API_URL`, `CORS_ALLOWED_ORIGINS` y los demás secretos desde el gestor elegido; nunca usar `compose.yaml` ni una imagen local para sustituir PostgreSQL gestionado, TLS, backups o control de acceso. La elección de proveedor UE sigue pendiente y no se codifica en estas imágenes.
+CI construye los tres objetivos después de `check` y arranca API/web para comprobar `/health` y `robots.txt`. Staging debe inyectar `DATABASE_URL`, `ADMIN_API_KEY`, `PUBLIC_WEB_URL`, `PUBLIC_API_URL`, `CORS_ALLOWED_ORIGINS` y los demás secretos desde el gestor elegido; nunca usar `compose.yaml` ni una imagen local para sustituir PostgreSQL gestionado, TLS, backups o control de acceso. La elección de proveedor UE sigue pendiente y no se codifica en estas imágenes.
 
 ## PWA y progreso offline
 

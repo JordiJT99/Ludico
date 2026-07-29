@@ -62,5 +62,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build --target api --tag ludico-api:ci .
+      - name: Smoke test API container
+        run: |
+          docker run -d --rm --name ludico-api-ci -p 4000:4000 \
+            -e DATABASE_URL=postgresql://ludico:ludico@127.0.0.1:5432/ludico \
+            -e ADMIN_API_KEY=01234567890123456789012345678901 \
+            ludico-api:ci
+          for attempt in {1..10}; do
+            if curl --fail --silent --show-error http://127.0.0.1:4000/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs ludico-api-ci
+          exit 1
+      - if: always()
+        run: docker rm --force ludico-api-ci || true
       - run: docker build --target worker --tag ludico-worker:ci .
       - run: docker build --target web --tag ludico-web:ci .
+      - name: Smoke test web container
+        run: |
+          docker run -d --rm --name ludico-web-ci -p 3000:3000 \
+            -e PUBLIC_API_URL=http://127.0.0.1:4000 \
+            ludico-web:ci
+          for attempt in {1..10}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/robots.txt; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs ludico-web-ci
+          exit 1
+      - if: always()
+        run: docker rm --force ludico-web-ci || true
