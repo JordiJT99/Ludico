@@ -54,3 +54,13 @@ jobs:
       - run: pnpm security:check
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm check
+
+  containers:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --target api --tag ludico-api:ci .
+      - run: docker build --target worker --tag ludico-worker:ci .
+      - run: docker build --target web --tag ludico-web:ci .

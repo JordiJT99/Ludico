@@ -56,6 +56,18 @@ Prueba manual de staging: instalar el build en un dispositivo físico, iniciar c
 
 `PUBLIC_WEB_URL` fija el origen confiable para CSRF y CORS. Los orígenes directos adicionales, separados por coma, van en `CORS_ALLOWED_ORIGINS`; no usar `*`. En producción, comprobar desde el dominio final CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` y `Permissions-Policy`. `/health` no toca DB; `/ready` debe devolver 200 sólo con PostgreSQL disponible. Configurar un `METRICS_TOKEN` privado de al menos 32 caracteres permite al scraper interno leer `/metrics`; no exponerlo en el navegador ni usar la llave administrativa. El rate limit local no sustituye WAF/edge cuando haya más de una réplica.
 
+## Artefactos OCI para staging
+
+El `Dockerfile` raíz produce tres objetivos sin secretos ni base de datos embebida: `api` (puerto 4000), `worker` y `web` (puerto 3000). Construyen los paquetes compartidos antes de arrancar y los procesos de producción resuelven sólo sus artefactos `dist`; desarrollo, migraciones y pruebas conservan la condición `development` para usar TypeScript fuente.
+
+```powershell
+docker build --target api --tag ludico-api:local .
+docker build --target worker --tag ludico-worker:local .
+docker build --target web --tag ludico-web:local .
+```
+
+CI construye los tres objetivos después de `check`. Staging debe inyectar `DATABASE_URL`, `ADMIN_API_KEY`, `PUBLIC_WEB_URL`, `PUBLIC_API_URL`, `CORS_ALLOWED_ORIGINS` y los demás secretos desde el gestor elegido; nunca usar `compose.yaml` ni una imagen local para sustituir PostgreSQL gestionado, TLS, backups o control de acceso. La elección de proveedor UE sigue pendiente y no se codifica en estas imágenes.
+
 ## PWA y progreso offline
 
 La web registra `/sw.js` en producción. El service worker conserva el shell, los assets versionados, las navegaciones ya visitadas y las lecturas públicas de juegos. Nunca intercepta sesiones invitadas, intentos, soluciones, administración ni autenticación. El quiz guarda únicamente contenido público, las respuestas del jugador y eventos pendientes; el token de invitado permanece en cookie HttpOnly o SecureStore.

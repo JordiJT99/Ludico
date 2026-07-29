@@ -4,12 +4,13 @@ Estado: `DRAFT-EVIDENCE` · La aplicación está preparada para staging; G5 no e
 
 ## Evidencia automatizada disponible
 
-Última ejecución local: 2026-07-29. `pnpm check` validó 17 documentos, 32 tests de dominio, 37 de base de datos, 43 de API, 8 de worker, builds Next/Expo web+Android+iOS/API/worker y 5 E2E Chromium. `pnpm security:check` pasó el umbral alto/crítico con el residual moderado documentado.
+Última ejecución local: 2026-07-30. `pnpm check` validó 17 documentos, 32 tests de dominio, 37 de base de datos, 43 de API, 8 de worker, builds Next/Expo web+Android+iOS/API/worker, imports de producción API/worker y 5 E2E Chromium. `pnpm security:check` pasó el umbral alto/crítico con el residual moderado documentado.
 
 | Área | Estado | Evidencia |
 |---|---|---|
 | especificación/trazabilidad | verificada | `pnpm docs:check` |
 | formato, lint y tipos | verificada | `pnpm format:check`, `pnpm lint`, `pnpm typecheck` |
+| artefactos OCI | pendiente de CI | `Dockerfile` con objetivos `api`, `worker` y `web`; el job `containers` los construye sin secretos, sin base embebida y con `dist` en producción |
 | CI remota | verificada | [GitHub Actions #30495177167](https://github.com/JordiJT99/Ludico/actions/runs/30495177167), SHA `07df1ce131c8250979e7e5c7057f640ef7db51c4`: jobs `secrets` y `check` correctos; `check` migró PostgreSQL 18 efímero y ejecutó `pnpm check` |
 | dominio/API/DB/worker | verificada localmente | tests unitarios e integración PGlite serializados, más migración/seed, restore aislado y API diaria contra PostgreSQL 18 local |
 | web/PWA | verificada | build Next + E2E Chromium online/offline, caché sensible excluida |

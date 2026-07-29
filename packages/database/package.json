@@ -3,12 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx --env-file-if-exists=../../.env src/migrate.ts",
-    "db:seed": "tsx --env-file-if-exists=../../.env src/seed.ts",
+    "db:migrate": "tsx --conditions=development --env-file-if-exists=../../.env src/migrate.ts",
+    "db:seed": "tsx --conditions=development --env-file-if-exists=../../.env src/seed.ts",
     "test": "vitest run src --testTimeout 15000 --hookTimeout 15000 --maxWorkers=1 --no-file-parallelism",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

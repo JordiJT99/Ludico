@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowJs": false,
+    "customConditions": ["development"],
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

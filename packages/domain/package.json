@@ -4,10 +4,26 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./crossword": "./src/crossword.ts",
-    "./crossword-progress": "./src/crossword-progress.ts",
-    "./quiz-progress": "./src/quiz-progress.ts"
+    ".": {
+      "development": "./src/index.ts",
+      "react-native": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./crossword": {
+      "development": "./src/crossword.ts",
+      "react-native": "./src/crossword.ts",
+      "default": "./dist/crossword.js"
+    },
+    "./crossword-progress": {
+      "development": "./src/crossword-progress.ts",
+      "react-native": "./src/crossword-progress.ts",
+      "default": "./dist/crossword-progress.js"
+    },
+    "./quiz-progress": {
+      "development": "./src/quiz-progress.ts",
+      "react-native": "./src/quiz-progress.ts",
+      "default": "./dist/quiz-progress.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
