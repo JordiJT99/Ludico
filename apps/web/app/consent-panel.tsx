@@ -56,12 +56,17 @@ export function ConsentPanel({ adsMode }: Readonly<{ adsMode: "disabled" | "test
   const showTestAd = consent?.ads === true && adsMode === "test";
   return (
     <>
-      <div aria-label="Espacio publicitario" className="ad-reservation">
+      <aside aria-label="Espacio publicitario" className="ad-reservation">
         {showTestAd ? <span>Anuncio de prueba</span> : null}
-      </div>
-      <aside aria-labelledby="privacy-heading" className="privacy-panel">
+      </aside>
+      <aside aria-label="Privacidad" className="privacy-panel">
         {editing ? (
-          <div aria-modal="false" className="privacy-dialog" role="dialog">
+          <div
+            aria-labelledby="privacy-heading"
+            aria-modal="false"
+            className="privacy-dialog"
+            role="dialog"
+          >
             <h2 id="privacy-heading">Tu privacidad</h2>
             <p>
               Las funciones necesarias guardan tu partida. Puedes decidir por separado si permites

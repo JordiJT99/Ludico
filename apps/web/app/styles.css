@@ -295,6 +295,15 @@ legend {
     background: #111827;
     color: #fff9ef;
   }
+
+  .eyebrow {
+    color: #ff9eaa;
+  }
+
+  .progress,
+  .session-status {
+    color: #c2cde3;
+  }
 }
 .crossword-grid {
   aspect-ratio: 1;

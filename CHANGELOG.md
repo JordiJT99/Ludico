@@ -60,3 +60,4 @@
 - Backup y restore aislado verificados con PostgreSQL 18 local, sin tocar la base de desarrollo.
 - La BFF web omite `Content-Type` cuando un comando no lleva cuerpo, evitando rechazos JSON vacíos al iniciar o enviar partidas; una sesión invitada inválida se renueva una vez al reanudar un juego.
 - CI remota verificada en GitHub Actions con secret scan, migración PostgreSQL 18 efímera y suite completa correctos.
+- Auditoría Lighthouse local de build de producción: 99 rendimiento, 100 accesibilidad, 96 buenas prácticas y 100 SEO; se corrigieron nombre accesible del diálogo de privacidad, semántica del slot de anuncios y contraste oscuro.

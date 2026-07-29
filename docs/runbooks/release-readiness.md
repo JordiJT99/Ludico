@@ -20,6 +20,10 @@ Estado: `DRAFT-EVIDENCE` · La aplicación está preparada para staging; G5 no e
 | accesibilidad | baseline automatizado | idioma, IDs, alternativas y nombres accesibles; falta auditoría WCAG manual |
 | privacidad | verificada en producto | opt-in granular, retirada inmediata, ocho eventos allowlist web/native sin respuestas/PII, cuarentena sin payload/sujeto con TTL y anuncios deshabilitados/test |
 
+## Medición local de rendimiento y accesibilidad
+
+El 2026-07-30 se auditó `http://127.0.0.1:3101/` con Lighthouse 12.8.2, Chrome estable y una build de producción local. Resultado: rendimiento 99, accesibilidad 100, buenas prácticas 96 y SEO 100; FCP 0,8 s, LCP 2,1 s, TBT 0 ms y CLS 0. La medición detectó y se corrigió el nombre accesible del diálogo de privacidad, la semántica del espacio publicitario y el contraste oscuro. Es evidencia local reproducible, no sustituye Lighthouse móvil en staging, red real, matriz de navegadores ni auditoría WCAG manual.
+
 ## Puertas externas obligatorias para G5
 
 ### CI remota confirmada
