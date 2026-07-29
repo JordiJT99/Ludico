@@ -9,3 +9,12 @@ export async function ensurePlayerSession(signal: AbortSignal): Promise<boolean>
     return false;
   }
 }
+
+export async function renewGuestSession(signal: AbortSignal): Promise<boolean> {
+  try {
+    const cleared = await fetch("/api/guest-session", { method: "DELETE", signal });
+    return cleared.ok && (await ensurePlayerSession(signal));
+  } catch {
+    return false;
+  }
+}

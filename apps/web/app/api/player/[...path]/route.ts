@@ -106,11 +106,11 @@ async function forwardCommand(
       : undefined;
   return proxy(path, {
     method,
-    body,
+    body: body || undefined,
     cache: "no-store",
     headers: {
       ...player,
-      "Content-Type": "application/json",
+      ...(body ? { "Content-Type": "application/json" } : {}),
       "idempotency-key": crypto.randomUUID(),
       "x-client-platform": "web",
     },

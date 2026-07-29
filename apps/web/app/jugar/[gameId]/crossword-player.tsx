@@ -21,7 +21,7 @@ import {
 } from "@ludico/domain/crossword-progress";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { ensurePlayerSession } from "../../player-session";
+import { ensurePlayerSession, renewGuestSession } from "../../player-session";
 import { LeaderboardPanel } from "../../leaderboard-panel";
 import { ShareButton } from "../../share-button";
 import { durationBucket, scoreBucket, trackAnalytics } from "../../analytics";
@@ -501,7 +501,11 @@ export function CrosswordPlayer({ gameId }: Readonly<{ gameId: string }>) {
   );
 }
 
-async function start(gameId: string, signal: AbortSignal): Promise<SessionState> {
+async function start(
+  gameId: string,
+  signal: AbortSignal,
+  canRenewGuestSession = true,
+): Promise<SessionState> {
   const cached = readCrosswordDraft(gameId);
   try {
     if (!(await ensurePlayerSession(signal))) throw new Error("offline");
@@ -513,6 +517,13 @@ async function start(gameId: string, signal: AbortSignal): Promise<SessionState>
       method: "POST",
       signal,
     });
+    if (
+      attemptResponse.status === 401 &&
+      canRenewGuestSession &&
+      (await renewGuestSession(signal))
+    ) {
+      return start(gameId, signal, false);
+    }
     if (!attemptResponse.ok) throw new Error("offline");
     const attempt: unknown = await attemptResponse.json();
     if (!isCrosswordAttemptState(attempt)) throw new Error("attempt");
