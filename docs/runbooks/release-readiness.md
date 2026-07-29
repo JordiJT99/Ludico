@@ -10,8 +10,8 @@ Estado: `DRAFT-EVIDENCE` · La aplicación está preparada para staging; G5 no e
 |---|---|---|
 | especificación/trazabilidad | verificada | `pnpm docs:check` |
 | formato, lint y tipos | verificada | `pnpm format:check`, `pnpm lint`, `pnpm typecheck` |
-| artefactos OCI | verificada | `Dockerfile` con objetivos `api`, `worker` y `web`; el job [`containers`](https://github.com/JordiJT99/Ludico/actions/runs/30498211499) construyó los tres sin secretos, sin base embebida y con `dist` en producción |
-| CI remota | verificada | [GitHub Actions #30498211499](https://github.com/JordiJT99/Ludico/actions/runs/30498211499), SHA `e3bffae54b0444eaf8847eb12d3a4af29d24313e`: jobs `secrets`, `check` y `containers` correctos; `check` migró PostgreSQL 18 efímero y ejecutó `pnpm check` |
+| artefactos OCI | verificada | `Dockerfile` con objetivos `api`, `worker` y `web`; el job [`containers`](https://github.com/JordiJT99/Ludico/actions/runs/30499913479) construyó los tres sin secretos, sin base embebida y con `dist` en producción, y arrancó API/web para comprobar `/health` y `robots.txt` |
+| CI remota | verificada | [GitHub Actions #30499913479](https://github.com/JordiJT99/Ludico/actions/runs/30499913479), SHA `7d5962ec6724acb1928ccc154c1def7a7db03e9b`: jobs `secrets`, `check` y `containers` correctos; `check` migró PostgreSQL 18 efímero y ejecutó `pnpm check` |
 | dominio/API/DB/worker | verificada localmente | tests unitarios e integración PGlite serializados, más migración/seed, restore aislado y API diaria contra PostgreSQL 18 local |
 | web/PWA | verificada | build Next + E2E Chromium online/offline, caché sensible excluida |
 | Android/base iOS | verificada en compilación JS | Expo export Android/iOS/web; no equivale a build firmado ni prueba física |
@@ -29,7 +29,7 @@ El 2026-07-30 se auditó `http://127.0.0.1:3101/` con Lighthouse 12.8.2, Chrome 
 
 ### CI remota confirmada
 
-La última ejecución con evidencia está completada: [GitHub Actions #30498211499](https://github.com/JordiJT99/Ludico/actions/runs/30498211499) sobre `e3bffae54b0444eaf8847eb12d3a4af29d24313e`, con `secrets`, `check` y `containers` verdes. `check` instaló dependencias bloqueadas, aplicó las migraciones en PostgreSQL 18 efímero, ejecutó la comprobación de seguridad, instaló Chromium y terminó `pnpm check` correctamente; `containers` construyó las imágenes OCI de API, worker y web con dependencias de producción.
+La última ejecución con evidencia está completada: [GitHub Actions #30499913479](https://github.com/JordiJT99/Ludico/actions/runs/30499913479) sobre `7d5962ec6724acb1928ccc154c1def7a7db03e9b`, con `secrets`, `check` y `containers` verdes. `check` instaló dependencias bloqueadas, aplicó las migraciones en PostgreSQL 18 efímero, ejecutó la comprobación de seguridad, instaló Chromium y terminó `pnpm check` correctamente; `containers` construyó las imágenes OCI de API, worker y web con dependencias de producción y arrancó API/web para sus smoke tests.
 
 Cada cambio posterior en `main` debe conservar los tres jobs verdes. Si el repositorio pasa a una organización que lo requiera, configurar `GITLEAKS_LICENSE` antes del siguiente push.
 

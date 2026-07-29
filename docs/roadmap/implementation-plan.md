@@ -7,7 +7,7 @@ Estado: `APPROVED`. Una historia no entra en desarrollo sin aceptación aprobada
 | Historia | Estado | Evidencia / pendiente |
 |---|---|---|
 | US-001 | completada | G0–G2 aprobadas, docs check y trazabilidad |
-| US-002 | completada | `pnpm check`, hooks, `.env.example`, builds web/Expo/API/worker, comprobación de imports compilados y objetivos OCI API/worker/web sin secretos; [CI remota verde](https://github.com/JordiJT99/Ludico/actions/runs/30498211499) en `e3bffae` con SCA, secret scan y las tres imágenes construidas |
+| US-002 | completada | `pnpm check`, hooks, `.env.example`, builds web/Expo/API/worker, comprobación de imports compilados y objetivos OCI API/worker/web sin secretos; [CI remota verde](https://github.com/JordiJT99/Ludico/actions/runs/30499913479) en `7d5962e` con SCA, secret scan, las tres imágenes construidas y smoke tests de API/web |
 | US-003 | en progreso | migración/seed y restore aislado verificados en PGlite y PostgreSQL 18 local; CI PostgreSQL 18 confirmada, pg-boss/retry/DLQ/singleton; falta restore real PostgreSQL 18 en staging |
 | US-010 | en progreso | DST, publish/close idempotente, reserva manual, kill switch, outbox/audit, solution gate, API/web/mobile y edición diaria contra PostgreSQL 18 local; quiz y crucigrama comprobados manualmente en navegador contra esa API; falta E2E completo con PostgreSQL 18/staging |
 | US-011 | en progreso | token 256-bit/hash, rotación con sujeto estable por linaje, expiración, revocación, cookie HttpOnly, SecureStore y XOR de GameAttempt verificado; la web renueva una sesión invitada inválida al reanudar; falta E2E en dispositivo |
