@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Lúdico",
+    "slug": "ludico",
+    "scheme": "ludico",
+    "version": "0.0.0",
+    "icon": "./assets/icon.png",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-secure-store",
+      "expo-sqlite",
+      "expo-notifications"
+    ],
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#fff9ef",
+        "foregroundImage": "./assets/icon.png"
+      },
+      "package": "es.ludico.app"
+    },
+    "ios": {
+      "bundleIdentifier": "es.ludico.app",
+      "icon": "./assets/icon.png",
+      "supportsTablet": true
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    }
+  }
+}

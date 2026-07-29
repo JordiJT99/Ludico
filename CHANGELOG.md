@@ -1,0 +1,60 @@
+# Changelog
+
+## Unreleased
+
+- Baseline de especificación Spec-Driven Development.
+- Scaffolding verificable de web, mobile, API, worker, dominio y base de datos.
+- Primer flujo de edición diaria: calendario Madrid/DST, migración, publicación/cierre idempotente, cola, API pública y clientes web/mobile.
+- Operaciones de emergencia auditadas para programar una reserva y desactivar un juego.
+- Sesiones invitadas con token hasheado, rotación/revocación y almacenamiento HttpOnly/SecureStore.
+- Primer corte vertical del quiz: contenido validado, intentos con sujeto XOR, guardado optimista y deduplicado, puntuación privada en servidor con límite temporal antifraude, reanudación y UI web/native accesible.
+- Progreso offline del quiz en web y mobile con cola de eventos, reconciliación de conflictos y almacenamiento local validado antes de usarlo.
+- PWA instalable con manifest, iconos originales, service worker de caché segura, recarga del quiz sin servidor y página de contingencia offline.
+- Actualización controlada de la PWA: una versión nueva espera, avisa sin interrumpir la partida y sólo toma el control cuando la persona elige recargar.
+- E2E Chromium del quiz con teclado, áreas táctiles, manifest, caché de navegación/assets, desconexión total, sincronización y control de filtraciones.
+- Primer corte vertical del crucigrama: cuadrícula validada y numerada, NFC/acentos/Ñ, score privado, eventos de celda, ayuda casual no cacheable, guardado offline web/SQLite y vistas accesibles web/native.
+- E2E Chromium del crucigrama con recarga offline, reconexión, flechas/letras, alternancia en cruces, campos por pista, ayuda confirmada, formato no correctivo y resultado sin solución.
+- Sincronización serializada del crucigrama web/native: las letras siguen entrando de forma optimista mientras una petición está en curso, con regresión E2E de red lenta.
+- Revisión pública post-cierre web/native con snapshot versionado de enunciado y solución, proyección sin metadatos internos, ruta web bloqueada/noindex antes del cierre y cuadrícula resuelta tras publicarse.
+- Comparación personal post-cierre web/native con score, respuestas o letras propias y ayudas, autorizada por propietario y servida siempre con caché privada desactivada.
+- Continuidad del invitado tras rotar el secreto: el linaje resuelve un sujeto estable para reanudar intentos sin aceptar tokens antiguos.
+- Base de cuenta Supabase: identidad verificada por el servidor de Auth, migración transaccional/repetible del invitado, resolución de intentos en conflicto y revocación auditada del linaje.
+- Cuenta utilizable en web/Expo: registro y entrada, cookies access/refresh `HttpOnly` en BFF web, `SecureStore` mobile, juego/revisión autorizados por `user_id` y reanudación E2E del mismo quiz en un segundo navegador.
+- Rachas y clasificación: duración de score persistida, desempate estable, vistas por juego/día/semana, percentil privado para invitado o cuenta, alias nominal solo con opt-in auditado y UI web/native.
+- Compartir resultado desde web/native mediante payload generado por servidor con juego, puntos, modo y URL pública; el contrato y E2E bloquean respuestas, soluciones e identificadores de intento.
+- Identidad instalable compartida entre PWA, Android e iOS, con icono original, icono adaptativo y atajos directos al quiz y al crucigrama del día.
+- Privacidad por diseño: consentimiento versionado append-only para invitado/cuenta, migración de sujeto, controles granulares web/native, retirada inmediata y caché privada.
+- Collector analítico first-party con ocho eventos y propiedades allowlist, deduplicación, ventana temporal y filtro estricto por consentimiento, sin respuestas ni PII.
+- Publicidad segura por defecto: slot sin salto de layout y placeholder inerte únicamente en modo `test`, sin SDK ni identificadores publicitarios reales.
+- Pipeline de contenido con planificación idempotente de 21 días, presupuesto/coste, lineage, validación determinista, fuentes por ítem, bloqueos, dedupe exacto, cuarentena y ensamblado atómico de quiz+crucigrama aprobado.
+- Worker con colas separadas de plan/generación/ensamblado, retry/DLQ y adapter `fake` exclusivamente explícito; proveedor deshabilitado por defecto y configuraciones desconocidas rechazadas al arrancar.
+- Backoffice web noindex/no-store con calendario, reserva, previews privados, planificación y decisiones auditadas; RBAC Supabase desde `app_metadata`, reautenticación reciente y llave de emergencia aislada.
+- Notificaciones push opt-in para cuentas: preferencias web/native, permiso solicitado bajo acción explícita, tokens Expo cifrados, quiet hours/DST, digest con cap, dedupe, baja inmediata, deep links validados y worker con retry/desactivación de dispositivos obsoletos.
+- Hardening de preparación de release: límites y rate limiting API, correlation/readiness, errores seguros, CORS/CSRF, CSP/cabeceras, robots/sitemap, baseline a11y E2E, Dependabot y overrides que eliminan vulnerabilidades altas transitivas; checklist G5 separa evidencia local de puertas externas.
+- Archivo web de siete días con URL canónica por fecha y acceso a revisiones cerradas, más un bloque de soluciones de ayer en la portada; la API rechaza fechas futuras o fuera de ventana.
+- Archivo nativo de siete días para Android/iOS con carga validada de ediciones públicas y navegación directa a cada solución cerrada.
+- Comparación pública de puntuación y duración media en revisiones, publicada sólo con al menos 20 partidas competitivas para proteger cohortes pequeñas.
+- Porcentajes agregados de acierto por pregunta y fallo por palabra en la revisión web/native, sometidos al mismo umbral mínimo de 20 partidas competitivas.
+- Resumen personal de las partidas de ayer para cuentas en web y mobile, con puntos, puesto final competitivo y enlace directo a la revisión propia.
+- Derechos de cuenta web/native: exportación JSON de datos propios y baja con reautenticación, confirmación literal, borrado transaccional de analítica/consentimientos/push, pseudonimización y outbox de propagación.
+- Moderación de términos bloqueados en backoffice con normalización coherente, RBAC/reauth, activación y desactivación auditadas, outbox y aplicación inmediata en la validación de contenido.
+- Regeneración editorial idempotente: rechaza el candidato anterior, reabre su job como `queued` y conserva actor, motivo y outbox para el siguiente despacho del worker.
+- Edición JSON segura en backoffice: conserva la versión anterior, revalida payloads y fuentes, exige reautenticación/motivo y audita el enlace entre revisiones.
+- Catálogo analítico MVP conectado en web y mobile con cola efímera hasta resolver consentimiento, contexto técnico allowlist y E2E que demuestra ausencia de respuestas/soluciones.
+- El cierre editorial finaliza atómica e idempotentemente los intentos aceptados y publica en outbox cuántos quedaron sellados para consumidores de ranking.
+- Retención diaria auditable en worker para analítica raw (13 meses), idempotencias vencidas, entregas push terminales (90 días) y outbox publicado (30 días), preservando auditoría, consentimientos y eventos pendientes.
+- Banco léxico español curado con procedencia, vigencia, categoría, dificultad, variantes, calidad y estado; gestión editorial auditada, constructor de crucigramas determinista y acotado con unicidad verificada, y preview SVG de servidor sin respuestas.
+- Dashboard analítico privado con RBAC, ventana diaria Madrid, actividad y funnel deduplicado por intento, definiciones/owner/freshness y salida exclusivamente agregada.
+- Calidad y resiliencia del pipeline: rechazo de casi duplicados mediante similitud tokenizada determinista y circuit breaker medible por proveedor/tipo con apertura, bloqueo y sonda de recuperación.
+- Calendario editorial con alerta de reserva por debajo de 10 días y programación de ediciones aprobadas desde editor reautenticado, conservando la vía de emergencia y distinguiendo ambos actores en auditoría.
+- Feed de auditoría reciente en backoffice, limitado y sin metadata, servido con `private,no-store` exclusivamente a superadmin sin bloquear la experiencia de los demás roles.
+- Cuarentena analítica minimizada: los lotes semánticamente inválidos revierten de forma atómica y solo dejan metadatos estructurales sin payload ni sujeto, con TTL de 30 días y conteo agregado en backoffice.
+- Métricas HTTP internas en formato Prometheus, agregadas por método/ruta/estado y ocultas salvo token específico para scraping.
+- CI incorpora Gitleaks sobre el historial completo para impedir que credenciales lleguen al repositorio.
+- CI aplica las migraciones en PostgreSQL 18 efímero antes de aceptar cambios.
+- El worker alerta de forma estructurada cuando la reserva aprobada de quiz o crucigrama baja de diez días.
+- La reserva editorial ignora candidatos aprobados de fechas ya vencidas, usando la fecha de negocio Europe/Madrid.
+- Desarrollo local reproducible con `.env` cargado por API, worker y migrador, y migración/seed comprobados contra PostgreSQL 18 local.
+- La suite PGlite de base se serializa para evitar agotamiento de memoria cuando coexiste con servicios de desarrollo.
+- Los E2E aíslan su API fake en el puerto 4100 para poder ejecutarse mientras la API de desarrollo ocupa el 4000.
+- Backup y restore aislado verificados con PostgreSQL 18 local, sin tocar la base de desarrollo.

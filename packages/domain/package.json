@@ -1,0 +1,21 @@
+{
+  "name": "@ludico/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./crossword": "./src/crossword.ts",
+    "./crossword-progress": "./src/crossword-progress.ts",
+    "./quiz-progress": "./src/quiz-progress.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run src",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ludico/contracts": "workspace:*",
+    "@js-temporal/polyfill": "0.5.1"
+  }
+}

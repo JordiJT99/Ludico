@@ -1,0 +1,23 @@
+{
+  "name": "@ludico/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "start": "node dist/main.js",
+    "test": "vitest run src",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ludico/contracts": "workspace:*",
+    "@ludico/database": "workspace:*",
+    "@ludico/domain": "workspace:*",
+    "pg-boss": "12.26.3"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.4",
+    "vitest": "4.1.10"
+  }
+}
