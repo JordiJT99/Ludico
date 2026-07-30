@@ -6,6 +6,7 @@ import {
   type QuizAnswerInput,
   type QuizSolutionItem,
   validateQuiz,
+  validateQuizEditorial,
 } from "./quiz.js";
 
 const quiz: QuizPublicPayload = {
@@ -33,6 +34,26 @@ describe("quiz validation", () => {
   it("requires one valid solution per question", () => {
     expect(() => validateQuiz(quiz, solution)).not.toThrow();
     expect(() => validateQuiz(quiz, solution.slice(1))).toThrow(InvalidQuizError);
+  });
+
+  it("rejects repeated editorial text and predictable correct-answer positions", () => {
+    expect(() => validateQuizEditorial(quiz, solution)).toThrow(InvalidQuizError);
+    const balanced = solution.map((item, index) => ({
+      ...item,
+      correctOptionId: quiz.questions[index]!.options[index % 4]!.id,
+    }));
+    expect(() => validateQuizEditorial(quiz, balanced)).not.toThrow();
+    expect(() =>
+      validateQuizEditorial(
+        {
+          ...quiz,
+          questions: quiz.questions.map((question, index) =>
+            index === 1 ? { ...question, prompt: quiz.questions[0]!.prompt } : question,
+          ),
+        },
+        balanced,
+      ),
+    ).toThrow(InvalidQuizError);
   });
 });
 

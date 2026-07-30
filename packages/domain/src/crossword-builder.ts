@@ -9,17 +9,35 @@ import {
 export interface WordBankEntry {
   readonly answer: string;
   readonly clue: string;
+  readonly difficulty?: number;
   readonly id: string;
+  readonly locale?: string;
+  readonly qualityScore?: number;
   readonly sourceUrl: string;
 }
 
 export interface CrosswordBuildOptions {
   readonly entryCount?: number;
+  readonly maxColumns?: number;
+  readonly maxGenerationAttempts?: number;
+  readonly maxRows?: number;
   readonly maxSearchNodes?: number;
+  readonly minDensity?: number;
+  readonly minQualityScore?: number;
   readonly seed: string;
+  readonly targetDifficulty?: 1 | 2 | 3 | 4 | 5;
   readonly timeLimitMs?: number;
   readonly title: string;
   readonly vocabularyVersion: string;
+}
+
+export interface CrosswordQuality {
+  readonly acrossEntries: number;
+  readonly compactness: number;
+  readonly density: number;
+  readonly downEntries: number;
+  readonly intersections: number;
+  readonly score: number;
 }
 
 type Direction = "across" | "down";
@@ -53,6 +71,23 @@ export function constructCrossword(
   const ordered = shuffle(prepared, options.seed);
   const maxNodes = options.maxSearchNodes ?? 20_000;
   const deadline = Date.now() + (options.timeLimitMs ?? 100);
+  const constraints = {
+    maxColumns: options.maxColumns ?? 21,
+    maxRows: options.maxRows ?? 21,
+    minDensity: options.minDensity ?? 0.35,
+  };
+  if (
+    constraints.maxColumns < 3 ||
+    constraints.maxColumns > 21 ||
+    constraints.maxRows < 3 ||
+    constraints.maxRows > 21 ||
+    constraints.minDensity <= 0 ||
+    constraints.minDensity > 1 ||
+    (options.minQualityScore !== undefined &&
+      (options.minQualityScore < 0 || options.minQualityScore > 100))
+  ) {
+    throw new CrosswordConstructionError("INVALID_BANK");
+  }
   let nodes = 0;
   const consumeNode = () => {
     nodes += 1;
@@ -62,19 +97,28 @@ export function constructCrossword(
   };
 
   let placements: readonly Placement[] | null = null;
-  for (const first of ordered) {
-    placements = search(
-      ordered,
-      [{ ...first, column: 0, direction: "across" as const, row: 0 }],
-      new Set([first.id]),
-      entryCount,
-      consumeNode,
-    );
-    if (placements) break;
+  const attempts = options.maxGenerationAttempts ?? 1;
+  if (attempts < 1 || attempts > 50) throw new CrosswordConstructionError("INVALID_BANK");
+  for (let attempt = 0; attempt < attempts && !placements; attempt += 1) {
+    const attemptOrder = attempt === 0 ? ordered : shuffle(ordered, `${options.seed}:${attempt}`);
+    for (const first of attemptOrder) {
+      placements = search(
+        attemptOrder,
+        [{ ...first, column: 0, direction: "across" as const, row: 0 }],
+        new Set([first.id]),
+        entryCount,
+        consumeNode,
+        constraints,
+      );
+      if (placements) break;
+    }
   }
   if (!placements) throw new CrosswordConstructionError("NO_LAYOUT");
 
   const candidate = toCandidate(placements, bank, options);
+  if (assessCrosswordQuality(candidate.publicPayload).score < (options.minQualityScore ?? 0)) {
+    throw new CrosswordConstructionError("NO_LAYOUT");
+  }
   if (countCrosswordSolutions(candidate.publicPayload, bank) !== 1) {
     throw new CrosswordConstructionError("NON_UNIQUE");
   }
@@ -87,7 +131,7 @@ export function countCrosswordSolutions(
   bank: readonly WordBankEntry[],
   limit = 2,
 ): number {
-  const prepared = prepareBank(bank);
+  const prepared = prepareBank(bank, { allowEquivalentAnswers: true });
   const choices = crossword.entries
     .map((entry) => ({
       entry,
@@ -134,22 +178,58 @@ export function countCrosswordSolutions(
   return count;
 }
 
+export function assessCrosswordQuality(crossword: CrosswordPublicPayload): CrosswordQuality {
+  const cellsToEntries = new Map<string, number>();
+  let acrossEntries = 0;
+  let downEntries = 0;
+  for (const entry of crossword.entries) {
+    if (entry.direction === "across") acrossEntries += 1;
+    else downEntries += 1;
+    for (const cellId of entry.cellIds) {
+      cellsToEntries.set(cellId, (cellsToEntries.get(cellId) ?? 0) + 1);
+    }
+  }
+  const intersections = [...cellsToEntries.values()].filter((uses) => uses > 1).length;
+  const density = crossword.cells.length / (crossword.rows * crossword.columns);
+  const compactness =
+    Math.min(crossword.rows, crossword.columns) / Math.max(crossword.rows, crossword.columns);
+  const directionBalance =
+    crossword.entries.length === 0
+      ? 0
+      : 1 - Math.abs(acrossEntries - downEntries) / crossword.entries.length;
+  const intersectionScore =
+    crossword.cells.length === 0 ? 0 : Math.min(1, intersections / crossword.cells.length);
+  const score = Math.round(
+    100 * (density * 0.45 + compactness * 0.2 + directionBalance * 0.15 + intersectionScore * 0.2),
+  );
+  return { acrossEntries, compactness, density, downEntries, intersections, score };
+}
+
 function search(
   bank: readonly PreparedEntry[],
   placements: readonly Placement[],
   used: ReadonlySet<string>,
   target: number,
   consumeNode: () => void,
+  constraints: Readonly<{ maxColumns: number; maxRows: number; minDensity: number }>,
 ): readonly Placement[] | null {
-  if (placements.length === target) return density(placements) >= 0.35 ? placements : null;
+  if (placements.length === target)
+    return density(placements) >= constraints.minDensity ? placements : null;
   const grid = buildGrid(placements);
   for (const entry of bank) {
     if (used.has(entry.id)) continue;
     consumeNode();
     for (const placement of possiblePlacements(entry, grid)) {
-      if (!fits(placement, grid, placements)) continue;
+      if (!fits(placement, grid, placements, constraints)) continue;
       const next = [...placements, placement];
-      const result = search(bank, next, new Set([...used, entry.id]), target, consumeNode);
+      const result = search(
+        bank,
+        next,
+        new Set([...used, entry.id]),
+        target,
+        consumeNode,
+        constraints,
+      );
       if (result) return result;
     }
   }
@@ -184,6 +264,7 @@ function fits(
   placement: Placement,
   grid: ReadonlyMap<string, GridCell>,
   placements: readonly Placement[],
+  constraints: Readonly<{ maxColumns: number; maxRows: number }>,
 ): boolean {
   const before = coordinateAt(placement, -1);
   const after = coordinateAt(placement, placement.letters.length);
@@ -210,7 +291,9 @@ function fits(
     if (neighbors.some((neighbor) => grid.has(neighbor))) return false;
   }
   const bounds = getBounds([...placements, placement]);
-  return crossings > 0 && bounds.rows <= 21 && bounds.columns <= 21;
+  return (
+    crossings > 0 && bounds.rows <= constraints.maxRows && bounds.columns <= constraints.maxColumns
+  );
 }
 
 function toCandidate(
@@ -291,20 +374,37 @@ function toCandidate(
   };
 }
 
-function prepareBank(bank: readonly WordBankEntry[]): PreparedEntry[] {
+function prepareBank(
+  bank: readonly WordBankEntry[],
+  options: Readonly<{ allowEquivalentAnswers?: boolean }> = {},
+): PreparedEntry[] {
   const ids = new Set<string>();
+  const answers = new Set<string>();
   const entries = bank.map((entry) => ({ ...entry, letters: answerLetters(entry.answer) }));
   if (
     entries.length < 2 ||
-    entries.some(
-      (entry) =>
+    entries.some((entry) => {
+      const normalizedAnswer = entry.letters.join("");
+      const duplicateId = ids.has(entry.id);
+      const duplicateAnswer = !options.allowEquivalentAnswers && answers.has(normalizedAnswer);
+      ids.add(entry.id);
+      answers.add(normalizedAnswer);
+      return (
         !entry.id ||
-        !ids.add(entry.id) ||
+        duplicateId ||
+        duplicateAnswer ||
         !entry.clue.trim() ||
         entry.letters.length < 2 ||
         entry.letters.length > 21 ||
-        !isHttps(entry.sourceUrl),
-    )
+        (entry.difficulty !== undefined &&
+          (!Number.isInteger(entry.difficulty) || entry.difficulty < 1 || entry.difficulty > 5)) ||
+        (entry.qualityScore !== undefined &&
+          (!Number.isInteger(entry.qualityScore) ||
+            entry.qualityScore < 0 ||
+            entry.qualityScore > 100)) ||
+        !isHttps(entry.sourceUrl)
+      );
+    })
   ) {
     throw new CrosswordConstructionError("INVALID_BANK");
   }

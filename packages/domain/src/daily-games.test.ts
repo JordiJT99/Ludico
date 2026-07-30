@@ -1,0 +1,59 @@
+import { describe, expect, it } from "vitest";
+import {
+  constructWordSearch,
+  DailyGameValidationError,
+  validateGuessWord,
+  validateTrueFalse,
+  validateWordSearch,
+} from "./daily-games.js";
+
+describe("daily game validators", () => {
+  it("validates balanced true/false and an unambiguous guess word", () => {
+    expect(() =>
+      validateTrueFalse([
+        item("La Tierra gira alrededor del Sol.", true),
+        item("El Sol gira alrededor de la Tierra.", false),
+        item("El agua hierve a 100 grados al nivel del mar.", true),
+      ]),
+    ).not.toThrow();
+    expect(() => validateGuessWord(guessWord())).not.toThrow();
+  });
+
+  it("constructs reproducible, reconstructible word searches", () => {
+    const config = {
+      columns: 8,
+      directions: ["east", "south", "southEast"] as const,
+      rows: 8,
+      seed: "2026-08-01-naturaleza",
+      words: ["SOL", "LUNA", "NUBE"],
+    };
+    const first = constructWordSearch(config);
+    expect(constructWordSearch(config)).toEqual(first);
+    expect(() => validateWordSearch(first)).not.toThrow();
+    expect(() => validateWordSearch({ ...first, grid: [] })).toThrow(DailyGameValidationError);
+  });
+});
+
+function item(statement: string, value: boolean) {
+  return {
+    category: "Ciencia",
+    difficulty: 2 as const,
+    explanation: "ExplicaciÃ³n factual comprobada.",
+    sourceUrl: "https://example.com/source",
+    statement,
+    value,
+  };
+}
+
+function guessWord() {
+  return {
+    allowedCharacters: ["A", "R", "B", "O", "L"],
+    alternativeAnswers: [],
+    answer: "ARBOL",
+    category: "Naturaleza",
+    definition: "Planta leÃ±osa con tronco y copa.",
+    difficulty: 2 as const,
+    hints: [{ text: "Tiene raÃ­ces.", unlockAfterAttempts: 1 }],
+    maxAttempts: 5,
+  };
+}

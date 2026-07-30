@@ -112,14 +112,14 @@ export function normalizeCrosswordLetter(value: string): string | null {
 }
 
 export function foldCrosswordLetter(value: string): string {
+  const enyePlaceholder = "\uE000";
   return value
     .normalize("NFC")
     .toLocaleUpperCase("es-ES")
-    .replace(/[ÁÀÂÄ]/g, "A")
-    .replace(/[ÉÈÊË]/g, "E")
-    .replace(/[ÍÌÎÏ]/g, "I")
-    .replace(/[ÓÒÔÖ]/g, "O")
-    .replace(/[ÚÙÛÜ]/g, "U");
+    .replaceAll("\u00D1", enyePlaceholder)
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replaceAll(enyePlaceholder, "\u00D1");
 }
 
 export function calculateCrosswordScore(

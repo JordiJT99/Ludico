@@ -171,7 +171,7 @@ export const guestSessionCredentialSchema = {
   },
 } as const;
 
-export type QuizDifficulty = "easy" | "medium" | "hard";
+export type QuizDifficulty = "very_easy" | "easy" | "medium" | "hard" | "expert";
 
 export interface QuizOptionPublic {
   readonly id: string;
@@ -211,7 +211,7 @@ export const quizPublicPayloadSchema = {
           id: { type: "string", format: "uuid" },
           prompt: { type: "string", minLength: 1, maxLength: 280 },
           category: { type: "string", minLength: 1, maxLength: 80 },
-          difficulty: { enum: ["easy", "medium", "hard"] },
+          difficulty: { enum: ["very_easy", "easy", "medium", "hard", "expert"] },
           options: {
             type: "array",
             minItems: 4,

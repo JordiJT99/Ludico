@@ -143,7 +143,7 @@ export async function recordGeneratedContent(
     );
     const validation = validateGeneratedContent(candidate, {
       blockedTerms: blocked.rows.map(({ normalizedTerm }) => normalizedTerm),
-      ...(current.provider === "fake"
+      ...(current.provider === "fake" || current.provider === "deterministic"
         ? {}
         : { knownSemanticCandidates: await listSemanticCandidates(transaction, candidate.type) }),
     });

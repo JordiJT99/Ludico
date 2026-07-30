@@ -342,7 +342,7 @@ function quizCandidate(title = "Quiz de cultura"): GeneratedContentCandidate {
     privatePayload: {
       kind: "quiz-solution",
       questions: questions.map((question) => ({
-        correctOptionId: question.options[0]!.id,
+        correctOptionId: question.options[questions.indexOf(question) % 4]!.id,
         explanation: "Explicación documentada.",
         questionId: question.id,
       })),

@@ -40,9 +40,14 @@ if (!connectionString) throw new Error("DATABASE_URL es obligatoria");
 
 const boss = new PgBoss({ application_name: "ludico-worker", connectionString });
 const database = new PostgresClient(connectionString);
-const contentProvider = process.env.AI_PROVIDER ?? "disabled";
-if (contentProvider !== "disabled" && contentProvider !== "fake") {
-  throw new Error("AI_PROVIDER no soportado; use disabled o fake fuera de producción");
+const contentProvider = process.env.AI_PROVIDER ?? "deterministic";
+if (!(["disabled", "deterministic", "fake"] as const).includes(contentProvider as never)) {
+  throw new Error(
+    "AI_PROVIDER no soportado; use deterministic, disabled o fake fuera de producción",
+  );
+}
+if (contentProvider === "fake" && process.env.NODE_ENV === "production") {
+  throw new Error("AI_PROVIDER=fake no está permitido en producción");
 }
 const pushProviderName = process.env.PUSH_PROVIDER ?? "disabled";
 if (!(["disabled", "expo", "fake"] as const).includes(pushProviderName as never)) {
@@ -104,7 +109,7 @@ await boss.work(CONTENT_PLAN_QUEUE, async (jobs) => {
     );
   }
 });
-if (contentProvider === "fake") {
+if (contentProvider === "fake" || contentProvider === "deterministic") {
   const contentGenerator = new ContentProviderCircuitBreaker(fakeContentGenerator);
   await boss.work(CONTENT_GENERATION_QUEUE, async (jobs) => {
     for (const job of jobs) {

@@ -38,7 +38,7 @@ function fakeQuiz(targetDate: string) {
     privatePayload: {
       kind: "quiz-solution" as const,
       questions: questions.map((question) => ({
-        correctOptionId: question.options[0]!.id,
+        correctOptionId: question.options[questions.indexOf(question) % 4]!.id,
         explanation: "Contenido exclusivo para desarrollo y pruebas.",
         questionId: question.id,
       })),

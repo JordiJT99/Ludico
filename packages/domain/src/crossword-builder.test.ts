@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
+  assessCrosswordQuality,
   constructCrossword,
   countCrosswordSolutions,
   CrosswordConstructionError,
   type WordBankEntry,
 } from "./crossword-builder.js";
-import { validateCrossword, type CrosswordPrivateSolution } from "./crossword.js";
+import {
+  foldCrosswordLetter,
+  validateCrossword,
+  type CrosswordPrivateSolution,
+} from "./crossword.js";
 
 const bank: WordBankEntry[] = [
   entry("sol", "SOL", "Astro que ilumina el día"),
@@ -31,6 +36,11 @@ describe("bounded deterministic crossword construction", () => {
       if (first.type !== "crossword") continue;
       expect(() => validateCrossword(first.publicPayload, first.privatePayload)).not.toThrow();
       expect(countCrosswordSolutions(first.publicPayload, bank)).toBe(1);
+      expect(assessCrosswordQuality(first.publicPayload)).toMatchObject({
+        density: expect.any(Number),
+        intersections: expect.any(Number),
+        score: expect.any(Number),
+      });
     }
   });
 
@@ -63,6 +73,31 @@ describe("bounded deterministic crossword construction", () => {
         },
       ),
     ).toThrow(new CrosswordConstructionError("SEARCH_LIMIT"));
+  });
+
+  it("enforces configured geometry and rejects equivalent answers in the word bank", () => {
+    expect(foldCrosswordLetter("ÁRBOL")).toBe("ARBOL");
+    expect(foldCrosswordLetter("NIÑO")).toBe("NIÑO");
+    expect(() =>
+      constructCrossword(bank, {
+        entryCount: 3,
+        maxColumns: 3,
+        maxRows: 3,
+        minDensity: 0.9,
+        seed: "too-dense",
+        title: "Sin salida",
+        vocabularyVersion: "bank-es-v1",
+      }),
+    ).toThrow(new CrosswordConstructionError("NO_LAYOUT"));
+
+    expect(() =>
+      constructCrossword([...bank, entry("sol-alt", "SOL", "Alternativa")], {
+        entryCount: 3,
+        seed: "duplicate-answer",
+        title: "Duplicado",
+        vocabularyVersion: "bank-es-v1",
+      }),
+    ).toThrow(new CrosswordConstructionError("INVALID_BANK"));
   });
 });
 

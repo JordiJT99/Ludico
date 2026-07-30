@@ -54,7 +54,7 @@ export async function configureSchedules(
   );
   await boss.schedule(
     CONTENT_ASSEMBLY_QUEUE,
-    "0 20 * * *",
+    "*/15 * * * *",
     { source: "schedule" },
     { key: "ES", singletonKey: "ES:content-assemble", tz: "Europe/Madrid" },
   );

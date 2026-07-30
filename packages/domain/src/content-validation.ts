@@ -1,6 +1,6 @@
 import type { CrosswordPublicPayload, QuizPublicPayload } from "@ludico/contracts";
 import { validateCrossword, type CrosswordPrivateSolution } from "./crossword.js";
-import { validateQuiz, type QuizPrivateSolution } from "./quiz.js";
+import { validateQuizEditorial, type QuizPrivateSolution } from "./quiz.js";
 
 export interface CandidateSource {
   readonly itemId: string;
@@ -56,7 +56,7 @@ export function validateGeneratedContent(
   const findings: ContentFinding[] = [];
   try {
     if (candidate.type === "quiz") {
-      validateQuiz(candidate.publicPayload, candidate.privatePayload.questions);
+      validateQuizEditorial(candidate.publicPayload, candidate.privatePayload.questions);
     } else {
       validateCrossword(candidate.publicPayload, candidate.privatePayload);
     }

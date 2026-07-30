@@ -3,6 +3,8 @@ export * from "./crossword-builder.js";
 export * from "./crossword-svg.js";
 export * from "./crossword-progress.js";
 export * from "./content-validation.js";
+export * from "./difficulty.js";
+export * from "./daily-games.js";
 export * from "./edition.js";
 export * from "./quiz.js";
 export * from "./notifications.js";
