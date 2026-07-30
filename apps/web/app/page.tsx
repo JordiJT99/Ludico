@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AnalyticsEvent } from "./analytics-event";
 import { GuestSessionBootstrap } from "./guest-session-bootstrap";
 import { PreviousResultsPanel } from "./previous-results-panel";
+import { SiteHeader } from "./site-header";
 
 export const dynamic = "force-dynamic";
 
@@ -11,67 +12,103 @@ export default async function Home() {
   const previous = edition ? await loadEditionPath(previousDate(edition.localDate)) : null;
 
   return (
-    <main>
-      <p className="eyebrow">Lúdico</p>
-      <h1>Un rato para pensar, cada día.</h1>
-      <GuestSessionBootstrap />
-      <PreviousResultsPanel />
-      {edition ? (
-        <>
-          <AnalyticsEvent
-            name="DailyEditionViewed"
-            properties={{
-              availability: "available",
-              editionId: edition.id,
-              localDate: edition.localDate,
-              platform: "web",
-            }}
-          />
-          <section aria-labelledby="today-heading">
-            <h2 id="today-heading">Retos del {formatDate(edition.localDate)}</h2>
+    <>
+      <SiteHeader />
+      <main className="dashboard">
+        <section className="dashboard-hero">
+          <p className="eyebrow">La edición de hoy</p>
+          {edition ? <p className="dashboard-date">{formatDate(edition.localDate)}</p> : null}
+          <h1>Un rato para pensar, cada día.</h1>
+          <p className="hero-quote">
+            “La curiosidad es la forma más elegante de entrenar la mente.”
+          </p>
+        </section>
+        <GuestSessionBootstrap />
+        {edition ? (
+          <>
+            <AnalyticsEvent
+              name="DailyEditionViewed"
+              properties={{
+                availability: "available",
+                editionId: edition.id,
+                localDate: edition.localDate,
+                platform: "web",
+              }}
+            />
+            <section aria-labelledby="today-heading" className="today-games">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Retos del día</p>
+                  <h2 id="today-heading">Elige por dónde empezar</h2>
+                </div>
+                <span>
+                  {edition.games.filter((game) => game.status === "active").length} disponibles
+                </span>
+              </div>
+              <div className="games games--featured">
+                {edition.games.map((game) => (
+                  <article className={`game game--${game.type}`} key={game.id}>
+                    <div aria-hidden="true" className="game__art">
+                      {game.type === "quiz" ? "?" : "✦"}
+                    </div>
+                    <div className="game__content">
+                      <p className="game__kicker">
+                        {game.type === "quiz" ? "Saber y pensar" : "Palabras cruzadas"}
+                      </p>
+                      <h3>{game.type === "quiz" ? "Quiz diario" : "Crucigrama diario"}</h3>
+                      <p>
+                        {game.status === "active"
+                          ? game.type === "quiz"
+                            ? "Diez preguntas para despertar la curiosidad."
+                            : "Una cuadrícula para tomarse el tiempo necesario."
+                          : "Temporalmente no disponible"}
+                      </p>
+                      {game.status === "active" ? (
+                        <Link className="button-link" href={`/jugar/${game.id}`}>
+                          Jugar <span aria-hidden="true">→</span>
+                        </Link>
+                      ) : (
+                        <button disabled type="button">
+                          Próximamente
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : (
+          <section className="empty-state">
+            <p role="status">La edición de hoy se está preparando. Vuelve en unos minutos.</p>
+          </section>
+        )}
+        <PreviousResultsPanel />
+        {previous ? (
+          <section aria-labelledby="previous-heading" className="previous-edition">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Archivo diario</p>
+                <h2 id="previous-heading">Soluciones de ayer</h2>
+              </div>
+            </div>
             <div className="games">
-              {edition.games.map((game) => (
+              {previous.games.map((game) => (
                 <article className="game" key={game.id}>
-                  <h3>{game.type === "quiz" ? "Quiz diario" : "Crucigrama diario"}</h3>
-                  <p>
-                    {game.status === "active" ? "Listo para jugar" : "Temporalmente no disponible"}
-                  </p>
-                  {game.status === "active" ? (
-                    <Link className="button-link" href={`/jugar/${game.id}`}>
-                      Jugar
-                    </Link>
-                  ) : (
-                    <button disabled type="button">
-                      Próximamente
-                    </button>
-                  )}
+                  <h3>{game.type === "quiz" ? "Quiz de ayer" : "Crucigrama de ayer"}</h3>
+                  <Link className="button-link" href={`/resultados/${game.id}`}>
+                    Ver solución
+                  </Link>
                 </article>
               ))}
             </div>
           </section>
-        </>
-      ) : (
-        <p role="status">La edición de hoy se está preparando. Vuelve en unos minutos.</p>
-      )}
-      {previous ? (
-        <section aria-labelledby="previous-heading">
-          <h2 id="previous-heading">Soluciones de ayer</h2>
-          <div className="games">
-            {previous.games.map((game) => (
-              <article className="game" key={game.id}>
-                <h3>{game.type === "quiz" ? "Quiz de ayer" : "Crucigrama de ayer"}</h3>
-                <Link className="button-link" href={`/resultados/${game.id}`}>
-                  Ver solución
-                </Link>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
-      <p>
-        <Link href="/archivo">Ver el archivo de los últimos siete días</Link>
-      </p>
-    </main>
+        ) : null}
+        <Link className="archive-link" href="/archivo">
+          Ver el archivo de los últimos siete días <span aria-hidden="true">→</span>
+        </Link>
+      </main>
+    </>
   );
 }
 
@@ -96,7 +133,7 @@ function previousDate(localDate: string): string {
 }
 
 function formatDate(localDate: string): string {
-  return new Intl.DateTimeFormat("es-ES", { dateStyle: "long", timeZone: "UTC" }).format(
+  return new Intl.DateTimeFormat("es-ES", { dateStyle: "full", timeZone: "UTC" }).format(
     new Date(`${localDate}T12:00:00Z`),
   );
 }

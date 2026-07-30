@@ -1,6 +1,7 @@
 import { isPublicEdition, type PublicEdition } from "@ludico/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteHeader } from "../site-header";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -12,26 +13,32 @@ export const metadata: Metadata = {
 export default async function ArchivePage() {
   const editions = await loadRecentEditions();
   return (
-    <main>
-      <p className="eyebrow">Siete días</p>
-      <h1>Archivo de retos</h1>
-      <p>Las soluciones aparecen sólo después del cierre oficial de cada edición.</p>
-      {editions.length ? (
-        <ol className="archive-list">
-          {editions.map((edition) => (
-            <li key={edition.id}>
-              <Link href={`/ediciones/${edition.localDate}`}>{formatDate(edition.localDate)}</Link>
-              <span>{edition.games.length} retos</span>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <p role="status">Todavía no hay ediciones anteriores disponibles.</p>
-      )}
-      <Link className="button-link" href="/">
-        Volver a hoy
-      </Link>
-    </main>
+    <>
+      <SiteHeader active="archive" />
+      <main className="content-page archive-page">
+        <p className="eyebrow">Siete días</p>
+        <h1>Archivo de retos</h1>
+        <p className="page-intro">
+          Las soluciones aparecen sólo después del cierre oficial de cada edición.
+        </p>
+        {editions.length ? (
+          <ol className="archive-list">
+            {editions.map((edition) => (
+              <li key={edition.id}>
+                <Link href={`/ediciones/${edition.localDate}`}>
+                  {formatDate(edition.localDate)}
+                </Link>
+                <span>
+                  {edition.games.length} retos <b aria-hidden="true">→</b>
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p role="status">Todavía no hay ediciones anteriores disponibles.</p>
+        )}
+      </main>
+    </>
   );
 }
 
@@ -66,7 +73,7 @@ function recentDates(now: Date, days: number): string[] {
 }
 
 function formatDate(localDate: string): string {
-  return new Intl.DateTimeFormat("es-ES", { dateStyle: "long", timeZone: "UTC" }).format(
+  return new Intl.DateTimeFormat("es-ES", { dateStyle: "full", timeZone: "UTC" }).format(
     new Date(`${localDate}T12:00:00Z`),
   );
 }

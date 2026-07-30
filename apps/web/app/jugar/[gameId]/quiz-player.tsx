@@ -109,7 +109,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
 
   if (fatalError) {
     return (
-      <main>
+      <main className="play-page">
         <p className="eyebrow">Quiz diario</p>
         <h1>No hemos podido abrir el quiz</h1>
         <p role="alert">{fatalError}</p>
@@ -121,7 +121,16 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
   }
   if (result) {
     return (
-      <main>
+      <main className="play-page result-page">
+        <header className="play-topbar">
+          <Link aria-label="Volver a los retos" className="play-topbar__back" href="/">
+            ←
+          </Link>
+          <Link className="play-topbar__brand" href="/">
+            Lúdico
+          </Link>
+          <span className="play-topbar__status">Resultado</span>
+        </header>
         <p className="eyebrow">Resultado provisional</p>
         <h1>{result.provisional.score} puntos</h1>
         <p>
@@ -142,7 +151,15 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
   }
   if (!session) {
     return (
-      <main aria-busy="true">
+      <main aria-busy="true" className="play-page">
+        <header className="play-topbar">
+          <Link aria-label="Volver a los retos" className="play-topbar__back" href="/">
+            ←
+          </Link>
+          <Link className="play-topbar__brand" href="/">
+            Lúdico
+          </Link>
+        </header>
         <p className="eyebrow">Quiz diario</p>
         <h1>Preparando las preguntas…</h1>
       </main>
@@ -153,7 +170,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
   const question = playing.quiz.questions[playing.current];
   if (!question || playing.attempt.status !== "in_progress") {
     return (
-      <main>
+      <main className="play-page">
         <h1>Este intento ya se ha enviado</h1>
         <Link className="button-link" href="/">
           Volver al inicio
@@ -166,6 +183,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
     (answer) => answer.questionId === currentQuestion.id,
   )?.selectedOptionId;
   const last = playing.current === playing.quiz.questions.length - 1;
+  const progressPercent = Math.round(((playing.current + 1) / playing.quiz.questions.length) * 100);
 
   async function choose(selectedOptionId: string) {
     if (!session || saving) return;
@@ -231,8 +249,16 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
   }
 
   return (
-    <main>
-      <p className="eyebrow">{playing.quiz.title}</p>
+    <main className="play-page quiz-page">
+      <header className="play-topbar">
+        <Link aria-label="Volver a los retos" className="play-topbar__back" href="/">
+          ←
+        </Link>
+        <Link className="play-topbar__brand" href="/">
+          Lúdico
+        </Link>
+        <span className="play-topbar__status">Quiz diario</span>
+      </header>
       <p aria-live="polite" className={`sync-status ${session.syncStatus}`}>
         {session.syncStatus === "saved"
           ? "Progreso guardado"
@@ -240,17 +266,38 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
             ? "Guardando…"
             : "Sin conexión · pendiente de sincronizar"}
       </p>
-      {notice ? <p role="status">{notice}</p> : null}
-      <p className="progress">
+      {notice ? (
+        <p className="notice" role="status">
+          {notice}
+        </p>
+      ) : null}
+      <p className="progress quiz-legacy-progress">
         Pregunta {playing.current + 1} de {playing.quiz.questions.length} ·{" "}
         {currentQuestion.category}
       </p>
+      <div className="question-meta">
+        <p>
+          Pregunta {playing.current + 1} de {playing.quiz.questions.length}
+        </p>
+        <span>{progressPercent}%</span>
+      </div>
+      <div
+        aria-label={`${progressPercent}% completado`}
+        aria-valuemax={100}
+        aria-valuemin={0}
+        aria-valuenow={progressPercent}
+        className="progress-track"
+        role="progressbar"
+      >
+        <span style={{ width: `${progressPercent}%` }} />
+      </div>
       <section aria-labelledby="question-heading" className="quiz-card">
+        <p className="eyebrow">{currentQuestion.category}</p>
         <h1 id="question-heading">{currentQuestion.prompt}</h1>
         <fieldset disabled={saving}>
           <legend>Elige una respuesta</legend>
           <div className="options">
-            {currentQuestion.options.map((option) => (
+            {currentQuestion.options.map((option, index) => (
               <label
                 className={selected === option.id ? "option selected" : "option"}
                 key={option.id}
@@ -262,6 +309,9 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
                   type="radio"
                   value={option.id}
                 />
+                <span aria-hidden="true" className="option__letter">
+                  {String.fromCharCode(65 + index)}
+                </span>
                 <span>{option.text}</span>
               </label>
             ))}
@@ -272,7 +322,12 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
             Sincronizar
           </button>
         ) : null}
-        <button disabled={!selected || saving} onClick={() => void advance()} type="button">
+        <button
+          className="primary-action"
+          disabled={!selected || saving}
+          onClick={() => void advance()}
+          type="button"
+        >
           {saving ? "Guardando…" : last ? "Enviar quiz" : "Siguiente"}
         </button>
       </section>

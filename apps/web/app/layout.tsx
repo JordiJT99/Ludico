@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AccountPanel } from "./account-panel";
 import { ConsentPanel } from "./consent-panel";
 import { ServiceWorkerRegister } from "./service-worker-register";
-import "./styles.css";
+import "./editorial.css";
 
 export const metadata: Metadata = {
   applicationName: "Lúdico",

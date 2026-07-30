@@ -30,7 +30,7 @@ export function PreviousResultsPanel() {
 
   if (!results.length) return null;
   return (
-    <section aria-labelledby="personal-yesterday-heading">
+    <section aria-labelledby="personal-yesterday-heading" className="personal-results">
       <h2 id="personal-yesterday-heading">Tu resultado de ayer</h2>
       <div className="games">
         {results.map((result) => (

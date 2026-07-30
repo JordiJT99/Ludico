@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lúdico - Quiz</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "on-surface": "#1c1c16",
+                    "surface-container-lowest": "#ffffff",
+                    "error": "#ba1a1a",
+                    "secondary-fixed": "#ffdbd0",
+                    "surface-container": "#f1eee5",
+                    "on-error-container": "#93000a",
+                    "surface": "#fdf9f0",
+                    "on-secondary-container": "#661a00",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#002a1b",
+                    "on-background": "#1c1c16",
+                    "secondary": "#aa370b",
+                    "tertiary-fixed-dim": "#72daae",
+                    "inverse-on-surface": "#f4f0e7",
+                    "tertiary": "#00120a",
+                    "surface-bright": "#fdf9f0",
+                    "surface-variant": "#e6e2d9",
+                    "on-secondary-fixed": "#3a0b00",
+                    "on-tertiary-container": "#2e9c74",
+                    "outline": "#75777e",
+                    "secondary-container": "#ff7346",
+                    "on-primary-fixed-variant": "#3b4661",
+                    "surface-container-high": "#ece8df",
+                    "primary-container": "#17233c",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#842500",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed": "#8ef7c9",
+                    "on-primary-container": "#7f8aa9",
+                    "secondary-fixed-dim": "#ffb59e",
+                    "primary-fixed": "#d8e2ff",
+                    "inverse-surface": "#31302b",
+                    "on-surface-variant": "#45464d",
+                    "on-tertiary-fixed": "#002115",
+                    "primary": "#020d25",
+                    "on-primary-fixed": "#0f1b34",
+                    "background": "#fdf9f0",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#bac6e7",
+                    "surface-tint": "#525e7a",
+                    "surface-container-low": "#f7f3ea",
+                    "surface-container-highest": "#e6e2d9",
+                    "outline-variant": "#c5c6ce",
+                    "on-tertiary-fixed-variant": "#005139",
+                    "inverse-primary": "#bac6e7",
+                    "surface-dim": "#dddad1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "xl": "40px",
+                    "base": "8px",
+                    "gutter": "24px",
+                    "md": "16px",
+                    "container-max": "1200px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Hanken Grotesk"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "label-bold": ["Hanken Grotesk"],
+                    "headline-md": ["\"Source Serif 4\""],
+                    "display-lg-mobile": ["\"Source Serif 4\""],
+                    "display-lg": ["\"Source Serif 4\""]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-bold": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .tight-shadow {
+        box-shadow: 4px 4px 0px rgba(2, 13, 37, 0.1);
+      }
+      .tight-shadow-hover:hover {
+        box-shadow: 2px 2px 0px rgba(2, 13, 37, 0.2);
+        transform: translate(2px, 2px);
+      }
+      .active-tile {
+        border: 2px solid #020d25 !important;
+        background-color: rgba(2, 13, 37, 0.02);
+      }
+      .paper-texture {
+        background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+      }
+      body {
+        -webkit-tap-highlight-color: transparent;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body-md text-on-surface min-h-screen flex flex-col paper-texture">
+<!-- Top AppBar (JSON Derived) -->
+<header class="bg-surface fixed top-0 w-full z-40 border-b border-outline-variant">
+<div class="flex justify-between items-center px-lg py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-md">
+<button class="p-xs hover:bg-surface-container-high transition-colors rounded-lg">
+<span class="material-symbols-outlined text-primary">close</span>
+</button>
+<h1 class="font-display-lg-mobile text-display-lg-mobile text-primary">Lúdico</h1>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-bold text-label-bold text-primary">5 🔥</span>
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a friendly young man with clear skin and a kind expression, wearing a minimalist dark navy sweater. The background is a soft, warm cream color with editorial lighting that highlights his features and creates a sophisticated, premium feel consistent with a high-end educational app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC41rytdjQZFOPAJsqbqtzX5rnzoJHGRtNdWFsUJWlmg3kCJT5gn403zsg0NwkSdsxQ1WX8t_5vszd5GNmmD_Z8A1SG54zVGfvKSvznQHHzCbG8eFOwnYaho78ohVzIOP82llc9L5s2uBdrstfNo_Sy-oB7V4_9Le9hJOYNPGk6HB9MYsTbdyWYZuqgSTkBaf_SnrLwfzNAPpG2OcuFNYYHZptg-Y-1oXhf8YkwhIsTPBsKAt5AcpkfCg"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Progress Indicator -->
+<nav class="mt-20 px-lg pt-md">
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-bold text-label-bold text-on-surface-variant">Pregunta 3 de 10</span>
+<span class="font-label-bold text-label-bold text-secondary">30%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-secondary-container h-full transition-all duration-700 ease-out" style="width: 30%"></div>
+</div>
+</nav>
+<!-- Main Content (Canvas) -->
+<main class="flex-grow px-lg py-xl flex flex-col">
+<!-- Category Chip -->
+<div class="mb-md">
+<span class="inline-flex items-center px-md py-xs bg-surface-container-high text-primary font-label-bold text-label-bold rounded-full border border-outline-variant/30">
+                Historia y Geografía
+            </span>
+</div>
+<!-- Question Enunciation -->
+<div class="mb-xl">
+<h2 class="font-headline-md text-headline-md text-primary leading-tight">
+                ¿Cuál es la capital de Kazajistán?
+            </h2>
+</div>
+<!-- Options Grid -->
+<div class="grid grid-cols-1 gap-md">
+<!-- Option A -->
+<button class="w-full text-left bg-surface-container-lowest border border-outline-variant/50 p-md rounded-xl transition-all duration-200 tight-shadow tight-shadow-hover flex items-center group">
+<span class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container text-primary font-bold mr-md group-hover:bg-primary group-hover:text-on-primary transition-colors">A</span>
+<span class="font-body-lg text-body-lg text-on-surface">Almaty</span>
+</button>
+<!-- Option B (Selected) -->
+<button class="w-full text-left bg-surface-container-lowest border border-outline-variant p-md rounded-xl transition-all duration-200 active-tile flex items-center group">
+<span class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold mr-md">B</span>
+<span class="font-body-lg text-body-lg text-primary font-bold">Astaná</span>
+<span class="material-symbols-outlined ml-auto text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</button>
+<!-- Option C -->
+<button class="w-full text-left bg-surface-container-lowest border border-outline-variant/50 p-md rounded-xl transition-all duration-200 tight-shadow tight-shadow-hover flex items-center group">
+<span class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container text-primary font-bold mr-md group-hover:bg-primary group-hover:text-on-primary transition-colors">C</span>
+<span class="font-body-lg text-body-lg text-on-surface">Taskent</span>
+</button>
+<!-- Option D -->
+<button class="w-full text-left bg-surface-container-lowest border border-outline-variant/50 p-md rounded-xl transition-all duration-200 tight-shadow tight-shadow-hover flex items-center group">
+<span class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container text-primary font-bold mr-md group-hover:bg-primary group-hover:text-on-primary transition-colors">D</span>
+<span class="font-body-lg text-body-lg text-on-surface">Bishkek</span>
+</button>
+</div>
+<!-- Secondary Action -->
+<div class="mt-lg flex justify-center">
+<button class="flex items-center gap-xs px-md py-sm text-on-surface-variant hover:text-error transition-colors font-label-bold text-label-bold">
+<span class="material-symbols-outlined text-[20px]">report</span>
+                Reportar error
+            </button>
+</div>
+</main>
+<!-- Bottom Action Bar (Contextual) -->
+<footer class="p-lg pb-xl bg-surface/80 backdrop-blur-md sticky bottom-0 border-t border-outline-variant/20">
+<button class="w-full bg-secondary-container hover:bg-secondary text-on-secondary font-label-bold text-headline-md py-md rounded-xl tight-shadow hover:scale-[0.98] transition-all active:scale-95 duration-150">
+            Confirmar respuesta
+        </button>
+</footer>
+<!-- Atmosphere/Micro-interaction Script -->
+<script>
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (this.classList.contains('bg-surface-container-lowest')) {
+                    // Reset others
+                    document.querySelectorAll('.active-tile').forEach(active => {
+                        active.classList.remove('active-tile');
+                        active.classList.add('tight-shadow', 'tight-shadow-hover');
+                        const icon = active.querySelector('.material-symbols-outlined:last-child');
+                        if (icon) icon.remove();
+                        const letter = active.querySelector('.bg-primary');
+                        if (letter) {
+                            letter.classList.remove('bg-primary', 'text-on-primary');
+                            letter.classList.add('bg-surface-container', 'text-primary');
+                        }
+                    });
+
+                    // Set this one active
+                    this.classList.add('active-tile');
+                    this.classList.remove('tight-shadow', 'tight-shadow-hover');
+
+                    const letterBox = this.querySelector('span:first-child');
+                    letterBox.classList.add('bg-primary', 'text-on-primary');
+                    letterBox.classList.remove('bg-surface-container', 'text-primary');
+
+                    const check = document.createElement('span');
+                    check.className = "material-symbols-outlined ml-auto text-primary";
+                    check.innerText = "check_circle";
+                    check.style.fontVariationSettings = "'FILL' 1";
+                    this.appendChild(check);
+                }
+            });
+        });
+    </script>
+</body></html>

@@ -11,6 +11,7 @@ import Link from "next/link";
 import { AnalyticsEvent } from "../../analytics-event";
 import { LeaderboardPanel } from "../../leaderboard-panel";
 import { ShareButton } from "../../share-button";
+import { SiteHeader } from "../../site-header";
 import { PersonalComparison } from "./personal-comparison";
 
 type PageProps = Readonly<{
@@ -38,67 +39,73 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
 
   if (result.status !== "available") {
     return (
-      <main>
-        <p className="eyebrow">Revisión diaria</p>
-        <h1>
-          {result.status === "locked" ? "La solución aún está cerrada" : "Revisión no disponible"}
-        </h1>
-        <p role="status">
-          {result.status === "locked"
-            ? "Podrás revisar las respuestas cuando termine la edición. Hasta entonces no mostramos ninguna pista de la solución."
-            : "No hemos podido encontrar esta revisión. Puedes volver a intentarlo desde el inicio."}
-        </p>
-        <Link className="button-link" href="/">
-          Volver al inicio
-        </Link>
-      </main>
+      <>
+        <SiteHeader />
+        <main className="content-page result-page">
+          <p className="eyebrow">Revisión diaria</p>
+          <h1>
+            {result.status === "locked" ? "La solución aún está cerrada" : "Revisión no disponible"}
+          </h1>
+          <p role="status">
+            {result.status === "locked"
+              ? "Podrás revisar las respuestas cuando termine la edición. Hasta entonces no mostramos ninguna pista de la solución."
+              : "No hemos podido encontrar esta revisión. Puedes volver a intentarlo desde el inicio."}
+          </p>
+          <Link className="button-link" href="/">
+            Volver al inicio
+          </Link>
+        </main>
+      </>
     );
   }
 
   const { solution } = result;
   return (
-    <main>
-      <AnalyticsEvent
-        name="ResultViewed"
-        properties={{
-          daysAgo: Math.max(
-            0,
-            Math.floor((Date.now() - Date.parse(solution.publishedAt)) / (24 * 60 * 60 * 1_000)),
-          ),
-          ...(attemptId ? { attemptId } : {}),
-          gameId,
-          gameType: solution.game.type,
-          platform: "web",
-        }}
-      />
-      <p className="eyebrow">Revisión publicada</p>
-      {isPublicQuizGame(solution.game) && isQuizPublicSolutionPayload(solution.payload) ? (
-        <QuizSolution solution={solution} />
-      ) : isPublicCrosswordGame(solution.game) &&
-        isCrosswordPublicSolutionPayload(solution.payload) ? (
-        <CrosswordSolution solution={solution} />
-      ) : (
-        <p role="alert">La revisión publicada no tiene un formato válido.</p>
-      )}
-      {solution.statistics ? (
-        <section aria-labelledby="global-comparison-heading">
-          <h2 id="global-comparison-heading">Comparación global</h2>
-          <p>
-            Media de {solution.statistics.attemptCount} partidas competitivas:{" "}
-            <strong>{solution.statistics.averageScore} puntos</strong> en{" "}
-            {formatDuration(solution.statistics.averageDurationMs)}.
-          </p>
-        </section>
-      ) : (
-        <p>Aún no hay suficientes partidas para publicar estadísticas agregadas.</p>
-      )}
-      {attemptId ? <PersonalComparison attemptId={attemptId} /> : null}
-      <LeaderboardPanel gameId={gameId} />
-      {attemptId ? <ShareButton attemptId={attemptId} /> : null}
-      <Link className="button-link" href="/">
-        Volver al inicio
-      </Link>
-    </main>
+    <>
+      <SiteHeader />
+      <main className="content-page result-page">
+        <AnalyticsEvent
+          name="ResultViewed"
+          properties={{
+            daysAgo: Math.max(
+              0,
+              Math.floor((Date.now() - Date.parse(solution.publishedAt)) / (24 * 60 * 60 * 1_000)),
+            ),
+            ...(attemptId ? { attemptId } : {}),
+            gameId,
+            gameType: solution.game.type,
+            platform: "web",
+          }}
+        />
+        <p className="eyebrow">Revisión publicada</p>
+        {isPublicQuizGame(solution.game) && isQuizPublicSolutionPayload(solution.payload) ? (
+          <QuizSolution solution={solution} />
+        ) : isPublicCrosswordGame(solution.game) &&
+          isCrosswordPublicSolutionPayload(solution.payload) ? (
+          <CrosswordSolution solution={solution} />
+        ) : (
+          <p role="alert">La revisión publicada no tiene un formato válido.</p>
+        )}
+        {solution.statistics ? (
+          <section aria-labelledby="global-comparison-heading">
+            <h2 id="global-comparison-heading">Comparación global</h2>
+            <p>
+              Media de {solution.statistics.attemptCount} partidas competitivas:{" "}
+              <strong>{solution.statistics.averageScore} puntos</strong> en{" "}
+              {formatDuration(solution.statistics.averageDurationMs)}.
+            </p>
+          </section>
+        ) : (
+          <p>Aún no hay suficientes partidas para publicar estadísticas agregadas.</p>
+        )}
+        {attemptId ? <PersonalComparison attemptId={attemptId} /> : null}
+        <LeaderboardPanel gameId={gameId} />
+        {attemptId ? <ShareButton attemptId={attemptId} /> : null}
+        <Link className="button-link" href="/">
+          Volver al inicio
+        </Link>
+      </main>
+    </>
   );
 }
 
@@ -113,7 +120,7 @@ function QuizSolution({ solution }: Readonly<{ solution: PublicSolution }>) {
     ]),
   );
   return (
-    <>
+    <section className="solution-section">
       <h1>{solution.game.payload.title}</h1>
       <p>Solución publicada el {formatPublishedAt(solution.publishedAt)}.</p>
       <ol className="review-list">
@@ -134,7 +141,7 @@ function QuizSolution({ solution }: Readonly<{ solution: PublicSolution }>) {
           );
         })}
       </ol>
-    </>
+    </section>
   );
 }
 
@@ -157,7 +164,7 @@ function CrosswordSolution({ solution }: Readonly<{ solution: PublicSolution }>)
     entry.cellIds.forEach((cellId, index) => letters.set(cellId, answer[index] ?? ""));
   }
   return (
-    <>
+    <section className="solution-section">
       <h1>{solution.game.payload.title}</h1>
       <p>Solución publicada el {formatPublishedAt(solution.publishedAt)}.</p>
       <div
@@ -198,7 +205,7 @@ function CrosswordSolution({ solution }: Readonly<{ solution: PublicSolution }>)
           </li>
         ))}
       </ol>
-    </>
+    </section>
   );
 }
 

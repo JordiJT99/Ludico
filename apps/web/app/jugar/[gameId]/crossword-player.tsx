@@ -136,7 +136,7 @@ export function CrosswordPlayer({ gameId }: Readonly<{ gameId: string }>) {
 
   if (fatalError) {
     return (
-      <main>
+      <main className="play-page">
         <p className="eyebrow">Crucigrama diario</p>
         <h1>No hemos podido abrir el crucigrama</h1>
         <p role="alert">{fatalError}</p>
@@ -148,7 +148,16 @@ export function CrosswordPlayer({ gameId }: Readonly<{ gameId: string }>) {
   }
   if (result) {
     return (
-      <main>
+      <main className="play-page result-page">
+        <header className="play-topbar">
+          <Link aria-label="Volver a los retos" className="play-topbar__back" href="/">
+            ←
+          </Link>
+          <Link className="play-topbar__brand" href="/">
+            Lúdico
+          </Link>
+          <span className="play-topbar__status">Resultado</span>
+        </header>
         <p className="eyebrow">Resultado provisional</p>
         <h1>{result.provisional.score} puntos</h1>
         <p>
@@ -169,7 +178,15 @@ export function CrosswordPlayer({ gameId }: Readonly<{ gameId: string }>) {
   }
   if (!session) {
     return (
-      <main aria-busy="true">
+      <main aria-busy="true" className="play-page">
+        <header className="play-topbar">
+          <Link aria-label="Volver a los retos" className="play-topbar__back" href="/">
+            ←
+          </Link>
+          <Link className="play-topbar__brand" href="/">
+            Lúdico
+          </Link>
+        </header>
         <p className="eyebrow">Crucigrama diario</p>
         <h1>Preparando la cuadrícula…</h1>
       </main>
@@ -180,6 +197,7 @@ export function CrosswordPlayer({ gameId }: Readonly<{ gameId: string }>) {
   const activeEntry = entryById(playing.crossword, playing.activeEntryId);
   const values = new Map(playing.attempt.cells.map((cell) => [cell.cellId, cell.value]));
   const filled = playing.crossword.cells.filter((cell) => values.has(cell.id)).length;
+  const progressPercent = Math.round((filled / playing.crossword.cells.length) * 100);
 
   function selectCell(cellId: string) {
     const current = sessionRef.current;
@@ -372,7 +390,16 @@ export function CrosswordPlayer({ gameId }: Readonly<{ gameId: string }>) {
   }
 
   return (
-    <main>
+    <main className="play-page crossword-page">
+      <header className="play-topbar">
+        <Link aria-label="Volver a los retos" className="play-topbar__back" href="/">
+          ←
+        </Link>
+        <Link className="play-topbar__brand" href="/">
+          Lúdico
+        </Link>
+        <span className="play-topbar__status">Crucigrama</span>
+      </header>
       <p className="eyebrow">{playing.crossword.title}</p>
       <p aria-live="polite" className={`sync-status ${session.syncStatus}`}>
         {session.syncStatus === "saved"
@@ -381,12 +408,34 @@ export function CrosswordPlayer({ gameId }: Readonly<{ gameId: string }>) {
             ? "Guardando…"
             : "Sin conexión · pendiente de sincronizar"}
       </p>
-      {notice ? <p role="status">{notice}</p> : null}
-      <p className="progress">
+      {notice ? (
+        <p className="notice" role="status">
+          {notice}
+        </p>
+      ) : null}
+      <p className="crossword-progress">
         {filled} de {playing.crossword.cells.length} celdas · {directionLabel(activeEntry)}{" "}
         {activeEntry.number}
       </p>
-      <h1>{activeEntry.clue}</h1>
+      <div
+        aria-label={`${progressPercent}% completado`}
+        aria-valuemax={100}
+        aria-valuemin={0}
+        aria-valuenow={progressPercent}
+        className="progress-track"
+        role="progressbar"
+      >
+        <span style={{ width: `${progressPercent}%` }} />
+      </div>
+      <div className="crossword-heading">
+        <div>
+          <p className="eyebrow">Pista actual</p>
+          <h1>{activeEntry.clue}</h1>
+        </div>
+        <span>
+          {activeEntry.number} {directionLabel(activeEntry)}
+        </span>
+      </div>
 
       <div
         aria-label="Cuadrícula del crucigrama"

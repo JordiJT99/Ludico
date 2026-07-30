@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lúdico | Hoy</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#ffffff",
+                      "on-surface": "#1c1c16",
+                      "surface-container-lowest": "#ffffff",
+                      "error": "#ba1a1a",
+                      "secondary-fixed": "#ffdbd0",
+                      "surface-container": "#f1eee5",
+                      "on-error-container": "#93000a",
+                      "surface": "#fdf9f0",
+                      "on-secondary-container": "#661a00",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-container": "#002a1b",
+                      "on-background": "#1c1c16",
+                      "secondary": "#aa370b",
+                      "tertiary-fixed-dim": "#72daae",
+                      "inverse-on-surface": "#f4f0e7",
+                      "tertiary": "#00120a",
+                      "surface-bright": "#fdf9f0",
+                      "surface-variant": "#e6e2d9",
+                      "on-secondary-fixed": "#3a0b00",
+                      "on-tertiary-container": "#2e9c74",
+                      "outline": "#75777e",
+                      "secondary-container": "#ff7346",
+                      "on-primary-fixed-variant": "#3b4661",
+                      "surface-container-high": "#ece8df",
+                      "primary-container": "#17233c",
+                      "on-primary": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed-variant": "#842500",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed": "#8ef7c9",
+                      "on-primary-container": "#7f8aa9",
+                      "secondary-fixed-dim": "#ffb59e",
+                      "primary-fixed": "#d8e2ff",
+                      "inverse-surface": "#31302b",
+                      "on-surface-variant": "#45464d",
+                      "on-tertiary-fixed": "#002115",
+                      "primary": "#020d25",
+                      "on-primary-fixed": "#0f1b34",
+                      "background": "#fdf9f0",
+                      "on-error": "#ffffff",
+                      "primary-fixed-dim": "#bac6e7",
+                      "surface-tint": "#525e7a",
+                      "surface-container-low": "#f7f3ea",
+                      "surface-container-highest": "#e6e2d9",
+                      "outline-variant": "#c5c6ce",
+                      "on-tertiary-fixed-variant": "#005139",
+                      "inverse-primary": "#bac6e7",
+                      "surface-dim": "#dddad1"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "xl": "40px",
+                      "base": "8px",
+                      "gutter": "24px",
+                      "md": "16px",
+                      "container-max": "1200px"
+              },
+              "fontFamily": {
+                      "body-lg": ["Hanken Grotesk"],
+                      "label-sm": ["Hanken Grotesk"],
+                      "body-md": ["Hanken Grotesk"],
+                      "label-bold": ["Hanken Grotesk"],
+                      "headline-md": ["\"Source Serif 4\""],
+                      "display-lg-mobile": ["\"Source Serif 4\""],
+                      "display-lg": ["\"Source Serif 4\""]
+              },
+              "fontSize": {
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-bold": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #fdf9f0;
+            color: #1c1c16;
+            font-family: 'Hanken Grotesk', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .editorial-shadow {
+            box-shadow: 4px 4px 0px rgba(2, 13, 37, 0.1);
+        }
+        .editorial-shadow-hover:hover {
+            box-shadow: 6px 6px 0px rgba(170, 55, 11, 0.15);
+            transform: translate(-2px, -2px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .card-border {
+            border: 1px solid rgba(2, 13, 37, 0.1);
+        }
+        .active-tab {
+            position: relative;
+        }
+        .active-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -24px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #aa370b;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-surface">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline sticky top-0 z-50">
+<div class="flex justify-between items-center px-lg py-md w-full max-w-container-max mx-auto h-20">
+<div class="flex items-center gap-xl">
+<span class="font-display-lg-mobile text-display-lg-mobile text-primary dark:text-primary-fixed leading-none">Lúdico</span>
+<nav class="hidden md:flex items-center gap-lg">
+<a class="text-secondary dark:text-secondary-fixed font-bold font-label-bold text-label-bold active-tab" href="#">Hoy</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high transition-colors px-md py-xs rounded-lg font-label-bold text-label-bold" href="#">Archivo</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high transition-colors px-md py-xs rounded-lg font-label-bold text-label-bold" href="#">Clasificación</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high transition-colors px-md py-xs rounded-lg font-label-bold text-label-bold" href="#">Stats</a>
+<a class="text-secondary font-bold font-label-bold text-label-bold flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                        Premium
+                    </a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center bg-surface-container-high px-md py-xs rounded-full gap-sm">
+<span class="text-label-bold font-label-bold text-secondary">5 🔥</span>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a young adult with a friendly expression, soft cinematic lighting, neutral background, high-end editorial photography style consistent with a premium educational or gaming platform. Deep indigo and warm cream color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCld8gAoeCejhzZIu2sJt1I0vss3EOm_QdCpf95ulEdhA_KwfVXqqpFcihqR3ppao4nNvH0-XgPxHCaa3DfJ_ZLI9uHebc7k725Ti1KI0yWRx1YMGdyPxKXHu3lUczhCK5HKNrUyruCWKpAEdi2gE9WvaXkd9iE9QFGn-38s-GiwEK_luECFUP8FOnF-3T7oMRs8pSUtg-mCrADIu6VaP5EbXVP4e6BgnhWldbbd4ZYA1CuYzTcklpEcw"/>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-lg py-xl">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-xl">
+<!-- Column Left: Profile & Stats -->
+<aside class="md:col-span-3 space-y-lg">
+<!-- Profile Card -->
+<section class="bg-surface-container-lowest p-lg rounded-xl card-border editorial-shadow">
+<h2 class="font-headline-md text-headline-md mb-md text-primary">Mi Progreso</h2>
+<div class="flex items-center gap-md mb-lg">
+<div class="w-16 h-16 rounded-xl bg-primary text-on-primary flex items-center justify-center">
+<span class="font-display-lg-mobile text-display-lg-mobile">JL</span>
+</div>
+<div>
+<p class="font-label-bold text-label-bold text-primary">Javier López</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Nivel 14 · Estratega</p>
+</div>
+</div>
+<div class="space-y-md">
+<div class="flex justify-between items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Racha diaria</span>
+<span class="font-label-bold text-label-bold text-secondary">5 días</span>
+</div>
+<div class="h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-5/7"></div>
+</div>
+</div>
+</section>
+<!-- Weekly Calendar -->
+<section class="bg-surface-container-lowest p-lg rounded-xl card-border editorial-shadow">
+<h3 class="font-label-bold text-label-bold mb-md uppercase tracking-wider text-on-surface-variant">Esta semana</h3>
+<div class="flex justify-between">
+<div class="flex flex-col items-center gap-xs">
+<span class="text-xs font-label-sm text-on-surface-variant">L</span>
+<div class="w-8 h-8 rounded-full bg-secondary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-xs font-label-sm text-on-surface-variant">M</span>
+<div class="w-8 h-8 rounded-full bg-secondary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-xs font-label-sm text-on-surface-variant">X</span>
+<div class="w-8 h-8 rounded-full bg-secondary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-xs font-label-sm text-on-surface-variant">J</span>
+<div class="w-8 h-8 rounded-full bg-secondary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-xs font-label-sm text-on-surface-variant">V</span>
+<div class="w-8 h-8 rounded-full border-2 border-secondary text-secondary flex items-center justify-center font-bold text-xs">
+                                5
+                            </div>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-xs font-label-sm text-on-surface-variant opacity-40">S</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-low border border-outline-variant"></div>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-xs font-label-sm text-on-surface-variant opacity-40">D</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-low border border-outline-variant"></div>
+</div>
+</div>
+</section>
+<!-- Quick Stats -->
+<section class="grid grid-cols-2 gap-md">
+<div class="bg-surface-container-lowest p-md rounded-xl card-border editorial-shadow text-center">
+<p class="font-display-lg-mobile text-display-lg-mobile text-primary leading-tight">124</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Puzles</p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-xl card-border editorial-shadow text-center">
+<p class="font-display-lg-mobile text-display-lg-mobile text-secondary leading-tight">92%</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Precisión</p>
+</div>
+</section>
+</aside>
+<!-- Column Center: Games Grid -->
+<main class="md:col-span-6 space-y-xl">
+<div>
+<h1 class="font-display-lg text-display-lg mb-xs text-primary">Viernes, 5 de Mayo</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant italic font-serif">"La mente es como un paracaídas, sólo funciona si se abre."</p>
+</div>
+<!-- Featured Game -->
+<section class="relative group cursor-pointer transition-all duration-300">
+<div class="bg-surface-container-lowest rounded-2xl overflow-hidden card-border editorial-shadow editorial-shadow-hover transition-all">
+<div class="h-64 relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A beautiful, minimalist close-up shot of a classic crossword puzzle layout on high-quality cream-colored paper. The ink is a deep navy blue. The lighting is soft morning sunlight creating gentle shadows across the texture of the paper. Editorial, clean, premium feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsRu9TWiTWXVe8pl46n4_zOeH06T-v-dUFb0IqOHnIfHOBwG8QmGaRaqPuHbfNQ8TBMYs7PIn4MI9Yi7JoQfqMTNYEKRJ8B4QWXkuthvJLliYa7p0KvfC-9hTPcgQmslg2U5EAGuiJwrIWCqrcH_jOMpvae-iIj_4NVzhLrv-4BFV_uLV0mZ1I7tVCuoX0PzzAmh3OVhuNrp4aDmJp_5SbMTDBNl9WCNJqZEXqbAG7bKnh75hJTAAr_g"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"></div>
+<div class="absolute bottom-lg left-lg">
+<span class="inline-block px-md py-xs bg-secondary text-on-primary rounded-full font-label-bold text-label-bold mb-sm">RETO DEL DÍA</span>
+<h2 class="font-display-lg-mobile text-display-lg-mobile text-on-primary">El Crucigrama Maestro</h2>
+</div>
+</div>
+<div class="p-lg flex justify-between items-center bg-surface-container-lowest">
+<div>
+<p class="font-body-md text-body-md text-on-surface-variant">15 mins · Dificultad: Media</p>
+<p class="text-sm text-secondary font-semibold">+500 pts si completas sin pistas</p>
+</div>
+<button class="bg-primary text-on-primary px-xl py-md rounded-lg font-label-bold text-label-bold flex items-center gap-sm editorial-shadow transition-all active:scale-95">
+                                JUGAR
+                                <span class="material-symbols-outlined">play_arrow</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Sub-grid of games -->
+<section class="grid grid-cols-1 sm:grid-cols-3 gap-lg">
+<!-- Game 1 -->
+<div class="bg-surface-container-lowest rounded-xl card-border p-md editorial-shadow editorial-shadow-hover cursor-pointer group">
+<div class="aspect-square bg-surface-container rounded-lg mb-md flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A minimalist digital illustration of a Rubik's cube with soft, rounded edges. The color scheme is muted blue, orange, and cream, set against a clean paper-like background. Architectural and clean design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt2DcqP09ACpWt-Sf9r8FOcrUBOxagN3ezAxH12Ov9RWHWZpdk90X59YlyTuz3zawiwxs2J3Rs8USNY6XTXjegw6gRK5dlBAsioeMvIlSLfpEjeiCR9HUdt178HGJ_hIapld_cJJINnQ85oi6Qsi7YuUBkWijdFGP8-vPX-imOjZhc7-ydc2t7ZS644BTN8XkL4SYcZtEI54jFZCO7ptDfbS_d-yRiCAn9QnZelnBqc4s5ofIdVuo2zw"/>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-xs">Sudoku</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Nivel experto</p>
+<div class="mt-md pt-md border-t border-outline-variant flex justify-between items-center">
+<span class="text-secondary font-bold">10m</span>
+<span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Game 2 -->
+<div class="bg-surface-container-lowest rounded-xl card-border p-md editorial-shadow editorial-shadow-hover cursor-pointer group">
+<div class="aspect-square bg-surface-container rounded-lg mb-md flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Stylized geometric patterns of interlocking puzzle pieces forming a larger circle. The aesthetic is inspired by high-end graphic design journals, using Ink Blue and Energy Orange colors. Crisp lines, no gradients." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLwj9Nj_-pEXsbDU66gWkqOR_zZx-Om90ETLzbuvyUOhcOG8EyGC1ZZ2baQXQNXsGTIIsruOONJVKk_wib6LrQ8yHs0HMtI67q50haOme5GQG7RMG3pSmHo_l9qySESPVRygAE6vcDVUiyYcQsPOA5rJKUILmYU7OpaJUdwPsk_9JBuywwkFFfVKUxeRdw8aat1iCP1L4gRbYBpnsRr0Ck2MyFyrYGUUh2lYEtI8R1jS7DdBb7dFgzVg"/>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-xs">Conexiones</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Lógica pura</p>
+<div class="mt-md pt-md border-t border-outline-variant flex justify-between items-center">
+<span class="text-secondary font-bold">5m</span>
+<span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Game 3 -->
+<div class="bg-surface-container-lowest rounded-xl card-border p-md editorial-shadow editorial-shadow-hover cursor-pointer group">
+<div class="aspect-square bg-surface-container rounded-lg mb-md flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Macro photography of letterpress wooden blocks showing various characters. Deep focus, warm tones, high contrast. Elegant editorial typography aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAykVEOzbQ6lZHd7PKc_hH9md8FixxlxHviFRa2d_BuRo3YDuBHnxUcrTdErJSuQntE9FQTsFoa3c9PqPHCtNSiERkiYGR3MdyqvbcDq0QzlC2vD5W2SGdWDFMs3p-0CzHe_rH5gY8MaORnwDRAZKxtc5fVQmgVfiif2xtf7vFogaC-2m2rTcv6pCyYrKL6axNpF9p1mJsDQyaNolh7XVqSyoCt9RewqZ6xBsZb2kApDSCwbYVOy7qpA"/>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-xs">Sopa Letras</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Agudeza visual</p>
+<div class="mt-md pt-md border-t border-outline-variant flex justify-between items-center">
+<span class="text-secondary font-bold">8m</span>
+<span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Column Right: Leaderboard & Results -->
+<aside class="md:col-span-3 space-y-lg">
+<!-- Leaderboard -->
+<section class="bg-surface-container-lowest rounded-xl card-border editorial-shadow overflow-hidden">
+<div class="bg-primary p-md text-on-primary">
+<h3 class="font-label-bold text-label-bold flex items-center gap-sm uppercase tracking-widest">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">leaderboard</span>
+                            Top Diario
+                        </h3>
+</div>
+<div class="p-md space-y-xs">
+<div class="flex items-center justify-between p-sm rounded-lg bg-surface-container-low border border-secondary/20">
+<div class="flex items-center gap-sm">
+<span class="font-bold text-secondary w-4">1</span>
+<div class="w-6 h-6 rounded-full bg-secondary-fixed"></div>
+<span class="font-label-bold text-label-bold">Marta G.</span>
+</div>
+<span class="text-xs font-bold">2,450</span>
+</div>
+<div class="flex items-center justify-between p-sm">
+<div class="flex items-center gap-sm">
+<span class="font-bold text-on-surface-variant w-4">2</span>
+<div class="w-6 h-6 rounded-full bg-surface-container-high"></div>
+<span class="font-label-sm text-label-sm">David R.</span>
+</div>
+<span class="text-xs text-on-surface-variant">2,320</span>
+</div>
+<div class="flex items-center justify-between p-sm">
+<div class="flex items-center gap-sm">
+<span class="font-bold text-on-surface-variant w-4">3</span>
+<div class="w-6 h-6 rounded-full bg-surface-container-high"></div>
+<span class="font-label-sm text-label-sm">Sofía T.</span>
+</div>
+<span class="text-xs text-on-surface-variant">2,100</span>
+</div>
+<div class="flex items-center justify-between p-sm">
+<div class="flex items-center gap-sm">
+<span class="font-bold text-on-surface-variant w-4">4</span>
+<div class="w-6 h-6 rounded-full bg-surface-container-high"></div>
+<span class="font-label-sm text-label-sm">Raúl M.</span>
+</div>
+<span class="text-xs text-on-surface-variant">2,050</span>
+</div>
+<div class="flex items-center justify-between p-sm">
+<div class="flex items-center gap-sm">
+<span class="font-bold text-on-surface-variant w-4">5</span>
+<div class="w-6 h-6 rounded-full bg-surface-container-high"></div>
+<span class="font-label-sm text-label-sm">Tú</span>
+</div>
+<span class="text-xs text-on-surface-variant">1,980</span>
+</div>
+</div>
+<button class="w-full py-md text-primary font-label-bold text-label-bold hover:bg-surface-container-high transition-colors border-t border-outline-variant">
+                        Ver tabla completa
+                    </button>
+</section>
+<!-- Recent Achievements -->
+<section class="bg-surface-container-lowest p-lg rounded-xl card-border editorial-shadow">
+<h3 class="font-label-bold text-label-bold mb-lg uppercase tracking-wider text-on-surface-variant">Logros Recientes</h3>
+<div class="space-y-lg">
+<div class="flex gap-md">
+<div class="w-10 h-10 shrink-0 bg-tertiary-fixed rounded-lg flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<p class="font-label-bold text-label-bold text-primary">Rayo Mental</p>
+<p class="text-xs text-on-surface-variant">Crucigrama en menos de 5 min.</p>
+</div>
+</div>
+<div class="flex gap-md opacity-40 grayscale">
+<div class="w-10 h-10 shrink-0 bg-surface-container-high rounded-lg flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<div>
+<p class="font-label-bold text-label-bold text-primary">Sabio</p>
+<p class="text-xs text-on-surface-variant">10 días de racha perfecta.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Yesterday's Results -->
+<section class="bg-secondary-container/10 p-lg rounded-xl card-border border-secondary/20">
+<h3 class="font-label-bold text-label-bold mb-md text-secondary">Ayer en Lúdico</h3>
+<div class="space-y-sm">
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Puzles resueltos</span>
+<span class="font-bold text-primary">4/4</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Puntos ganados</span>
+<span class="font-bold text-primary">1,250</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Posición global</span>
+<span class="font-bold text-primary">#422</span>
+</div>
+</div>
+</section>
+</aside>
+</div>
+</main>
+<!-- FAB for mobile would go here, but prompt specifies Desktop -->
+<!-- Mobile Bottom Navigation (Hidden on Desktop) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant flex justify-around items-center px-md pb-sm pt-xs z-50 shadow-lg">
+<a class="flex flex-col items-center justify-center text-secondary font-bold scale-110" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">today</span>
+<span class="text-[10px] uppercase font-bold tracking-tighter">Hoy</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-[10px] uppercase">Archivo</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70" href="#">
+<span class="material-symbols-outlined">extension</span>
+<span class="text-[10px] uppercase">Jugar</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="text-[10px] uppercase">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] uppercase">Perfil</span>
+</a>
+</nav>
+<script>
+        // Simple interactivity for the game cards
+        document.querySelectorAll('.editorial-shadow-hover').forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.style.transform = 'scale(0.98) translate(0,0)';
+                card.style.boxShadow = '2px 2px 0px rgba(2, 13, 37, 0.05)';
+            });
+            card.addEventListener('mouseup', () => {
+                card.style.transform = '';
+                card.style.boxShadow = '';
+            });
+        });
+    </script>
+</body></html>

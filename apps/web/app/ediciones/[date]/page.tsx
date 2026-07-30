@@ -2,6 +2,7 @@ import { isPublicEdition, type PublicEdition } from "@ludico/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SiteHeader } from "../../site-header";
 
 type PageProps = Readonly<{ params: Promise<{ date: string }> }>;
 export const dynamic = "force-dynamic";
@@ -20,29 +21,39 @@ export default async function EditionPage({ params }: PageProps) {
   if (!edition) notFound();
   const closed = Date.parse(edition.closesAt) <= Date.now();
   return (
-    <main>
-      <p className="eyebrow">Archivo diario</p>
-      <h1>Retos del {formatDate(edition.localDate)}</h1>
-      <div className="games">
-        {edition.games.map((game) => (
-          <article className="game" key={game.id}>
-            <h2>{game.type === "quiz" ? "Quiz diario" : "Crucigrama diario"}</h2>
-            {closed ? (
-              <Link className="button-link" href={`/resultados/${game.id}`}>
-                Ver solución
-              </Link>
-            ) : game.status === "active" ? (
-              <Link className="button-link" href={`/jugar/${game.id}`}>
-                Jugar
-              </Link>
-            ) : (
-              <p>Temporalmente no disponible.</p>
-            )}
-          </article>
-        ))}
-      </div>
-      <Link href="/archivo">Volver al archivo</Link>
-    </main>
+    <>
+      <SiteHeader active="archive" />
+      <main className="content-page edition-page">
+        <p className="eyebrow">Archivo diario</p>
+        <h1>Retos del {formatDate(edition.localDate)}</h1>
+        <div className="games">
+          {edition.games.map((game) => (
+            <article className={`game game--${game.type}`} key={game.id}>
+              <div aria-hidden="true" className="game__art">
+                {game.type === "quiz" ? "?" : "✦"}
+              </div>
+              <div className="game__content">
+                <h2>{game.type === "quiz" ? "Quiz diario" : "Crucigrama diario"}</h2>
+                {closed ? (
+                  <Link className="button-link" href={`/resultados/${game.id}`}>
+                    Ver solución
+                  </Link>
+                ) : game.status === "active" ? (
+                  <Link className="button-link" href={`/jugar/${game.id}`}>
+                    Jugar ahora
+                  </Link>
+                ) : (
+                  <p>Temporalmente no disponible.</p>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+        <Link className="archive-link" href="/archivo">
+          Volver al archivo <span aria-hidden="true">→</span>
+        </Link>
+      </main>
+    </>
   );
 }
 
@@ -58,7 +69,7 @@ async function loadEdition(localDate: string): Promise<PublicEdition | null> {
 }
 
 function formatDate(localDate: string): string {
-  return new Intl.DateTimeFormat("es-ES", { dateStyle: "long", timeZone: "UTC" }).format(
+  return new Intl.DateTimeFormat("es-ES", { dateStyle: "full", timeZone: "UTC" }).format(
     new Date(`${localDate}T12:00:00Z`),
   );
 }

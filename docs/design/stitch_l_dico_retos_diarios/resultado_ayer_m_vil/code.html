@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lúdico - Resumen de Ayer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "on-surface": "#1c1c16",
+                    "surface-container-lowest": "#ffffff",
+                    "error": "#ba1a1a",
+                    "secondary-fixed": "#ffdbd0",
+                    "surface-container": "#f1eee5",
+                    "on-error-container": "#93000a",
+                    "surface": "#fdf9f0",
+                    "on-secondary-container": "#661a00",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#002a1b",
+                    "on-background": "#1c1c16",
+                    "secondary": "#aa370b",
+                    "tertiary-fixed-dim": "#72daae",
+                    "inverse-on-surface": "#f4f0e7",
+                    "tertiary": "#00120a",
+                    "surface-bright": "#fdf9f0",
+                    "surface-variant": "#e6e2d9",
+                    "on-secondary-fixed": "#3a0b00",
+                    "on-tertiary-container": "#2e9c74",
+                    "outline": "#75777e",
+                    "secondary-container": "#ff7346",
+                    "on-primary-fixed-variant": "#3b4661",
+                    "surface-container-high": "#ece8df",
+                    "primary-container": "#17233c",
+                    "on-primary-container": "#7f8aa9",
+                    "secondary-fixed-dim": "#ffb59e",
+                    "primary-fixed": "#d8e2ff",
+                    "inverse-surface": "#31302b",
+                    "on-surface-variant": "#45464d",
+                    "on-tertiary-fixed": "#002115",
+                    "primary": "#020d25",
+                    "on-primary-fixed": "#0f1b34",
+                    "background": "#fdf9f0",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#bac6e7",
+                    "surface-tint": "#525e7a",
+                    "surface-container-low": "#f7f3ea",
+                    "surface-container-highest": "#e6e2d9",
+                    "outline-variant": "#c5c6ce",
+                    "on-tertiary-fixed-variant": "#005139",
+                    "inverse-primary": "#bac6e7",
+                    "surface-dim": "#dddad1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "xl": "40px",
+                    "base": "8px",
+                    "gutter": "24px",
+                    "md": "16px",
+                    "container-max": "1200px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Hanken Grotesk"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "label-bold": ["Hanken Grotesk"],
+                    "headline-md": ["\"Source Serif 4\""],
+                    "display-lg-mobile": ["\"Source Serif 4\""],
+                    "display-lg": ["\"Source Serif 4\""]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-bold": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .tight-shadow {
+            box-shadow: 4px 4px 0px rgba(2, 13, 37, 0.1);
+        }
+        .active-press:active {
+            transform: scale(0.95);
+            transition: transform 0.15s ease-out;
+        }
+        .editorial-border {
+            border: 1px solid rgba(2, 13, 37, 0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md selection:bg-secondary-fixed">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline docked full-width top-0 z-40 sticky">
+<div class="flex justify-between items-center px-lg py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a young person with a thoughtful expression, wearing minimalist glasses and a dark turtleneck, lit with soft editorial light against a warm paper-colored background, embodying a scholarly yet modern academic style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU5mwlQdWoiGzliWSCJ7wt7rm0o0rJiXWAv3hjWVZAs0BnSDYYoqluc9fXVkoJFbuPAJ-fBafe1v7SQnHbTqFeDpYAEX6dWjFRvQPzbem4E5NHvBWC83mSB1ZD-R9Yo_Ehuo7rzlrKNW4bSZqLdnxrjuL3kOp9KmeCsmUJIHJJPAfPcn4jXbiS5ArbBdeAwvuMzpKdgAeH-MvYqR03yy7QOaD9KIPA9WX9AJTDDmw0vRZCBJibRmNy_A"/>
+</div>
+<h1 class="font-display-lg-mobile text-display-lg-mobile text-primary dark:text-primary-fixed">Lúdico</h1>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-bold text-label-bold text-secondary">5 🔥</span>
+</div>
+</div>
+</header>
+<main class="px-md pb-xl pt-lg max-w-md mx-auto space-y-lg">
+<!-- Header Section -->
+<section class="space-y-xs animate-fade-in">
+<h2 class="font-headline-md text-headline-md text-primary">Resumen de ayer</h2>
+<p class="font-body-md text-on-surface-variant italic">24 de Mayo</p>
+</section>
+<!-- Stats Bento Grid -->
+<div class="grid grid-cols-2 gap-md">
+<!-- Total Score -->
+<article class="col-span-1 bg-surface-container-lowest p-md editorial-border tight-shadow rounded-lg">
+<p class="font-label-bold text-label-bold text-on-surface-variant mb-xs">PUNTUACIÓN</p>
+<p class="font-display-lg-mobile text-display-lg-mobile text-secondary">320 <span class="text-label-sm font-label-sm">pts</span></p>
+</article>
+<!-- Global Rank -->
+<article class="col-span-1 bg-surface-container-lowest p-md editorial-border tight-shadow rounded-lg">
+<p class="font-label-bold text-label-bold text-on-surface-variant mb-xs">PUESTO</p>
+<p class="font-display-lg-mobile text-display-lg-mobile text-primary">428<span class="text-label-sm font-label-sm">/12.540</span></p>
+</article>
+<!-- Success Chart -->
+<article class="col-span-2 bg-surface-container-lowest p-lg editorial-border tight-shadow rounded-lg flex items-center justify-between">
+<div class="space-y-sm">
+<p class="font-label-bold text-label-bold text-on-surface-variant">ACIERTOS TOTALES</p>
+<div class="space-y-xs">
+<div class="flex items-center gap-xs">
+<span class="w-3 h-3 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm">Aciertos (82%)</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="w-3 h-3 rounded-full bg-surface-container-high"></span>
+<span class="font-label-sm text-label-sm">Pendientes/Fallos</span>
+</div>
+</div>
+</div>
+<!-- Circular Graphic (Simple CSS/SVG version) -->
+<div class="relative flex items-center justify-center">
+<svg class="w-24 h-24">
+<circle class="text-surface-container-high" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-secondary progress-ring__circle" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="45.2" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<span class="absolute font-headline-md text-headline-md text-primary">82%</span>
+</div>
+</article>
+</div>
+<!-- Games List -->
+<section class="space-y-md">
+<h3 class="font-label-bold text-label-bold text-on-surface-variant border-b border-outline-variant pb-xs">DETALLE POR JUEGO</h3>
+<div class="space-y-sm">
+<!-- Quiz -->
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg editorial-border">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary">quiz</span>
+<span class="font-body-md">Quiz</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-bold text-label-bold">8/10</span>
+<span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+</div>
+</div>
+<!-- Crucigrama -->
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg editorial-border">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary">grid_on</span>
+<span class="font-body-md">Crucigrama</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-bold text-label-bold">100%</span>
+<span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+</div>
+</div>
+<!-- Verdadero/Falso -->
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg editorial-border">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary">rule</span>
+<span class="font-body-md">Verdadero/Falso</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-bold text-label-bold">5/5</span>
+<span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Strong Category Insight -->
+<div class="bg-primary text-on-primary-container p-lg rounded-xl flex items-start gap-md">
+<span class="material-symbols-outlined text-secondary-container">auto_awesome</span>
+<div>
+<p class="font-label-bold text-label-bold text-secondary-container mb-xs uppercase tracking-widest">INSIGHT DEL DÍA</p>
+<p class="font-body-lg text-body-lg text-on-primary">Tu categoría más fuerte fue <span class="italic font-bold">Historia</span>.</p>
+<p class="font-label-sm text-label-sm opacity-80 mt-xs">Superaste al 92% de los jugadores en esta área.</p>
+</div>
+</div>
+<!-- CTA Action -->
+<div class="pt-md pb-xl">
+<button class="w-full bg-secondary hover:bg-secondary-container text-on-primary font-label-bold text-label-bold py-lg rounded-lg transition-all tight-shadow active-press uppercase tracking-wider">
+                Revisar soluciones detalladas
+            </button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-md pb-sm pt-xs bg-surface-container-lowest dark:bg-surface-container border-t border-outline-variant dark:border-outline shadow-lg z-50 rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-70 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="today">today</span>
+<span class="font-label-sm text-label-sm">Hoy</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-container font-bold scale-110 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-label-sm text-label-sm">Archivo</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-70 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="extension">extension</span>
+<span class="font-label-sm text-label-sm">Jugar</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-70 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="font-label-sm text-label-sm">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-70 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Perfil</span>
+</a>
+</nav>
+<script>
+        // Simple animation logic for the chart
+        document.addEventListener('DOMContentLoaded', () => {
+            const circle = document.querySelector('.progress-ring__circle');
+            if (circle) {
+                const radius = circle.r.baseVal.value;
+                const circumference = radius * 2 * Math.PI;
+                circle.style.strokeDasharray = `${circumference} ${circumference}`;
+
+                // Target: 82%
+                const offset = circumference - (0.82 * circumference);
+                circle.style.strokeDashoffset = offset;
+            }
+        });
+    </script>
+</body></html>
