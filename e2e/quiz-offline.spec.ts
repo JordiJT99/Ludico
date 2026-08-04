@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 const apiBaseUrl = "http://127.0.0.1:4100";
+const historicalEditionDate = madridDateOffset(-1);
 
 test.beforeEach(async ({ request }) => {
   expect((await request.post(`${apiBaseUrl}/__e2e/reset`)).ok()).toBe(true);
@@ -95,8 +96,10 @@ test("el quiz conserva y sincroniza el progreso sin filtrar soluciones", async (
   expect(sitemap).not.toContain("/admin");
   const archive = await (await page.request.get("/archivo")).text();
   expect(archive).toContain("Archivo de retos");
-  expect(archive).toContain("/ediciones/2026-07-28");
-  const historicalEdition = await (await page.request.get("/ediciones/2026-07-28")).text();
+  expect(archive).toContain(`/ediciones/${historicalEditionDate}`);
+  const historicalEdition = await (
+    await page.request.get(`/ediciones/${historicalEditionDate}`)
+  ).text();
   expect(historicalEdition).toContain("Ver solución");
   const csrf = await page.request.post("/api/guest-session", {
     data: {},
@@ -410,7 +413,11 @@ test("el backoffice mantiene previews privados detrás de cuenta y audita decisi
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Backoffice de contenido" })).toBeVisible();
-  await expect(page.getByText(/Reserva aprobada: 9 quiz · 8 crucigramas/)).toBeVisible();
+  await expect(
+    page.getByText(
+      /Reserva aprobada: 9 quiz · 8 crucigramas · 8 verdadero\/falso · 8 palabras · 8 sopas/,
+    ),
+  ).toBeVisible();
   await expect(page.getByRole("alert").filter({ hasText: "Reserva baja" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Métricas de producto" })).toBeVisible();
   await expect(page.getByText("Tasa de finalización: 70%")).toBeVisible();
@@ -537,6 +544,17 @@ async function expectAnalyticsCount(request: APIRequestContext, count: number) {
       return state.analyticsEvents.length;
     })
     .toBe(count);
+}
+
+function madridDateOffset(offset: number) {
+  const today = new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+  }).format(new Date());
+  const [year, month, day] = today.split("-").map(Number) as [number, number, number];
+  return new Date(Date.UTC(year, month - 1, day + offset)).toISOString().slice(0, 10);
 }
 
 async function pageIsCached() {

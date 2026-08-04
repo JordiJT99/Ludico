@@ -5,6 +5,7 @@ const gameId = "22222222-2222-4222-8222-222222222222";
 const attemptId = "33333333-3333-4333-8333-333333333333";
 const crosswordGameId = "22222222-2222-4222-8222-222222222223";
 const crosswordAttemptId = "33333333-3333-4333-8333-333333333334";
+const historicalEditionDate = madridDateOffset(-1);
 const quiz = {
   kind: "quiz",
   title: "Quiz E2E",
@@ -212,9 +213,9 @@ createServer(async (request, response) => {
   if (request.method === "GET" && path === "/v1/editions/today") {
     return json(response, 200, {
       id: "11111111-1111-4111-8111-111111111111",
-      localDate: "2026-07-29",
-      opensAt: "2026-07-28T22:00:00.000Z",
-      closesAt: "2026-07-29T22:00:00.000Z",
+      localDate: madridDateOffset(0),
+      opensAt: `${historicalEditionDate}T22:00:00.000Z`,
+      closesAt: `${madridDateOffset(0)}T22:00:00.000Z`,
       games: [
         { id: gameId, type: "quiz", status: "active", payload: quiz, contentVersion: 1 },
         {
@@ -227,12 +228,12 @@ createServer(async (request, response) => {
       ],
     });
   }
-  if (request.method === "GET" && path === "/v1/editions/2026-07-28") {
+  if (request.method === "GET" && path === `/v1/editions/${historicalEditionDate}`) {
     return json(response, 200, {
       id: "11111111-1111-4111-8111-111111111110",
-      localDate: "2026-07-28",
-      opensAt: "2026-07-27T22:00:00.000Z",
-      closesAt: "2026-07-28T22:00:00.000Z",
+      localDate: historicalEditionDate,
+      opensAt: `${madridDateOffset(-2)}T22:00:00.000Z`,
+      closesAt: `${historicalEditionDate}T22:00:00.000Z`,
       games: [
         {
           id: crosswordGameId,
@@ -277,7 +278,7 @@ createServer(async (request, response) => {
             : "approved",
         },
       ],
-      reserve: { crossword: 8, quiz: 9 },
+      reserve: { crossword: 8, quiz: 9, true_false: 8, guess_word: 8, word_search: 8 },
     });
   }
   if (request.method === "POST" && /^\/v1\/admin\/editions\/[0-9a-f-]+\/schedule$/i.test(path)) {
@@ -757,4 +758,15 @@ function defaultNotificationPreferences() {
     quietStart: "22:00",
     timeZone: "Europe/Madrid",
   };
+}
+
+function madridDateOffset(offset) {
+  const today = new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+  }).format(new Date());
+  const [year, month, day] = today.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day + offset)).toISOString().slice(0, 10);
 }
