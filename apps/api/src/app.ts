@@ -2076,7 +2076,7 @@ const adminContentRecordSchema = {
   ],
   properties: {
     id: { type: "string", format: "uuid" },
-    contentType: { enum: ["crossword", "quiz"] },
+    contentType: { enum: ["crossword", "quiz", "true_false", "guess_word", "word_search"] },
     targetDate: { type: "string", format: "date" },
     status: { enum: ["approved", "pending_review", "rejected", "selected"] },
     publicPayload: { type: "object", additionalProperties: true },
@@ -2139,10 +2139,13 @@ const adminContentCalendarSchema = {
     reserve: {
       type: "object",
       additionalProperties: false,
-      required: ["crossword", "quiz"],
+      required: ["crossword", "quiz", "true_false", "guess_word", "word_search"],
       properties: {
         crossword: { type: "integer", minimum: 0 },
         quiz: { type: "integer", minimum: 0 },
+        true_false: { type: "integer", minimum: 0 },
+        guess_word: { type: "integer", minimum: 0 },
+        word_search: { type: "integer", minimum: 0 },
       },
     },
   },
@@ -2156,7 +2159,7 @@ const contentJobListSchema = {
     required: ["id", "contentType", "targetDate", "provider", "promptVersion", "budgetMicros"],
     properties: {
       id: { type: "string", format: "uuid" },
-      contentType: { enum: ["crossword", "quiz"] },
+      contentType: { enum: ["crossword", "quiz", "true_false", "guess_word", "word_search"] },
       targetDate: { type: "string", format: "date" },
       provider: { type: "string" },
       promptVersion: { type: "string" },

@@ -1,5 +1,13 @@
 import type { CrosswordPublicPayload, QuizPublicPayload } from "@ludico/contracts";
 import { validateCrossword, type CrosswordPrivateSolution } from "./crossword.js";
+import {
+  validateGuessWord,
+  validateTrueFalse,
+  validateWordSearch,
+  type GuessWordGame,
+  type TrueFalseItem,
+  type WordSearchGame,
+} from "./daily-games.js";
 import { validateQuizEditorial, type QuizPrivateSolution } from "./quiz.js";
 
 export interface CandidateSource {
@@ -7,11 +15,87 @@ export interface CandidateSource {
   readonly url: string;
 }
 
+export const generatedContentTypes = [
+  "crossword",
+  "quiz",
+  "true_false",
+  "guess_word",
+  "word_search",
+] as const;
+
+export type GeneratedContentType = (typeof generatedContentTypes)[number];
+
+type TrueFalsePublicPayload = {
+  readonly items: readonly {
+    readonly category: string;
+    readonly difficulty: 1 | 2 | 3 | 4 | 5;
+    readonly id: string;
+    readonly statement: string;
+  }[];
+  readonly kind: "true-false";
+  readonly title: string;
+};
+type TrueFalsePrivatePayload = {
+  readonly items: readonly {
+    readonly explanation: string;
+    readonly id: string;
+    readonly value: boolean;
+  }[];
+  readonly kind: "true-false-solution";
+};
+type GuessWordPublicPayload = {
+  readonly allowedCharacters: readonly string[];
+  readonly category: string;
+  readonly definition: string;
+  readonly difficulty: 1 | 2 | 3 | 4 | 5;
+  readonly hints: readonly { readonly text: string; readonly unlockAfterAttempts: number }[];
+  readonly id: string;
+  readonly kind: "guess-word";
+  readonly maxAttempts: number;
+  readonly title: string;
+};
+type GuessWordPrivatePayload = {
+  readonly alternativeAnswers: readonly string[];
+  readonly answer: string;
+  readonly kind: "guess-word-solution";
+};
+type WordSearchPublicPayload = {
+  readonly columns: number;
+  readonly grid: readonly (readonly string[])[];
+  readonly kind: "word-search";
+  readonly rows: number;
+  readonly seed: string;
+  readonly title: string;
+  readonly words: readonly { readonly answer: string; readonly id: string }[];
+};
+type WordSearchPrivatePayload = {
+  readonly entries: WordSearchGame["entries"];
+  readonly kind: "word-search-solution";
+};
+
 export type GeneratedContentCandidate =
   | {
       readonly type: "crossword";
       readonly publicPayload: CrosswordPublicPayload;
       readonly privatePayload: CrosswordPrivateSolution;
+      readonly sources: readonly CandidateSource[];
+    }
+  | {
+      readonly type: "true_false";
+      readonly publicPayload: TrueFalsePublicPayload;
+      readonly privatePayload: TrueFalsePrivatePayload;
+      readonly sources: readonly CandidateSource[];
+    }
+  | {
+      readonly type: "guess_word";
+      readonly publicPayload: GuessWordPublicPayload;
+      readonly privatePayload: GuessWordPrivatePayload;
+      readonly sources: readonly CandidateSource[];
+    }
+  | {
+      readonly type: "word_search";
+      readonly publicPayload: WordSearchPublicPayload;
+      readonly privatePayload: WordSearchPrivatePayload;
       readonly sources: readonly CandidateSource[];
     }
   | {
@@ -55,19 +139,12 @@ export function validateGeneratedContent(
 ): ContentValidation {
   const findings: ContentFinding[] = [];
   try {
-    if (candidate.type === "quiz") {
-      validateQuizEditorial(candidate.publicPayload, candidate.privatePayload.questions);
-    } else {
-      validateCrossword(candidate.publicPayload, candidate.privatePayload);
-    }
+    validateCandidateStructure(candidate);
   } catch {
     findings.push({ code: "INVALID_STRUCTURE" });
   }
 
-  const requiredItemIds =
-    candidate.type === "quiz"
-      ? candidate.publicPayload.questions.map((question) => question.id)
-      : candidate.publicPayload.entries.map((entry) => entry.id);
+  const requiredItemIds = candidateItemIds(candidate);
   const sourcesByItem = new Map<string, number>();
   for (const source of candidate.sources) {
     sourcesByItem.set(source.itemId, (sourcesByItem.get(source.itemId) ?? 0) + 1);
@@ -150,11 +227,90 @@ function contentText(candidate: GeneratedContentCandidate): string[] {
       ...candidate.privatePayload.questions.map((question) => question.explanation),
     ];
   }
+  if (candidate.type === "crossword") {
+    return [
+      candidate.publicPayload.title,
+      ...candidate.publicPayload.entries.map((entry) => entry.clue),
+      ...candidate.privatePayload.entries.map((entry) => entry.answer),
+    ];
+  }
+  if (candidate.type === "true_false") {
+    return [
+      candidate.publicPayload.title,
+      ...candidate.publicPayload.items.map((item) => item.statement),
+      ...candidate.privatePayload.items.map((item) => item.explanation),
+    ];
+  }
+  if (candidate.type === "guess_word") {
+    return [
+      candidate.publicPayload.title,
+      candidate.publicPayload.definition,
+      ...candidate.publicPayload.hints.map((hint) => hint.text),
+      candidate.privatePayload.answer,
+    ];
+  }
   return [
     candidate.publicPayload.title,
-    ...candidate.publicPayload.entries.map((entry) => entry.clue),
-    ...candidate.privatePayload.entries.map((entry) => entry.answer),
+    ...candidate.publicPayload.words.map((word) => word.answer),
   ];
+}
+
+function validateCandidateStructure(candidate: GeneratedContentCandidate): void {
+  if (candidate.type === "quiz") {
+    validateQuizEditorial(candidate.publicPayload, candidate.privatePayload.questions);
+    return;
+  }
+  if (candidate.type === "crossword") {
+    validateCrossword(candidate.publicPayload, candidate.privatePayload);
+    return;
+  }
+  if (candidate.type === "true_false") {
+    const privateById = new Map(candidate.privatePayload.items.map((item) => [item.id, item]));
+    if (privateById.size !== candidate.publicPayload.items.length)
+      throw new Error("INVALID_TRUE_FALSE");
+    const items: TrueFalseItem[] = candidate.publicPayload.items.map((item) => {
+      const solution = privateById.get(item.id);
+      if (!solution) throw new Error("INVALID_TRUE_FALSE");
+      return {
+        ...item,
+        explanation: solution.explanation,
+        sourceUrl: "https://content.local/source",
+        value: solution.value,
+      };
+    });
+    validateTrueFalse(items);
+    return;
+  }
+  if (candidate.type === "guess_word") {
+    const game: GuessWordGame = { ...candidate.publicPayload, ...candidate.privatePayload };
+    validateGuessWord(game);
+    return;
+  }
+  const answers = new Set(candidate.publicPayload.words.map((word) => word.answer));
+  if (
+    answers.size !== candidate.publicPayload.words.length ||
+    candidate.privatePayload.entries.length !== candidate.publicPayload.words.length ||
+    candidate.privatePayload.entries.some((entry) => !answers.has(entry.answer))
+  ) {
+    throw new Error("INVALID_WORD_SEARCH");
+  }
+  validateWordSearch({
+    columns: candidate.publicPayload.columns,
+    entries: candidate.privatePayload.entries,
+    grid: candidate.publicPayload.grid,
+    rows: candidate.publicPayload.rows,
+    seed: candidate.publicPayload.seed,
+  });
+}
+
+function candidateItemIds(candidate: GeneratedContentCandidate): readonly string[] {
+  if (candidate.type === "quiz")
+    return candidate.publicPayload.questions.map((question) => question.id);
+  if (candidate.type === "crossword")
+    return candidate.publicPayload.entries.map((entry) => entry.id);
+  if (candidate.type === "true_false") return candidate.publicPayload.items.map((item) => item.id);
+  if (candidate.type === "guess_word") return [candidate.publicPayload.id];
+  return candidate.publicPayload.words.map((word) => word.id);
 }
 
 function isSafeSource(value: string): boolean {

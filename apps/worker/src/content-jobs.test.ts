@@ -55,10 +55,11 @@ describe("content provider circuit breaker", () => {
 
 describe("content reserve alert", () => {
   it("alerts when either game reserve drops below ten days", () => {
-    expect(lowReserveAlert({ crossword: 10, quiz: 10 })).toBeNull();
-    expect(lowReserveAlert({ crossword: 9, quiz: 12 })).toEqual({
+    const healthy = { crossword: 10, quiz: 10, true_false: 10, guess_word: 10, word_search: 10 };
+    expect(lowReserveAlert(healthy)).toBeNull();
+    expect(lowReserveAlert({ ...healthy, crossword: 9, quiz: 12 })).toEqual({
       code: "CONTENT_RESERVE_LOW",
-      reserve: { crossword: 9, quiz: 12 },
+      reserve: { ...healthy, crossword: 9, quiz: 12 },
       thresholdDays: 10,
     });
   });

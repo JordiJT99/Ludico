@@ -1,12 +1,16 @@
-import type { GeneratedContentCandidate, ContentFinding } from "@ludico/domain";
-import { validateGeneratedContent } from "@ludico/domain";
+import type {
+  GeneratedContentCandidate,
+  ContentFinding,
+  GeneratedContentType,
+} from "@ludico/domain";
+import { generatedContentTypes, validateGeneratedContent } from "@ludico/domain";
 import { createHash } from "node:crypto";
 import type { QueryResultRow } from "pg";
 import type { SqlClient, TransactionClient } from "./sql-client.js";
 
 export interface ContentJob {
   readonly id: string;
-  readonly contentType: "crossword" | "quiz";
+  readonly contentType: GeneratedContentType;
   readonly targetDate: string;
   readonly provider: string;
   readonly promptVersion: string;
@@ -15,7 +19,7 @@ export interface ContentJob {
 
 export interface GeneratedContentRecord {
   readonly id: string;
-  readonly contentType: "crossword" | "quiz";
+  readonly contentType: GeneratedContentType;
   readonly targetDate: string;
   readonly status: "approved" | "pending_review" | "rejected" | "selected";
   readonly publicPayload: unknown;
@@ -31,7 +35,7 @@ export interface AdminContentCalendar {
     readonly localDate: string;
     readonly status: string;
   }[];
-  readonly reserve: { readonly crossword: number; readonly quiz: number };
+  readonly reserve: Readonly<Record<GeneratedContentType, number>>;
 }
 
 export interface BlockedTermRecord {
@@ -73,7 +77,7 @@ export async function planContentGenerationJobs(
     const jobs: ContentJob[] = [];
     for (let offset = 0; offset < days; offset += 1) {
       const targetDate = addDays(startDate, offset);
-      for (const contentType of ["quiz", "crossword"] as const) {
+      for (const contentType of generatedContentTypes) {
         const result = await transaction.query<ContentJob & QueryResultRow>(
           `insert into content_generation_jobs
              (content_type, target_date, provider, budget_micros)
@@ -355,7 +359,7 @@ export async function getAdminContentCalendar(
        group by edition.id order by edition.local_date limit 60`,
       [now],
     ),
-    client.query<{ contentType: "crossword" | "quiz"; count: number } & QueryResultRow>(
+    client.query<{ contentType: GeneratedContentType; count: number } & QueryResultRow>(
       `select content_type as "contentType", count(*)::int as count
        from generated_contents
        where status = 'approved' and selected_edition_id is null
@@ -367,7 +371,9 @@ export async function getAdminContentCalendar(
   const counts = new Map(reserve.rows.map((row) => [row.contentType, row.count]));
   return {
     editions: editions.rows,
-    reserve: { crossword: counts.get("crossword") ?? 0, quiz: counts.get("quiz") ?? 0 },
+    reserve: Object.fromEntries(
+      generatedContentTypes.map((contentType) => [contentType, counts.get(contentType) ?? 0]),
+    ) as Record<GeneratedContentType, number>,
   };
 }
 
@@ -479,7 +485,7 @@ export async function reviseGeneratedContent(
   return client.transaction(async (transaction) => {
     const current = await transaction.query<
       {
-        contentType: "crossword" | "quiz";
+        contentType: GeneratedContentType;
         generationJobId: string;
         provider: string;
         status: GeneratedContentRecord["status"];
@@ -672,7 +678,7 @@ export async function assembleApprovedEdition(
 
 async function listSemanticCandidates(
   transaction: TransactionClient,
-  contentType: "crossword" | "quiz",
+  contentType: GeneratedContentType,
   excludeId?: string,
 ): Promise<GeneratedContentCandidate[]> {
   const result = await transaction.query<

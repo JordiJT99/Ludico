@@ -4,11 +4,17 @@ import { useEffect, useState, type SyntheticEvent } from "react";
 
 interface Calendar {
   editions: Array<{ gameCount: number; id: string; localDate: string; status: string }>;
-  reserve: { crossword: number; quiz: number };
+  reserve: {
+    crossword: number;
+    guess_word: number;
+    quiz: number;
+    true_false: number;
+    word_search: number;
+  };
 }
 
 interface Candidate {
-  contentType: "crossword" | "quiz";
+  contentType: "crossword" | "quiz" | "true_false" | "guess_word" | "word_search";
   findings: Array<{ code?: string }>;
   id: string;
   privatePayload: Record<string, unknown>;
@@ -387,9 +393,12 @@ export function AdminDashboard() {
         <>
           <p>
             Reserva aprobada: <strong>{calendar.reserve.quiz}</strong> quiz ·{" "}
-            <strong>{calendar.reserve.crossword}</strong> crucigramas
+            <strong>{calendar.reserve.crossword}</strong> crucigramas ·{" "}
+            <strong>{calendar.reserve.true_false}</strong> verdadero/falso ·{" "}
+            <strong>{calendar.reserve.guess_word}</strong> palabras ·{" "}
+            <strong>{calendar.reserve.word_search}</strong> sopas
           </p>
-          {calendar.reserve.quiz < 10 || calendar.reserve.crossword < 10 ? (
+          {Object.values(calendar.reserve).some((value) => value < 10) ? (
             <p role="alert">
               Reserva baja: se requieren al menos 10 días por tipo antes de producción.
             </p>
@@ -768,7 +777,10 @@ function isCalendar(value: unknown): value is Calendar {
     Array.isArray(value.editions) &&
     isRecord(value.reserve) &&
     typeof value.reserve.quiz === "number" &&
-    typeof value.reserve.crossword === "number"
+    typeof value.reserve.crossword === "number" &&
+    typeof value.reserve.true_false === "number" &&
+    typeof value.reserve.guess_word === "number" &&
+    typeof value.reserve.word_search === "number"
   );
 }
 
@@ -776,7 +788,9 @@ function isCandidate(value: unknown): value is Candidate {
   return (
     isRecord(value) &&
     typeof value.id === "string" &&
-    (value.contentType === "quiz" || value.contentType === "crossword") &&
+    ["quiz", "crossword", "true_false", "guess_word", "word_search"].includes(
+      String(value.contentType),
+    ) &&
     typeof value.targetDate === "string" &&
     ["approved", "pending_review", "rejected", "selected"].includes(String(value.status)) &&
     isRecord(value.publicPayload) &&

@@ -1,2 +1,10 @@
 #!/bin/sh
-pnpm lint && pnpm typecheck && pnpm test
+PATH="/c/Program Files/nodejs:$PATH"
+export PATH
+if [ -f "/c/Program Files/nodejs/corepack.cmd" ]; then
+  "/c/Program Files/nodejs/corepack.cmd" pnpm lint &&
+    "/c/Program Files/nodejs/corepack.cmd" pnpm typecheck &&
+    "/c/Program Files/nodejs/corepack.cmd" pnpm test
+else
+  corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test
+fi

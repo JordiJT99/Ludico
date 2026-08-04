@@ -1,0 +1,4 @@
+ALTER TABLE "content_generation_jobs" DROP CONSTRAINT "content_jobs_type_check";--> statement-breakpoint
+ALTER TABLE "generated_contents" DROP CONSTRAINT "generated_content_type_check";--> statement-breakpoint
+ALTER TABLE "content_generation_jobs" ADD CONSTRAINT "content_jobs_type_check" CHECK ("content_generation_jobs"."content_type" in ('quiz','crossword','true_false','guess_word','word_search'));--> statement-breakpoint
+ALTER TABLE "generated_contents" ADD CONSTRAINT "generated_content_type_check" CHECK ("generated_contents"."content_type" in ('quiz','crossword','true_false','guess_word','word_search'));

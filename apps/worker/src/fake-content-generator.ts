@@ -1,5 +1,10 @@
 import type { QuizPublicPayload } from "@ludico/contracts";
-import { constructCrossword, type WordBankEntry } from "@ludico/domain";
+import {
+  constructCrossword,
+  constructWordSearch,
+  type GeneratedContentCandidate,
+  type WordBankEntry,
+} from "@ludico/domain";
 import type { ContentAssurancePort, ContentGeneratorPort } from "./content-jobs.js";
 
 export const fakeContentAssurance: ContentAssurancePort = {
@@ -14,12 +19,26 @@ export const fakeContentAssurance: ContentAssurancePort = {
 export const fakeContentGenerator: ContentGeneratorPort = {
   async generate(job) {
     return {
-      candidate:
-        job.contentType === "quiz" ? fakeQuiz(job.targetDate) : fakeCrossword(job.targetDate),
+      candidate: fakeCandidate(job.contentType, job.targetDate),
       costMicros: 0,
     };
   },
 };
+
+function fakeCandidate(type: GeneratedContentCandidate["type"], targetDate: string) {
+  switch (type) {
+    case "quiz":
+      return fakeQuiz(targetDate);
+    case "crossword":
+      return fakeCrossword(targetDate);
+    case "true_false":
+      return fakeTrueFalse(targetDate);
+    case "guess_word":
+      return fakeGuessWord(targetDate);
+    case "word_search":
+      return fakeWordSearch(targetDate);
+  }
+}
 
 function fakeQuiz(targetDate: string) {
   const questions: QuizPublicPayload["questions"] = Array.from({ length: 5 }, (_, index) => ({
@@ -57,6 +76,89 @@ function fakeCrossword(targetDate: string) {
     title: `Crucigrama sintético ${targetDate}`,
     vocabularyVersion: "fake-v1",
   });
+}
+
+function fakeTrueFalse(targetDate: string): GeneratedContentCandidate {
+  const items = [
+    ["La Tierra gira alrededor del Sol.", true],
+    ["La Luna es un planeta.", false],
+    ["El agua esta formada por hidrogeno y oxigeno.", true],
+  ] as const;
+  return {
+    type: "true_false",
+    publicPayload: {
+      items: items.map(([statement], index) => ({
+        category: "Ciencia",
+        difficulty: 1 as const,
+        id: uuid(targetDate, 300 + index),
+        statement,
+      })),
+      kind: "true-false",
+      title: `Verdadero o falso ${targetDate}`,
+    },
+    privatePayload: {
+      items: items.map(([, value], index) => ({
+        explanation: "Contenido determinista para desarrollo y pruebas.",
+        id: uuid(targetDate, 300 + index),
+        value,
+      })),
+      kind: "true-false-solution",
+    },
+    sources: items.map((_, index) => ({
+      itemId: uuid(targetDate, 300 + index),
+      url: `https://example.com/test/true-false/${index}`,
+    })),
+  };
+}
+
+function fakeGuessWord(targetDate: string): GeneratedContentCandidate {
+  const id = uuid(targetDate, 400);
+  return {
+    type: "guess_word",
+    publicPayload: {
+      allowedCharacters: ["A", "R", "B", "O", "L"],
+      category: "Naturaleza",
+      definition: "Planta leñosa con tronco y copa.",
+      difficulty: 2,
+      hints: [{ text: "Tiene raices.", unlockAfterAttempts: 1 }],
+      id,
+      kind: "guess-word",
+      maxAttempts: 5,
+      title: `Adivina la palabra ${targetDate}`,
+    },
+    privatePayload: { alternativeAnswers: [], answer: "ARBOL", kind: "guess-word-solution" },
+    sources: [{ itemId: id, url: "https://example.com/test/guess-word/arbol" }],
+  };
+}
+
+function fakeWordSearch(targetDate: string): GeneratedContentCandidate {
+  const game = constructWordSearch({
+    columns: 8,
+    directions: ["east", "south", "southEast"],
+    rows: 8,
+    seed: targetDate,
+    words: ["SOL", "LUNA", "NUBE"],
+  });
+  return {
+    type: "word_search",
+    publicPayload: {
+      columns: game.columns,
+      grid: game.grid,
+      kind: "word-search",
+      rows: game.rows,
+      seed: game.seed,
+      title: `Sopa de letras ${targetDate}`,
+      words: game.entries.map((entry, index) => ({
+        answer: entry.answer,
+        id: uuid(targetDate, 500 + index),
+      })),
+    },
+    privatePayload: { entries: game.entries, kind: "word-search-solution" },
+    sources: game.entries.map((_, index) => ({
+      itemId: uuid(targetDate, 500 + index),
+      url: `https://example.com/test/word-search/${index}`,
+    })),
+  };
 }
 
 const fakeWordBank: readonly WordBankEntry[] = [

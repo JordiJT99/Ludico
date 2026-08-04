@@ -57,10 +57,12 @@ describe("content generation pipeline", () => {
     const { client, database } = await setup();
     const firstPlan = await planContentGenerationJobs(client, "2026-08-03", 1, "fake", 1_000);
     const repeated = await planContentGenerationJobs(client, "2026-08-03", 1, "other", 2_000);
-    expect(firstPlan).toHaveLength(2);
+    expect(firstPlan).toHaveLength(5);
     expect(repeated.map(({ id }) => id)).toEqual(firstPlan.map(({ id }) => id));
 
-    for (const job of firstPlan) {
+    for (const job of firstPlan.filter(
+      (job) => job.contentType === "quiz" || job.contentType === "crossword",
+    )) {
       expect(await claimContentGenerationJob(client, job.id, now)).toMatchObject({ id: job.id });
       const generated = await recordGeneratedContent(
         client,

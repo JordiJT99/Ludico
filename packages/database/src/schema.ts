@@ -332,7 +332,10 @@ export const contentGenerationJobs = pgTable(
   (table) => [
     uniqueIndex("content_jobs_type_date_uidx").on(table.contentType, table.targetDate),
     index("content_jobs_status_target_idx").on(table.status, table.targetDate),
-    check("content_jobs_type_check", sql`${table.contentType} in ('quiz','crossword')`),
+    check(
+      "content_jobs_type_check",
+      sql`${table.contentType} in ('quiz','crossword','true_false','guess_word','word_search')`,
+    ),
     check(
       "content_jobs_status_check",
       sql`${table.status} in ('queued','running','succeeded','failed')`,
@@ -368,7 +371,10 @@ export const generatedContents = pgTable(
       table.contentType,
     ),
     index("generated_content_hash_idx").on(table.contentHash),
-    check("generated_content_type_check", sql`${table.contentType} in ('quiz','crossword')`),
+    check(
+      "generated_content_type_check",
+      sql`${table.contentType} in ('quiz','crossword','true_false','guess_word','word_search')`,
+    ),
     check(
       "generated_content_status_check",
       sql`${table.status} in ('approved','pending_review','rejected','selected')`,

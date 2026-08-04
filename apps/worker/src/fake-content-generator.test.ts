@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { fakeContentAssurance, fakeContentGenerator } from "./fake-content-generator.js";
 
 describe("explicit fake content provider", () => {
-  it.each(["quiz", "crossword"] as const)(
+  it.each(["quiz", "crossword", "true_false", "guess_word", "word_search"] as const)(
     "generates valid %s fixtures only on demand",
     async (type) => {
       const generated = await fakeContentGenerator.generate({

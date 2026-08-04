@@ -16,4 +16,8 @@ Verified with 12 deterministic seeds plus domain tests: 12 files / 38 tests pass
 
 Quiz editorial validation now checks repeated prompts/options and answer-position concentration; contracts accept all five difficulty levels. Added a common difficulty engine and validated deterministic implementations for true/false, adivina la palabra and sopa de letras. The worker defaults to deterministic generation when no AI provider is configured; `fake` remains prohibited in production.
 
-The next implementation increment connects the three new validated game payloads to candidate persistence, edition selection and their dedicated public play/attempt contracts.
+## Slice 3/4 — content pipeline integration
+
+The generation repository and job schema now accept the five MVP types. Planning creates a dated job per type, deterministic generation returns a typed candidate for each, validation checks its private/public split and provenance, and the backoffice reports the five reserve counts. The migration `0013_watery_black_tarantula` preserves existing rows while extending database checks.
+
+Daily edition assembly remains deliberately limited to quiz and crossword: they are the only types with server-verified competitive attempts and mobile/web play screens today. Publishing the other three before their attempt contracts are ready would violate the solution-secrecy and score-verification requirements. Their candidates are nevertheless generated, validated and visible as reserve/admin content.
