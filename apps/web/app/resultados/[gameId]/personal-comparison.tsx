@@ -3,7 +3,9 @@
 import {
   isAttemptReview,
   isCrosswordPublicSolutionPayload,
+  isGuessWordPublicSolutionPayload,
   isPublicCrosswordGame,
+  isPublicGuessWordGame,
   isPublicQuizStyleGame,
   isQuizPublicSolutionPayload,
   type AttemptReview,
@@ -63,6 +65,10 @@ export function PersonalComparison({ attemptId }: Readonly<{ attemptId: string }
         isPublicCrosswordGame(review.solution.game) &&
         isCrosswordPublicSolutionPayload(review.solution.payload) ? (
         <CrosswordComparison review={review} />
+      ) : review.progress.kind === "guess-word-progress" &&
+        isPublicGuessWordGame(review.solution.game) &&
+        isGuessWordPublicSolutionPayload(review.solution.payload) ? (
+        <GuessWordComparison review={review} />
       ) : null}
     </section>
   );
@@ -98,6 +104,27 @@ function QuizComparison({ review }: Readonly<{ review: AttemptReview }>) {
         );
       })}
     </ol>
+  );
+}
+
+function GuessWordComparison({ review }: Readonly<{ review: AttemptReview }>) {
+  if (
+    review.progress.kind !== "guess-word-progress" ||
+    !isPublicGuessWordGame(review.solution.game) ||
+    !isGuessWordPublicSolutionPayload(review.solution.payload)
+  ) {
+    return null;
+  }
+  const solved = review.progress.guesses.some(
+    (guess) => guess.guess === review.solution.payload.answer,
+  );
+  return (
+    <p>
+      Probaste {review.progress.guesses.length} palabra
+      {review.progress.guesses.length === 1 ? "" : "s"}:{" "}
+      {review.progress.guesses.map((guess) => guess.guess).join(", ")}.{" "}
+      {solved ? "Acertaste la solución." : "No acertaste la solución."}
+    </p>
   );
 }
 

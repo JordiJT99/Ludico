@@ -222,6 +222,12 @@ interface AccountCrosswordCellRow extends QueryResultRow {
   value: string;
 }
 
+interface AccountWordGuessRow extends QueryResultRow {
+  attemptId: string;
+  elapsedMs: number;
+  guess: string;
+}
+
 type AccountNotificationRow = NotificationPreferences & QueryResultRow;
 
 export async function getUserAccountData(
@@ -238,7 +244,7 @@ export async function getUserAccountData(
   const user = profile.rows[0];
   if (!user) return null;
 
-  const [attempts, consents, analytics, quizAnswers, crosswordCells, notifications] =
+  const [attempts, consents, analytics, quizAnswers, crosswordCells, wordGuesses, notifications] =
     await Promise.all([
       client.query<AccountAttemptRow>(
         `select attempt.id, game.type as "gameType", edition.local_date as "localDate",
@@ -278,6 +284,12 @@ export async function getUserAccountData(
        where attempt.user_id = $1 order by cell.created_at`,
         [userId],
       ),
+      client.query<AccountWordGuessRow>(
+        `select guess.attempt_id as "attemptId", guess.guess, guess.elapsed_ms as "elapsedMs"
+         from word_guesses guess join game_attempts attempt on attempt.id = guess.attempt_id
+         where attempt.user_id = $1 order by guess.created_at`,
+        [userId],
+      ),
       client.query<AccountNotificationRow>(
         `select enabled, edition_available as "editionAvailable",
               previous_solution as "previousSolution", time_zone as "timeZone",
@@ -312,6 +324,7 @@ export async function getUserAccountData(
       leaderboardOptIn: user.leaderboardOptIn,
     },
     quizAnswers: quizAnswers.rows,
+    wordGuesses: wordGuesses.rows,
   };
 }
 

@@ -611,14 +611,14 @@ export async function assembleApprovedEdition(
     );
     const present = existing.rows[0];
     if (present && present.gameCount > 0) {
-      if (present.status === "approved" && present.gameCount === 3) {
+      if (present.status === "approved" && present.gameCount === 4) {
         return { changed: false, editionId: present.editionId, status: "approved" };
       }
       throw new ContentPipelineError("EDITION_ALREADY_EXISTS");
     }
 
     const selected: GeneratedContentRecord[] = [];
-    for (const type of ["quiz", "crossword", "true_false"] as const) {
+    for (const type of ["quiz", "crossword", "true_false", "guess_word"] as const) {
       const result = await transaction.query<GeneratedContentRecord & QueryResultRow>(
         `select id, content_type as "contentType", target_date::text as "targetDate", status,
                 public_payload as "publicPayload", private_payload as "privatePayload",
@@ -688,10 +688,10 @@ export async function assembleApprovedEdition(
 function toPlayableContent(candidate: GeneratedContentCandidate): {
   readonly privatePayload: unknown;
   readonly publicPayload: unknown;
-  readonly type: "crossword" | "quiz" | "true_false";
+  readonly type: "crossword" | "quiz" | "true_false" | "guess_word";
 } {
   if (candidate.type !== "true_false") {
-    if (candidate.type === "guess_word" || candidate.type === "word_search") {
+    if (candidate.type === "word_search") {
       throw new ContentPipelineError("EDITION_GAME_UNSUPPORTED");
     }
     return candidate;

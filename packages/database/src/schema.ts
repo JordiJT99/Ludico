@@ -62,7 +62,7 @@ export const games = pgTable(
   },
   (table) => [
     uniqueIndex("games_edition_type_uidx").on(table.editionId, table.type),
-    check("games_type_check", sql`${table.type} in ('quiz','crossword','true_false')`),
+    check("games_type_check", sql`${table.type} in ('quiz','crossword','true_false','guess_word')`),
     check("games_status_check", sql`${table.status} in ('active','disabled')`),
   ],
 );
@@ -206,6 +206,31 @@ export const crosswordCells = pgTable(
   ],
 );
 
+export const wordGuesses = pgTable(
+  "word_guesses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    attemptId: uuid("attempt_id")
+      .references(() => gameAttempts.id, { onDelete: "cascade" })
+      .notNull(),
+    guess: text("guess").notNull(),
+    elapsedMs: integer("elapsed_ms").notNull(),
+    isCorrect: boolean("is_correct").notNull(),
+    ...auditColumns,
+  },
+  (table) => [
+    index("word_guesses_attempt_created_idx").on(table.attemptId, table.createdAt),
+    check(
+      "word_guesses_guess_check",
+      sql`char_length(${table.guess}) >= 1 and char_length(${table.guess}) <= 21`,
+    ),
+    check(
+      "word_guesses_elapsed_check",
+      sql`${table.elapsedMs} >= 0 and ${table.elapsedMs} <= 3600000`,
+    ),
+  ],
+);
+
 export const attemptEvents = pgTable(
   "attempt_events",
   {
@@ -224,7 +249,7 @@ export const attemptEvents = pgTable(
     index("attempt_events_received_idx").on(table.attemptId, table.receivedAt),
     check(
       "attempt_events_type_check",
-      sql`${table.eventType} in ('answer_selected','cell_set','hint_revealed')`,
+      sql`${table.eventType} in ('answer_selected','cell_set','hint_revealed','word_guessed')`,
     ),
   ],
 );

@@ -6,6 +6,8 @@ const attemptId = "33333333-3333-4333-8333-333333333333";
 const crosswordGameId = "22222222-2222-4222-8222-222222222223";
 const crosswordAttemptId = "33333333-3333-4333-8333-333333333334";
 const trueFalseGameId = "22222222-2222-4222-8222-222222222224";
+const guessWordGameId = "22222222-2222-4222-8222-222222222225";
+const guessWordAttemptId = "33333333-3333-4333-8333-333333333335";
 const historicalEditionDate = madridDateOffset(-1);
 const quiz = {
   kind: "quiz",
@@ -34,6 +36,17 @@ const trueFalse = {
       { id: `72000000-0000-4000-8000-00000000000${questionIndex}`, text: "Falso" },
     ],
   })),
+};
+const guessWord = {
+  allowedCharacters: Array.from("ABCDEFGHIJKLMNÑOPQRSTUVWXYZ"),
+  category: "Naturaleza",
+  definition: "Planta alta de tronco leñoso y copa de ramas.",
+  difficulty: 1,
+  hints: [{ text: "Puede dar sombra.", unlockAfterAttempts: 1 }],
+  id: "73000000-0000-4000-8000-000000000001",
+  kind: "guess-word",
+  maxAttempts: 3,
+  title: "Adivina la palabra E2E",
 };
 const crosswordCells = [
   crosswordCell(0, 0, 0, 1),
@@ -116,6 +129,8 @@ let cells = [];
 let crosswordVersion = 1;
 let hintsUsed = 0;
 let crosswordEventIds = new Set();
+let guesses = [];
+let guessWordVersion = 1;
 let unavailable = false;
 let migrations = 0;
 let playerAuthorization = null;
@@ -144,6 +159,8 @@ createServer(async (request, response) => {
     crosswordVersion = 1;
     hintsUsed = 0;
     crosswordEventIds = new Set();
+    guesses = [];
+    guessWordVersion = 1;
     unavailable = false;
     migrations = 0;
     playerAuthorization = null;
@@ -245,6 +262,13 @@ createServer(async (request, response) => {
           type: "true_false",
           status: "active",
           payload: trueFalse,
+          contentVersion: 1,
+        },
+        {
+          id: guessWordGameId,
+          type: "guess_word",
+          status: "active",
+          payload: guessWord,
           contentVersion: 1,
         },
       ],
@@ -580,10 +604,22 @@ createServer(async (request, response) => {
       contentVersion: 1,
     });
   }
+  if (request.method === "GET" && path === `/v1/games/${guessWordGameId}`) {
+    return json(response, 200, {
+      id: guessWordGameId,
+      type: "guess_word",
+      status: "active",
+      payload: guessWord,
+      contentVersion: 1,
+    });
+  }
   if (request.method === "GET" && path === `/v1/games/${gameId}/solution`) {
     return json(response, 423, { code: "SOLUTION_LOCKED" });
   }
   if (request.method === "GET" && path === `/v1/games/${trueFalseGameId}/solution`) {
+    return json(response, 423, { code: "SOLUTION_LOCKED" });
+  }
+  if (request.method === "GET" && path === `/v1/games/${guessWordGameId}/solution`) {
     return json(response, 423, { code: "SOLUTION_LOCKED" });
   }
   if (request.method === "GET" && path === `/v1/games/${crosswordGameId}`) {
@@ -647,6 +683,44 @@ createServer(async (request, response) => {
   }
   if (request.method === "POST" && path === `/v1/games/${trueFalseGameId}/attempts`) {
     return json(response, 200, { answers, attemptId, status: "in_progress", version });
+  }
+  if (request.method === "POST" && path === `/v1/games/${guessWordGameId}/attempts`) {
+    return json(response, 200, {
+      attemptId: guessWordAttemptId,
+      guesses,
+      status: guesses.some((guess) => guess.guess === "ARBOL") ? "accepted" : "in_progress",
+      version: guessWordVersion,
+    });
+  }
+  if (request.method === "POST" && path === `/v1/attempts/${guessWordAttemptId}/guesses`) {
+    const body = JSON.parse(await readBody(request));
+    if (body.version !== guessWordVersion) return json(response, 409, { code: "VERSION_CONFLICT" });
+    const guess = String(body.guess).normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
+    const correct = guess === "ARBOL";
+    guesses.push({ guess, elapsedMs: body.elapsedMs });
+    guessWordVersion += 1;
+    const exhausted = guesses.length >= guessWord.maxAttempts;
+    const accepted = correct || exhausted;
+    return json(response, 200, {
+      attempt: {
+        attemptId: guessWordAttemptId,
+        guesses,
+        ...(accepted
+          ? {
+              result: {
+                attemptId: guessWordAttemptId,
+                competitive: true,
+                provisional: { completed: true, score: correct ? 850 : 0 },
+                solutionAvailableAt: "2026-07-29T22:00:00.000Z",
+                status: "accepted",
+              },
+            }
+          : {}),
+        status: accepted ? "accepted" : "in_progress",
+        version: guessWordVersion,
+      },
+      outcome: correct ? "correct" : exhausted ? "exhausted" : "incorrect",
+    });
   }
   if (request.method === "POST" && path === `/v1/games/${crosswordGameId}/attempts`) {
     return json(response, 200, {

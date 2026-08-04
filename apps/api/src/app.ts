@@ -17,6 +17,11 @@ import {
   type CrosswordHintResult,
   type CrosswordProgressEvent,
   type CrosswordSubmitResult,
+  type GuessWordAttemptState,
+  type GuessWordGuessEvent,
+  type GuessWordGuessResult,
+  guessWordAttemptStateSchema,
+  guessWordGuessResultSchema,
   type GuestSessionCredential,
   guestSessionCredentialSchema,
   healthResponseSchema,
@@ -65,6 +70,7 @@ import {
   PrivacyError,
   QuizAttemptError,
   type GuestOrigin,
+  GuessWordAttemptError,
   type QuizProgressResult,
   type ShareResultData,
   WordBankError,
@@ -213,7 +219,13 @@ interface AppOptions {
     gameId: string,
     player: PlayerCredential,
     now: Date,
-  ) => Promise<QuizAttemptState | CrosswordAttemptState>;
+  ) => Promise<QuizAttemptState | CrosswordAttemptState | GuessWordAttemptState>;
+  readonly submitGuessWordGuess?: (
+    attemptId: string,
+    player: PlayerCredential,
+    event: GuessWordGuessEvent,
+    now: Date,
+  ) => Promise<GuessWordGuessResult>;
   readonly submitAttempt?: (
     attemptId: string,
     player: PlayerCredential,
@@ -952,7 +964,8 @@ export function buildApp(options: AppOptions = {}) {
   app.post<{
     Params: { id: string };
     Headers: PlayerCommandHeaders;
-    Reply: QuizAttemptState | CrosswordAttemptState | { code: "UNAVAILABLE" };
+    Reply:
+      QuizAttemptState | CrosswordAttemptState | GuessWordAttemptState | { code: "UNAVAILABLE" };
   }>(
     "/v1/games/:id/attempts",
     {
@@ -960,7 +973,13 @@ export function buildApp(options: AppOptions = {}) {
         params: idParamsSchema,
         headers: playerCommandHeadersSchema,
         response: {
-          200: { oneOf: [quizAttemptStateSchema, crosswordAttemptStateSchema] },
+          200: {
+            oneOf: [
+              quizAttemptStateSchema,
+              crosswordAttemptStateSchema,
+              guessWordAttemptStateSchema,
+            ],
+          },
         },
       },
     },
@@ -970,6 +989,45 @@ export function buildApp(options: AppOptions = {}) {
       reply.header("Cache-Control", "private, no-store");
       const player = await resolvePlayer(request.headers, options);
       return startAttempt(request.params.id, player, (options.now ?? (() => new Date()))());
+    },
+  );
+
+  app.post<{
+    Params: { id: string };
+    Headers: PlayerCommandHeaders;
+    Body: GuessWordGuessEvent;
+    Reply: GuessWordGuessResult | { code: "UNAVAILABLE" };
+  }>(
+    "/v1/attempts/:id/guesses",
+    {
+      schema: {
+        params: idParamsSchema,
+        headers: playerCommandHeadersSchema,
+        body: {
+          type: "object",
+          additionalProperties: false,
+          required: ["clientEventId", "elapsedMs", "guess", "version"],
+          properties: {
+            clientEventId: { type: "string", format: "uuid" },
+            clientOccurredAt: { type: "string", format: "date-time" },
+            elapsedMs: { type: "integer", minimum: 0, maximum: 3_600_000 },
+            guess: { type: "string", minLength: 3, maxLength: 21 },
+            version: { type: "integer", minimum: 1 },
+          },
+        },
+        response: { 200: guessWordGuessResultSchema },
+      },
+    },
+    async (request, reply) => {
+      if (!options.submitGuessWordGuess) return reply.code(503).send({ code: "UNAVAILABLE" });
+      reply.header("Cache-Control", "private, no-store");
+      const player = await resolvePlayer(request.headers, options);
+      return options.submitGuessWordGuess(
+        request.params.id,
+        player,
+        request.body,
+        (options.now ?? (() => new Date()))(),
+      );
     },
   );
 
@@ -1215,6 +1273,17 @@ export function buildApp(options: AppOptions = {}) {
         GAME_UNAVAILABLE: 409,
         INVALID_CELL: 422,
         UNAUTHORIZED: 401,
+      }[error.code];
+      return reply.code(status).send({ code: error.code });
+    }
+    if (error instanceof GuessWordAttemptError) {
+      const status = {
+        ATTEMPT_NOT_EDITABLE: 409,
+        ATTEMPT_NOT_FOUND: 404,
+        GAME_UNAVAILABLE: 409,
+        INVALID_GUESS: 422,
+        UNAUTHORIZED: 401,
+        VERSION_CONFLICT: 409,
       }[error.code];
       return reply.code(status).send({ code: error.code });
     }

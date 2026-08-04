@@ -203,6 +203,8 @@ function PersonalReview({ review }: Readonly<{ review: AttemptReview }>) {
       </Text>
       {review.progress.kind === "crossword-progress" ? (
         <Text style={styles.body}>Ayudas utilizadas: {review.progress.hintsUsed}</Text>
+      ) : review.progress.kind === "guess-word-progress" ? (
+        <Text style={styles.body}>Intentos realizados: {review.progress.guesses.length}</Text>
       ) : (
         <Text style={styles.body}>Respuestas guardadas: {review.progress.answers.length}</Text>
       )}

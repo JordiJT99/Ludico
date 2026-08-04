@@ -57,14 +57,18 @@ export default async function Home() {
                           ? "Saber y pensar"
                           : game.type === "true_false"
                             ? "Ciencia y curiosidades"
-                            : "Palabras cruzadas"}
+                            : game.type === "guess_word"
+                              ? "Léxico y deducción"
+                              : "Palabras cruzadas"}
                       </p>
                       <h3>
                         {game.type === "quiz"
                           ? "Quiz diario"
                           : game.type === "true_false"
                             ? "Verdadero o falso"
-                            : "Crucigrama diario"}
+                            : game.type === "guess_word"
+                              ? "Adivina la palabra"
+                              : "Crucigrama diario"}
                       </h3>
                       <p>
                         {game.status === "active"
@@ -72,7 +76,9 @@ export default async function Home() {
                             ? "Diez preguntas para despertar la curiosidad."
                             : game.type === "true_false"
                               ? "Decide qué afirmaciones son correctas."
-                              : "Una cuadrícula para tomarse el tiempo necesario."
+                              : game.type === "guess_word"
+                                ? "Una definición, pistas y una sola palabra."
+                                : "Una cuadrícula para tomarse el tiempo necesario."
                           : "Temporalmente no disponible"}
                       </p>
                       {game.status === "active" ? (
@@ -112,7 +118,9 @@ export default async function Home() {
                       ? "Quiz de ayer"
                       : game.type === "true_false"
                         ? "Verdadero o falso de ayer"
-                        : "Crucigrama de ayer"}
+                        : game.type === "guess_word"
+                          ? "Adivina la palabra de ayer"
+                          : "Crucigrama de ayer"}
                   </h3>
                   <Link className="button-link" href={`/resultados/${game.id}`}>
                     Ver solución

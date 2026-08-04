@@ -288,7 +288,7 @@ export default function QuizScreen() {
       ) : null}
       <Action
         disabled={!selected || saving}
-        label={saving ? "Guardando…" : last ? "Enviar respuestas" : "Siguiente"}
+        label={saving ? "Guardando…" : last ? "Enviar quiz" : "Siguiente"}
         onPress={() => void advance()}
       />
     </ScrollView>

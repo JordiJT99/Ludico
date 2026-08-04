@@ -7,6 +7,7 @@ export * from "./content-pipeline.js";
 export * from "./crossword-attempts.js";
 export * from "./editions.js";
 export * from "./guests.js";
+export * from "./guess-word-attempts.js";
 export * from "./notifications.js";
 export * from "./quiz-attempts.js";
 export * from "./privacy.js";

@@ -70,8 +70,10 @@ export type CrosswordProgressResult =
 export async function getAttemptGameType(
   client: TransactionClient,
   attemptId: string,
-): Promise<"quiz" | "crossword" | "true_false" | null> {
-  const result = await client.query<{ type: "quiz" | "crossword" | "true_false" } & QueryResultRow>(
+): Promise<"quiz" | "crossword" | "true_false" | "guess_word" | null> {
+  const result = await client.query<
+    { type: "quiz" | "crossword" | "true_false" | "guess_word" } & QueryResultRow
+  >(
     `select game.type
      from game_attempts attempt
      join games game on game.id = attempt.game_id

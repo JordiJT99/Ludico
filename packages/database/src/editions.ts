@@ -25,7 +25,7 @@ interface DueEditionRow extends QueryResultRow {
 
 interface SolutionRow extends QueryResultRow {
   gameId: string;
-  type: "quiz" | "crossword" | "true_false";
+  type: "quiz" | "crossword" | "true_false" | "guess_word";
   status: "active" | "disabled";
   publicPayload: Record<string, unknown>;
   contentVersion: number;
@@ -387,6 +387,10 @@ async function publishSolutions(
            when 'crossword' then jsonb_build_object(
              'kind', 'crossword-solution',
              'entries', solution.private_payload -> 'entries'
+           )
+           when 'guess_word' then jsonb_build_object(
+             'kind', 'guess-word-solution',
+             'answer', solution.private_payload ->> 'answer'
            )
          end,
          published_at = $2,

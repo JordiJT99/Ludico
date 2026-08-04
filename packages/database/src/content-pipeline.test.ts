@@ -64,7 +64,8 @@ describe("content generation pipeline", () => {
       (job) =>
         job.contentType === "quiz" ||
         job.contentType === "crossword" ||
-        job.contentType === "true_false",
+        job.contentType === "true_false" ||
+        job.contentType === "guess_word",
     )) {
       expect(await claimContentGenerationJob(client, job.id, now)).toMatchObject({ id: job.id });
       const generated = await recordGeneratedContent(
@@ -74,7 +75,9 @@ describe("content generation pipeline", () => {
           ? quizCandidate()
           : job.contentType === "crossword"
             ? crosswordCandidate()
-            : trueFalseCandidate(),
+            : job.contentType === "true_false"
+              ? trueFalseCandidate()
+              : guessWordCandidate(),
         { evaluatorPassed: true, sourcesVerified: true },
         500,
         now,
@@ -99,11 +102,16 @@ describe("content generation pipeline", () => {
       "select type, public_payload from games where edition_id = $1 order by type",
       [assembled.editionId],
     );
-    expect(games.rows.map(({ type }) => type)).toEqual(["crossword", "quiz", "true_false"]);
+    expect(games.rows.map(({ type }) => type)).toEqual([
+      "crossword",
+      "guess_word",
+      "quiz",
+      "true_false",
+    ]);
     expect(JSON.stringify(games.rows)).not.toMatch(
-      /correctOptionId|quiz-solution|vocabularyVersion|true-false-solution|"value":true/,
+      /correctOptionId|quiz-solution|vocabularyVersion|true-false-solution|guess-word-solution|"answer":|"value":true/,
     );
-    expect((await database.query("select * from game_solutions")).rows).toHaveLength(3);
+    expect((await database.query("select * from game_solutions")).rows).toHaveLength(4);
   });
 
   it("quarantines sensitive content and prevents overriding deterministic failures", async () => {
@@ -457,6 +465,26 @@ function trueFalseCandidate(): GeneratedContentCandidate {
       kind: "true-false-solution",
     },
     sources: items.map(({ id }) => ({ itemId: id, url: `https://example.com/${id}` })),
+  };
+}
+
+function guessWordCandidate(): GeneratedContentCandidate {
+  const id = "61111111-1111-4111-8111-111111111111";
+  return {
+    type: "guess_word",
+    publicPayload: {
+      allowedCharacters: Array.from("ABCDEFGHIJKLMNÑOPQRSTUVWXYZ"),
+      category: "Naturaleza",
+      definition: "Planta alta de tronco leñoso y copa de ramas.",
+      difficulty: 1,
+      hints: [{ text: "Puede dar sombra.", unlockAfterAttempts: 1 }],
+      id,
+      kind: "guess-word",
+      maxAttempts: 5,
+      title: "Adivina la palabra",
+    },
+    privatePayload: { alternativeAnswers: [], answer: "ARBOL", kind: "guess-word-solution" },
+    sources: [{ itemId: id, url: "https://example.com/arbol" }],
   };
 }
 

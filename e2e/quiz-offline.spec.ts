@@ -237,6 +237,34 @@ test("verdadero o falso reutiliza el intento seguro sin revelar la respuesta", a
   expect(locked.headers()["cache-control"]).toBe("private, no-store");
 });
 
+test("adivina la palabra valida en servidor sin revelar la solución", async ({ page }) => {
+  await page.goto("/");
+  const card = page.getByRole("article").filter({
+    has: page.getByRole("heading", { name: "Adivina la palabra", exact: true }),
+  });
+  await card.getByRole("link", { name: "Jugar", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Planta alta de tronco leñoso y copa de ramas." }),
+  ).toBeVisible();
+  await page.getByLabel("Escribe tu respuesta").fill("casa");
+  await page.getByRole("button", { name: "Comprobar palabra" }).click();
+  await expect(page.getByText(/No es la palabra/)).toBeVisible();
+  await expect(page.getByText("Puede dar sombra.")).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("ARBOL");
+  await page.getByLabel("Escribe tu respuesta").fill("árbol");
+  await page.getByRole("button", { name: "Comprobar palabra" }).click();
+  await expect(page.getByText("¡Correcto! Has resuelto el reto.")).toBeVisible();
+  const publicGame = await page.request.get(
+    "/api/player/games/22222222-2222-4222-8222-222222222225",
+  );
+  expect(await publicGame.text()).not.toContain("ARBOL");
+  const locked = await page.request.get(
+    "/api/player/games/22222222-2222-4222-8222-222222222225/solution",
+  );
+  expect(locked.status()).toBe(423);
+  expect(locked.headers()["cache-control"]).toBe("private, no-store");
+});
+
 test("el crucigrama funciona offline, conserva pulsaciones lentas y coordina sus vistas", async ({
   context,
   page,

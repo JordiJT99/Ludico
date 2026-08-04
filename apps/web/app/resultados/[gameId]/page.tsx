@@ -1,6 +1,8 @@
 import {
   isCrosswordPublicSolutionPayload,
+  isGuessWordPublicSolutionPayload,
   isPublicCrosswordGame,
+  isPublicGuessWordGame,
   isPublicQuizStyleGame,
   isPublicSolution,
   isQuizPublicSolutionPayload,
@@ -83,6 +85,9 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
         ) : isPublicCrosswordGame(solution.game) &&
           isCrosswordPublicSolutionPayload(solution.payload) ? (
           <CrosswordSolution solution={solution} />
+        ) : isPublicGuessWordGame(solution.game) &&
+          isGuessWordPublicSolutionPayload(solution.payload) ? (
+          <GuessWordSolution solution={solution} />
         ) : (
           <p role="alert">La revisión publicada no tiene un formato válido.</p>
         )}
@@ -141,6 +146,25 @@ function QuizSolution({ solution }: Readonly<{ solution: PublicSolution }>) {
           );
         })}
       </ol>
+    </section>
+  );
+}
+
+function GuessWordSolution({ solution }: Readonly<{ solution: PublicSolution }>) {
+  if (
+    !isPublicGuessWordGame(solution.game) ||
+    !isGuessWordPublicSolutionPayload(solution.payload)
+  ) {
+    return null;
+  }
+  return (
+    <section className="solution-section">
+      <h1>{solution.game.payload.title}</h1>
+      <p>{solution.game.payload.definition}</p>
+      <p>
+        Respuesta: <strong>{solution.payload.answer}</strong>
+      </p>
+      <p>Solución publicada el {formatPublishedAt(solution.publishedAt)}.</p>
     </section>
   );
 }

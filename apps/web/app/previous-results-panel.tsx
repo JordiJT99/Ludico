@@ -40,7 +40,9 @@ export function PreviousResultsPanel() {
                 ? "Quiz"
                 : result.gameType === "true_false"
                   ? "Verdadero o falso"
-                  : "Crucigrama"}
+                  : result.gameType === "guess_word"
+                    ? "Adivina la palabra"
+                    : "Crucigrama"}
             </h3>
             <p>
               <strong>{result.points} puntos</strong>

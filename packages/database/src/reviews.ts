@@ -1,4 +1,9 @@
-import type { AttemptReview, CrosswordAttemptCell, QuizAttemptAnswer } from "@ludico/contracts";
+import type {
+  AttemptReview,
+  CrosswordAttemptCell,
+  GuessWordAttempt,
+  QuizAttemptAnswer,
+} from "@ludico/contracts";
 import type { QueryResultRow } from "pg";
 import { getGameSolution } from "./editions.js";
 import { authenticateGuestSession, GuestTokenError } from "./guests.js";
@@ -10,7 +15,7 @@ interface ReviewRow extends QueryResultRow {
   points: number;
   scoreVersion: string;
   submittedAt: Date | string;
-  type: "quiz" | "crossword" | "true_false";
+  type: "quiz" | "crossword" | "true_false" | "guess_word";
 }
 
 export type AttemptReviewResult =
@@ -76,25 +81,36 @@ async function getAttemptReview(
           ).rows,
           kind: "quiz-progress" as const,
         }
-      : {
-          cells: (
-            await transaction.query<CrosswordAttemptCell & QueryResultRow>(
-              `select cell_id as "cellId", value, elapsed_ms as "elapsedMs"
-               from crossword_cells where attempt_id = $1 order by created_at`,
-              [attemptId],
-            )
-          ).rows,
-          hintsUsed: Number(
-            (
-              await transaction.query<{ count: string } & QueryResultRow>(
-                `select count(*)::text as count from attempt_events
-                 where attempt_id = $1 and event_type = 'hint_revealed'`,
+      : row.type === "guess_word"
+        ? {
+            guesses: (
+              await transaction.query<GuessWordAttempt & QueryResultRow>(
+                `select guess, elapsed_ms as "elapsedMs" from word_guesses
+                 where attempt_id = $1 order by created_at`,
                 [attemptId],
               )
-            ).rows[0]?.count ?? 0,
-          ),
-          kind: "crossword-progress" as const,
-        };
+            ).rows,
+            kind: "guess-word-progress" as const,
+          }
+        : {
+            cells: (
+              await transaction.query<CrosswordAttemptCell & QueryResultRow>(
+                `select cell_id as "cellId", value, elapsed_ms as "elapsedMs"
+               from crossword_cells where attempt_id = $1 order by created_at`,
+                [attemptId],
+              )
+            ).rows,
+            hintsUsed: Number(
+              (
+                await transaction.query<{ count: string } & QueryResultRow>(
+                  `select count(*)::text as count from attempt_events
+                 where attempt_id = $1 and event_type = 'hint_revealed'`,
+                  [attemptId],
+                )
+              ).rows[0]?.count ?? 0,
+            ),
+            kind: "crossword-progress" as const,
+          };
 
   return {
     review: {

@@ -29,7 +29,9 @@ export function PreviousResultsPanel() {
               ? "Quiz"
               : result.gameType === "true_false"
                 ? "Verdadero o falso"
-                : "Crucigrama"}
+                : result.gameType === "guess_word"
+                  ? "Adivina la palabra"
+                  : "Crucigrama"}
             : {result.points} puntos
             {result.rank && result.total
               ? ` · puesto ${result.rank} de ${result.total}`

@@ -37,6 +37,7 @@ import {
   isValidPushEncryptionKey,
   PostgresClient,
   QuizAttemptError,
+  recordGuestGuessWordGuess,
   revokeGuestSession,
   registerUserPushEndpoint,
   regenerateGeneratedContent,
@@ -44,14 +45,17 @@ import {
   revealGuestCrosswordCell,
   revealUserCrosswordCell,
   rotateGuestSession,
+  recordUserGuessWordGuess,
   saveGuestCrosswordProgress,
   saveGuestQuizProgress,
   saveUserCrosswordProgress,
   saveUserQuizProgress,
   scheduleReserveEdition,
   startGuestCrosswordAttempt,
+  startGuestGuessWordAttempt,
   startGuestQuizAttempt,
   startUserCrosswordAttempt,
+  startUserGuessWordAttempt,
   startUserQuizAttempt,
   submitGuestQuizAttempt,
   submitGuestCrosswordAttempt,
@@ -190,6 +194,11 @@ const app = buildApp({
         ? startGuestCrosswordAttempt(database, gameId, player.token, now)
         : startUserCrosswordAttempt(database, gameId, player.userId, now);
     }
+    if (game?.type === "guess_word") {
+      return player.kind === "guest"
+        ? startGuestGuessWordAttempt(database, gameId, player.token, now)
+        : startUserGuessWordAttempt(database, gameId, player.userId, now);
+    }
     return player.kind === "guest"
       ? startGuestQuizAttempt(database, gameId, player.token, now)
       : startUserQuizAttempt(database, gameId, player.userId, now);
@@ -202,6 +211,10 @@ const app = buildApp({
     player.kind === "guest"
       ? submitGuestQuizAttempt(database, attemptId, player.token, now)
       : submitUserQuizAttempt(database, attemptId, player.userId, now),
+  submitGuessWordGuess: (attemptId, player, event, now) =>
+    player.kind === "guest"
+      ? recordGuestGuessWordGuess(database, attemptId, player.token, event, now)
+      : recordUserGuessWordGuess(database, attemptId, player.userId, event, now),
   submitAttempt: async (attemptId, player, now) => {
     const crossword = (await getAttemptGameType(database, attemptId)) === "crossword";
     if (crossword) {

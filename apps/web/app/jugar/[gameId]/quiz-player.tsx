@@ -332,7 +332,13 @@ export function QuizPlayer({
           onClick={() => void advance()}
           type="button"
         >
-          {saving ? "Guardando…" : last ? "Enviar respuestas" : "Siguiente"}
+          {saving
+            ? "Guardando…"
+            : last
+              ? gameType === "true_false"
+                ? "Enviar respuestas"
+                : "Enviar quiz"
+              : "Siguiente"}
         </button>
       </section>
     </main>

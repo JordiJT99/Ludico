@@ -89,14 +89,21 @@ export default function HomeScreen() {
                   ? "Quiz diario"
                   : game.type === "true_false"
                     ? "Verdadero o falso"
-                    : "Crucigrama diario"}
+                    : game.type === "guess_word"
+                      ? "Adivina la palabra"
+                      : "Crucigrama diario"}
               </Text>
               <Pressable
                 accessibilityRole="button"
                 disabled={game.status !== "active"}
                 onPress={() =>
                   router.push({
-                    pathname: game.type === "crossword" ? "/crossword/[gameId]" : "/quiz/[gameId]",
+                    pathname:
+                      game.type === "crossword"
+                        ? "/crossword/[gameId]"
+                        : game.type === "guess_word"
+                          ? "/guess-word/[gameId]"
+                          : "/quiz/[gameId]",
                     params: { gameId: game.id },
                   })
                 }
