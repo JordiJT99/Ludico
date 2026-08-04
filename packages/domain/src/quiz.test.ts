@@ -36,6 +36,36 @@ describe("quiz validation", () => {
     expect(() => validateQuiz(quiz, solution.slice(1))).toThrow(InvalidQuizError);
   });
 
+  it("validates binary true-false questions only with explicit binary rules", () => {
+    const binaryQuiz: QuizPublicPayload = {
+      ...quiz,
+      questions: quiz.questions.slice(0, 3).map((question) => ({
+        ...question,
+        options: question.options.slice(0, 2),
+      })),
+    };
+    const binarySolution = binaryQuiz.questions.map((question) => ({
+      correctOptionId: question.options[0]!.id,
+      explanation: "Explicacion binaria verificada.",
+      questionId: question.id,
+    }));
+    expect(() => validateQuiz(binaryQuiz, binarySolution)).toThrow(InvalidQuizError);
+    expect(() =>
+      validateQuiz(binaryQuiz, binarySolution, {
+        maxQuestions: 20,
+        minQuestions: 3,
+        optionCount: 2,
+      }),
+    ).not.toThrow();
+    expect(
+      calculateQuizScore(binaryQuiz, binarySolution, [], {
+        maxQuestions: 20,
+        minQuestions: 3,
+        optionCount: 2,
+      }),
+    ).toMatchObject({ completed: false, points: 0 });
+  });
+
   it("rejects repeated editorial text and predictable correct-answer positions", () => {
     expect(() => validateQuizEditorial(quiz, solution)).toThrow(InvalidQuizError);
     const balanced = solution.map((item, index) => ({

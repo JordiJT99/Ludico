@@ -33,7 +33,13 @@ export default async function EditionPage({ params }: PageProps) {
                 {game.type === "quiz" ? "?" : "✦"}
               </div>
               <div className="game__content">
-                <h2>{game.type === "quiz" ? "Quiz diario" : "Crucigrama diario"}</h2>
+                <h2>
+                  {game.type === "quiz"
+                    ? "Quiz diario"
+                    : game.type === "true_false"
+                      ? "Verdadero o falso"
+                      : "Crucigrama diario"}
+                </h2>
                 {closed ? (
                   <Link className="button-link" href={`/resultados/${game.id}`}>
                     Ver solución

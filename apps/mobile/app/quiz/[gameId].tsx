@@ -1,5 +1,5 @@
 import {
-  isPublicQuizGame,
+  isPublicQuizStyleGame,
   isQuizAttemptState,
   isQuizProgressConflict,
   isQuizProgressSaved,
@@ -239,7 +239,7 @@ export default function QuizScreen() {
       setNotice(
         ready.pendingEvents.length
           ? "Conecta el dispositivo para sincronizar antes de enviar."
-          : "No se pudo enviar el quiz. Tus respuestas siguen guardadas.",
+          : "No se pudo enviar el reto. Tus respuestas siguen guardadas.",
       );
     } finally {
       setSaving(false);
@@ -288,7 +288,7 @@ export default function QuizScreen() {
       ) : null}
       <Action
         disabled={!selected || saving}
-        label={saving ? "Guardando…" : last ? "Enviar quiz" : "Siguiente"}
+        label={saving ? "Guardando…" : last ? "Enviar respuestas" : "Siguiente"}
         onPress={() => void advance()}
       />
     </ScrollView>
@@ -319,7 +319,7 @@ async function start(gameId: string, signal: AbortSignal): Promise<SessionState>
     const gameResponse = await fetch(`${apiUrl()}/games/${gameId}`, { signal });
     if (!gameResponse.ok) throw new Error(gameResponse.status === 404 ? "game" : "offline");
     const game: unknown = await gameResponse.json();
-    if (!isPublicQuizGame(game)) throw new Error("game");
+    if (!isPublicQuizStyleGame(game)) throw new Error("game");
     const attemptResponse = await fetch(`${apiUrl()}/games/${gameId}/attempts`, {
       method: "POST",
       headers: commandHeaders(headers),

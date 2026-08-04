@@ -10,7 +10,7 @@ interface ReviewRow extends QueryResultRow {
   points: number;
   scoreVersion: string;
   submittedAt: Date | string;
-  type: "quiz" | "crossword";
+  type: "quiz" | "crossword" | "true_false";
 }
 
 export type AttemptReviewResult =
@@ -64,7 +64,7 @@ async function getAttemptReview(
   if (published.status !== "available") return { status: published.status };
 
   const progress =
-    row.type === "quiz"
+    row.type === "quiz" || row.type === "true_false"
       ? {
           answers: (
             await transaction.query<QuizAttemptAnswer & QueryResultRow>(

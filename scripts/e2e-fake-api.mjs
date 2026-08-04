@@ -5,6 +5,7 @@ const gameId = "22222222-2222-4222-8222-222222222222";
 const attemptId = "33333333-3333-4333-8333-333333333333";
 const crosswordGameId = "22222222-2222-4222-8222-222222222223";
 const crosswordAttemptId = "33333333-3333-4333-8333-333333333334";
+const trueFalseGameId = "22222222-2222-4222-8222-222222222224";
 const historicalEditionDate = madridDateOffset(-1);
 const quiz = {
   kind: "quiz",
@@ -18,6 +19,20 @@ const quiz = {
       id: `50000000-0000-4000-8000-0000000000${questionIndex}${optionIndex}`,
       text: `Opción ${optionIndex + 1}`,
     })),
+  })),
+};
+const trueFalse = {
+  kind: "quiz",
+  title: "Verdadero o falso E2E",
+  questions: Array.from({ length: 5 }, (_, questionIndex) => ({
+    id: `70000000-0000-4000-8000-00000000000${questionIndex}`,
+    prompt: `Afirmacion de prueba ${questionIndex + 1}`,
+    category: "Ciencia",
+    difficulty: "easy",
+    options: [
+      { id: `71000000-0000-4000-8000-00000000000${questionIndex}`, text: "Verdadero" },
+      { id: `72000000-0000-4000-8000-00000000000${questionIndex}`, text: "Falso" },
+    ],
   })),
 };
 const crosswordCells = [
@@ -223,6 +238,13 @@ createServer(async (request, response) => {
           type: "crossword",
           status: "active",
           payload: crossword,
+          contentVersion: 1,
+        },
+        {
+          id: trueFalseGameId,
+          type: "true_false",
+          status: "active",
+          payload: trueFalse,
           contentVersion: 1,
         },
       ],
@@ -549,7 +571,19 @@ createServer(async (request, response) => {
       contentVersion: 1,
     });
   }
+  if (request.method === "GET" && path === `/v1/games/${trueFalseGameId}`) {
+    return json(response, 200, {
+      id: trueFalseGameId,
+      type: "true_false",
+      status: "active",
+      payload: trueFalse,
+      contentVersion: 1,
+    });
+  }
   if (request.method === "GET" && path === `/v1/games/${gameId}/solution`) {
+    return json(response, 423, { code: "SOLUTION_LOCKED" });
+  }
+  if (request.method === "GET" && path === `/v1/games/${trueFalseGameId}/solution`) {
     return json(response, 423, { code: "SOLUTION_LOCKED" });
   }
   if (request.method === "GET" && path === `/v1/games/${crosswordGameId}`) {
@@ -609,6 +643,9 @@ createServer(async (request, response) => {
   }
   if (request.method === "POST" && path === `/v1/games/${gameId}/attempts`) {
     playerAuthorization = request.headers.authorization ?? null;
+    return json(response, 200, { answers, attemptId, status: "in_progress", version });
+  }
+  if (request.method === "POST" && path === `/v1/games/${trueFalseGameId}/attempts`) {
     return json(response, 200, { answers, attemptId, status: "in_progress", version });
   }
   if (request.method === "POST" && path === `/v1/games/${crosswordGameId}/attempts`) {

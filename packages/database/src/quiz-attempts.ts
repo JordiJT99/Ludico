@@ -6,7 +6,12 @@ import type {
   QuizPublicPayload,
   QuizSubmitResult,
 } from "@ludico/contracts";
-import { calculateQuizScore, type QuizPrivateSolution, validateQuiz } from "@ludico/domain";
+import {
+  calculateQuizScore,
+  type QuizPrivateSolution,
+  type QuizValidationOptions,
+  validateQuiz,
+} from "@ludico/domain";
 import type { QueryResultRow } from "pg";
 import { authenticateGuestSession } from "./guests.js";
 import type { SqlClient, TransactionClient } from "./sql-client.js";
@@ -18,7 +23,7 @@ interface GameRow extends QueryResultRow {
   privatePayload: QuizPrivateSolution;
   publicPayload: QuizPublicPayload;
   status: "active" | "disabled";
-  type: "quiz";
+  type: "quiz" | "true_false";
 }
 
 interface PublicGameRow extends QueryResultRow {
@@ -26,7 +31,7 @@ interface PublicGameRow extends QueryResultRow {
   id: string;
   publicPayload: object;
   status: "active" | "disabled";
-  type: "quiz" | "crossword";
+  type: "quiz" | "crossword" | "true_false";
 }
 
 interface AttemptRow extends QueryResultRow {
@@ -39,6 +44,7 @@ interface AttemptRow extends QueryResultRow {
   publicPayload: QuizPublicPayload;
   startedAt: Date | string;
   status: string;
+  type: "quiz" | "true_false";
   userId: string | null;
   version: number;
 }
@@ -202,7 +208,7 @@ async function startQuizAttempt(
 ): Promise<QuizAttemptState> {
   const game = await getQuizGame(transaction, gameId, now);
   if (!game) throw new QuizAttemptError("GAME_UNAVAILABLE", "El quiz no está disponible");
-  validateQuiz(game.publicPayload, game.privatePayload.questions);
+  validateQuiz(game.publicPayload, game.privatePayload.questions, validationOptionsFor(game.type));
   const subjectColumn = subject.kind === "guest" ? "guest_session_id" : "user_id";
   const attempt = await transaction.query<{ id: string; status: string; version: number }>(
     `insert into game_attempts (game_id, ${subjectColumn}, started_at)
@@ -304,11 +310,13 @@ async function submitQuizAttempt(
     await readAnswers(transaction, attempt.id),
     Math.max(0, now.getTime() - new Date(attempt.startedAt).getTime()),
   );
-  validateQuiz(attempt.publicPayload, attempt.privatePayload.questions);
+  const validationOptions = validationOptionsFor(attempt.type);
+  validateQuiz(attempt.publicPayload, attempt.privatePayload.questions, validationOptions);
   const score = calculateQuizScore(
     attempt.publicPayload,
     attempt.privatePayload.questions,
     answers,
+    validationOptions,
   );
   const competitive = attempt.mode === "competitive" && now.getTime() < closesAt.getTime();
   const durationMs = answers.reduce((total, answer) => total + answer.elapsedMs, 0);
@@ -354,7 +362,7 @@ async function getQuizGame(
      from games game
      join daily_editions edition on edition.id = game.edition_id
      join game_solutions solution on solution.game_id = game.id
-     where game.id = $1 and game.type = 'quiz' and game.status = 'active'
+     where game.id = $1 and game.type in ('quiz', 'true_false') and game.status = 'active'
        and edition.status = 'published' and edition.opens_at <= $2 and edition.closes_at > $2
      limit 1`,
     [gameId, now],
@@ -370,7 +378,8 @@ async function getAttemptForUpdate(
     `select attempt.id, attempt.game_id as "gameId",
             attempt.guest_session_id as "guestSessionId", attempt.user_id as "userId",
             attempt.status, attempt.mode,
-            attempt.version, attempt.started_at as "startedAt", game.public_payload as "publicPayload",
+            attempt.version, attempt.started_at as "startedAt", game.type,
+            game.public_payload as "publicPayload",
             solution.private_payload as "privatePayload", edition.closes_at as "closesAt"
      from game_attempts attempt
      join games game on game.id = attempt.game_id
@@ -387,6 +396,10 @@ function ownsAttempt(attempt: AttemptRow, subject: AttemptSubject): boolean {
   return subject.kind === "guest"
     ? attempt.guestSessionId === subject.id
     : attempt.userId === subject.id;
+}
+
+function validationOptionsFor(type: "quiz" | "true_false"): QuizValidationOptions | undefined {
+  return type === "true_false" ? { maxQuestions: 20, minQuestions: 3, optionCount: 2 } : undefined;
 }
 
 async function readAttemptState(

@@ -11,7 +11,7 @@ export type HealthResponse = { status: "ok" };
 
 export interface PublicGame {
   readonly id: string;
-  readonly type: "quiz" | "crossword";
+  readonly type: "quiz" | "crossword" | "true_false";
   readonly status: "active" | "disabled";
   readonly payload: object;
   readonly contentVersion: number;
@@ -31,7 +31,7 @@ export const publicGameSchema = {
   required: ["id", "type", "status", "payload", "contentVersion"],
   properties: {
     id: { type: "string", format: "uuid" },
-    type: { enum: ["quiz", "crossword"] },
+    type: { enum: ["quiz", "crossword", "true_false"] },
     status: { enum: ["active", "disabled"] },
     payload: { type: "object", additionalProperties: true },
     contentVersion: { type: "integer", minimum: 1 },
@@ -66,7 +66,7 @@ export function isPublicEdition(value: unknown): value is PublicEdition {
       (game) =>
         isRecord(game) &&
         typeof game.id === "string" &&
-        (game.type === "quiz" || game.type === "crossword") &&
+        (game.type === "quiz" || game.type === "crossword" || game.type === "true_false") &&
         (game.status === "active" || game.status === "disabled") &&
         isRecord(game.payload) &&
         Number.isInteger(game.contentVersion),
@@ -431,7 +431,7 @@ export interface PreviousResultSummary {
   readonly attemptId: string;
   readonly competitive: boolean;
   readonly gameId: string;
-  readonly gameType: "crossword" | "quiz";
+  readonly gameType: "crossword" | "quiz" | "true_false";
   readonly localDate: string;
   readonly points: number;
   readonly rank?: number;
@@ -446,7 +446,7 @@ export interface AccountDataExport {
   }[];
   readonly attempts: readonly {
     readonly competitive: boolean | null;
-    readonly gameType: "crossword" | "quiz";
+    readonly gameType: "crossword" | "quiz" | "true_false";
     readonly id: string;
     readonly localDate: string;
     readonly mode: "casual" | "competitive";
@@ -808,7 +808,7 @@ export const previousResultSummariesSchema = {
       attemptId: { type: "string", format: "uuid" },
       competitive: { type: "boolean" },
       gameId: { type: "string", format: "uuid" },
-      gameType: { enum: ["crossword", "quiz"] },
+      gameType: { enum: ["crossword", "quiz", "true_false"] },
       localDate: { type: "string", format: "date" },
       points: { type: "integer", minimum: 0 },
       rank: { type: "integer", minimum: 1 },
@@ -862,7 +862,7 @@ export const accountDataExportSchema = {
         ],
         properties: {
           competitive: { anyOf: [{ type: "boolean" }, { type: "null" }] },
-          gameType: { enum: ["crossword", "quiz"] },
+          gameType: { enum: ["crossword", "quiz", "true_false"] },
           id: { type: "string", format: "uuid" },
           localDate: { type: "string", format: "date" },
           mode: { enum: ["casual", "competitive"] },
@@ -1062,6 +1062,41 @@ export function isPublicQuizGame(
     (value.status === "active" || value.status === "disabled") &&
     Number.isInteger(value.contentVersion) &&
     isQuizPublicPayload(value.payload)
+  );
+}
+
+export function isPublicQuizStyleGame(
+  value: unknown,
+): value is PublicGame & { payload: QuizPublicPayload } {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    (value.type === "quiz" || value.type === "true_false") &&
+    (value.status === "active" || value.status === "disabled") &&
+    Number.isInteger(value.contentVersion) &&
+    (value.type === "quiz"
+      ? isQuizPublicPayload(value.payload)
+      : isTrueFalseQuizPayload(value.payload))
+  );
+}
+
+function isTrueFalseQuizPayload(value: unknown): value is QuizPublicPayload {
+  if (!isRecord(value) || value.kind !== "quiz" || typeof value.title !== "string") return false;
+  if (!Array.isArray(value.questions) || value.questions.length < 3 || value.questions.length > 20)
+    return false;
+  return value.questions.every(
+    (question) =>
+      isRecord(question) &&
+      typeof question.id === "string" &&
+      typeof question.prompt === "string" &&
+      typeof question.category === "string" &&
+      ["very_easy", "easy", "medium", "hard", "expert"].includes(String(question.difficulty)) &&
+      Array.isArray(question.options) &&
+      question.options.length === 2 &&
+      question.options.every(
+        (option) =>
+          isRecord(option) && typeof option.id === "string" && typeof option.text === "string",
+      ),
   );
 }
 
@@ -1281,7 +1316,7 @@ export function isPublicSolution(value: unknown): value is PublicSolution {
     return false;
   }
   return (
-    (isPublicQuizGame(value.game) && isQuizPublicSolutionPayload(value.payload)) ||
+    (isPublicQuizStyleGame(value.game) && isQuizPublicSolutionPayload(value.payload)) ||
     (isPublicCrosswordGame(value.game) && isCrosswordPublicSolutionPayload(value.payload))
   );
 }
@@ -1345,7 +1380,9 @@ export function isPreviousResultSummaries(value: unknown): value is PreviousResu
         typeof result.attemptId === "string" &&
         typeof result.competitive === "boolean" &&
         typeof result.gameId === "string" &&
-        (result.gameType === "quiz" || result.gameType === "crossword") &&
+        (result.gameType === "quiz" ||
+          result.gameType === "crossword" ||
+          result.gameType === "true_false") &&
         typeof result.localDate === "string" &&
         Number.isInteger(result.points) &&
         (result.rank === undefined || Number.isInteger(result.rank)) &&

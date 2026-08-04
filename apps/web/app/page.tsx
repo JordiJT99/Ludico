@@ -49,18 +49,30 @@ export default async function Home() {
                 {edition.games.map((game) => (
                   <article className={`game game--${game.type}`} key={game.id}>
                     <div aria-hidden="true" className="game__art">
-                      {game.type === "quiz" ? "?" : "✦"}
+                      {game.type === "quiz" ? "?" : game.type === "true_false" ? "V/F" : "✦"}
                     </div>
                     <div className="game__content">
                       <p className="game__kicker">
-                        {game.type === "quiz" ? "Saber y pensar" : "Palabras cruzadas"}
+                        {game.type === "quiz"
+                          ? "Saber y pensar"
+                          : game.type === "true_false"
+                            ? "Ciencia y curiosidades"
+                            : "Palabras cruzadas"}
                       </p>
-                      <h3>{game.type === "quiz" ? "Quiz diario" : "Crucigrama diario"}</h3>
+                      <h3>
+                        {game.type === "quiz"
+                          ? "Quiz diario"
+                          : game.type === "true_false"
+                            ? "Verdadero o falso"
+                            : "Crucigrama diario"}
+                      </h3>
                       <p>
                         {game.status === "active"
                           ? game.type === "quiz"
                             ? "Diez preguntas para despertar la curiosidad."
-                            : "Una cuadrícula para tomarse el tiempo necesario."
+                            : game.type === "true_false"
+                              ? "Decide qué afirmaciones son correctas."
+                              : "Una cuadrícula para tomarse el tiempo necesario."
                           : "Temporalmente no disponible"}
                       </p>
                       {game.status === "active" ? (
@@ -95,7 +107,13 @@ export default async function Home() {
             <div className="games">
               {previous.games.map((game) => (
                 <article className="game" key={game.id}>
-                  <h3>{game.type === "quiz" ? "Quiz de ayer" : "Crucigrama de ayer"}</h3>
+                  <h3>
+                    {game.type === "quiz"
+                      ? "Quiz de ayer"
+                      : game.type === "true_false"
+                        ? "Verdadero o falso de ayer"
+                        : "Crucigrama de ayer"}
+                  </h3>
                   <Link className="button-link" href={`/resultados/${game.id}`}>
                     Ver solución
                   </Link>

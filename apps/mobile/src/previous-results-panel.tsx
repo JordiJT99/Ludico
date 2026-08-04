@@ -25,7 +25,12 @@ export function PreviousResultsPanel() {
       {results.map((result) => (
         <View key={result.attemptId} style={styles.result}>
           <Text style={styles.body}>
-            {result.gameType === "quiz" ? "Quiz" : "Crucigrama"}: {result.points} puntos
+            {result.gameType === "quiz"
+              ? "Quiz"
+              : result.gameType === "true_false"
+                ? "Verdadero o falso"
+                : "Crucigrama"}
+            : {result.points} puntos
             {result.rank && result.total
               ? ` · puesto ${result.rank} de ${result.total}`
               : " · casual"}

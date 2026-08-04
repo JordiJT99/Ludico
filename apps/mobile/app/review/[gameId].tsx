@@ -2,7 +2,7 @@ import {
   isAttemptReview,
   isCrosswordPublicSolutionPayload,
   isPublicCrosswordGame,
-  isPublicQuizGame,
+  isPublicQuizStyleGame,
   isPublicSolution,
   isQuizPublicSolutionPayload,
   type AttemptReview,
@@ -78,7 +78,7 @@ export default function ReviewScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.eyebrow}>Revisión publicada</Text>
-      {isPublicQuizGame(solution.game) && isQuizPublicSolutionPayload(solution.payload) ? (
+      {isPublicQuizStyleGame(solution.game) && isQuizPublicSolutionPayload(solution.payload) ? (
         <QuizReview review={state.review} solution={solution} />
       ) : isPublicCrosswordGame(solution.game) &&
         isCrosswordPublicSolutionPayload(solution.payload) ? (
@@ -98,7 +98,7 @@ function QuizReview({
   review,
   solution,
 }: Readonly<{ review?: AttemptReview; solution: PublicSolution }>) {
-  if (!isPublicQuizGame(solution.game) || !isQuizPublicSolutionPayload(solution.payload))
+  if (!isPublicQuizStyleGame(solution.game) || !isQuizPublicSolutionPayload(solution.payload))
     return null;
   const answers = new Map(solution.payload.questions.map((answer) => [answer.questionId, answer]));
   const percentages = new Map(

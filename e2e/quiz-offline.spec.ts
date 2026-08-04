@@ -215,6 +215,28 @@ test("el quiz conserva y sincroniza el progreso sin filtrar soluciones", async (
   await expect(page.locator("body")).not.toContainText("correctOptionId");
 });
 
+test("verdadero o falso reutiliza el intento seguro sin revelar la respuesta", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  const card = page.getByRole("article").filter({
+    has: page.getByRole("heading", { name: "Verdadero o falso", exact: true }),
+  });
+  await card.getByRole("link", { name: "Jugar", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Afirmacion de prueba 1" })).toBeVisible();
+  await page.getByRole("radio", { name: "Verdadero", exact: true }).check();
+  await expectAnswerCount(request, 1);
+  expect(
+    await (await page.request.get("/api/player/games/22222222-2222-4222-8222-222222222224")).text(),
+  ).not.toMatch(/correctOptionId|true-false-solution|"value":/);
+  const locked = await page.request.get(
+    "/api/player/games/22222222-2222-4222-8222-222222222224/solution",
+  );
+  expect(locked.status()).toBe(423);
+  expect(locked.headers()["cache-control"]).toBe("private, no-store");
+});
+
 test("el crucigrama funciona offline, conserva pulsaciones lentas y coordina sus vistas", async ({
   context,
   page,

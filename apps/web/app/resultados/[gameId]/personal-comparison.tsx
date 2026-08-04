@@ -4,7 +4,7 @@ import {
   isAttemptReview,
   isCrosswordPublicSolutionPayload,
   isPublicCrosswordGame,
-  isPublicQuizGame,
+  isPublicQuizStyleGame,
   isQuizPublicSolutionPayload,
   type AttemptReview,
 } from "@ludico/contracts";
@@ -56,7 +56,7 @@ export function PersonalComparison({ attemptId }: Readonly<{ attemptId: string }
       <h2 id="personal-heading">{review.score.points} puntos</h2>
       <p>{review.score.competitive ? "Partida competitiva" : "Partida casual"}</p>
       {review.progress.kind === "quiz-progress" &&
-      isPublicQuizGame(review.solution.game) &&
+      isPublicQuizStyleGame(review.solution.game) &&
       isQuizPublicSolutionPayload(review.solution.payload) ? (
         <QuizComparison review={review} />
       ) : review.progress.kind === "crossword-progress" &&
@@ -71,7 +71,7 @@ export function PersonalComparison({ attemptId }: Readonly<{ attemptId: string }
 function QuizComparison({ review }: Readonly<{ review: AttemptReview }>) {
   if (
     review.progress.kind !== "quiz-progress" ||
-    !isPublicQuizGame(review.solution.game) ||
+    !isPublicQuizStyleGame(review.solution.game) ||
     !isQuizPublicSolutionPayload(review.solution.payload)
   ) {
     return null;

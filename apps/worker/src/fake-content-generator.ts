@@ -83,6 +83,8 @@ function fakeTrueFalse(targetDate: string): GeneratedContentCandidate {
     ["La Tierra gira alrededor del Sol.", true],
     ["La Luna es un planeta.", false],
     ["El agua esta formada por hidrogeno y oxigeno.", true],
+    ["Los murcielagos son mamiferos.", true],
+    ["El Sol gira alrededor de la Tierra.", false],
   ] as const;
   return {
     type: "true_false",

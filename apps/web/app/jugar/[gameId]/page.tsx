@@ -6,10 +6,15 @@ export default async function PlayPage({
   params,
 }: Readonly<{ params: Promise<{ gameId: string }> }>) {
   const { gameId } = await params;
-  return (await loadGameType(gameId)) === "crossword" ? (
+  const gameType = await loadGameType(gameId);
+  return gameType === "crossword" ? (
     <CrosswordPlayer gameId={gameId} />
   ) : (
-    <QuizPlayer gameId={gameId} />
+    <QuizPlayer
+      gameId={gameId}
+      gameType={gameType === "true_false" ? "true_false" : "quiz"}
+      title={gameType === "true_false" ? "Verdadero o falso" : undefined}
+    />
   );
 }
 

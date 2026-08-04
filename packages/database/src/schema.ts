@@ -62,7 +62,7 @@ export const games = pgTable(
   },
   (table) => [
     uniqueIndex("games_edition_type_uidx").on(table.editionId, table.type),
-    check("games_type_check", sql`${table.type} in ('quiz','crossword')`),
+    check("games_type_check", sql`${table.type} in ('quiz','crossword','true_false')`),
     check("games_status_check", sql`${table.status} in ('active','disabled')`),
   ],
 );

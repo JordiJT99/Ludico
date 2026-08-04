@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  isPublicQuizGame,
+  isPublicQuizStyleGame,
   isQuizAttemptState,
   isQuizProgressConflict,
   isQuizProgressSaved,
@@ -38,7 +38,11 @@ type SessionState = {
   syncStatus: "saved" | "syncing" | "pending";
 };
 
-export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
+export function QuizPlayer({
+  gameId,
+  gameType = "quiz",
+  title = "Quiz diario",
+}: Readonly<{ gameId: string; gameType?: "quiz" | "true_false"; title?: string }>) {
   const [session, setSession] = useState<SessionState>();
   const [result, setResult] = useState<QuizSubmitResult>();
   const [fatalError, setFatalError] = useState<string>();
@@ -62,7 +66,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
           attemptId: state.playing.attempt.attemptId,
           entryPoint: state.playing.attempt.answers.length ? "resume" : "daily",
           gameId,
-          gameType: "quiz",
+          gameType,
           offline: !navigator.onLine,
           platform: "web",
         });
@@ -79,7 +83,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
         if (!controller.signal.aborted) setFatalError(messageFor(cause));
       });
     return () => controller.abort();
-  }, [gameId]);
+  }, [gameId, gameType]);
 
   useEffect(() => {
     if (!session) return;
@@ -110,8 +114,8 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
   if (fatalError) {
     return (
       <main className="play-page">
-        <p className="eyebrow">Quiz diario</p>
-        <h1>No hemos podido abrir el quiz</h1>
+        <p className="eyebrow">{title}</p>
+        <h1>No hemos podido abrir este reto</h1>
         <p role="alert">{fatalError}</p>
         <Link className="button-link" href="/">
           Volver al inicio
@@ -134,7 +138,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
         <p className="eyebrow">Resultado provisional</p>
         <h1>{result.provisional.score} puntos</h1>
         <p>
-          {result.provisional.completed ? "Quiz completado." : "Quiz enviado."}{" "}
+          {result.provisional.completed ? `${title} completado.` : `${title} enviado.`}{" "}
           {result.competitive ? "Tu puntuación entra en la clasificación." : "Partida casual."}
         </p>
         <p>Las soluciones estarán disponibles al cerrar la edición.</p>
@@ -160,7 +164,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
             Lúdico
           </Link>
         </header>
-        <p className="eyebrow">Quiz diario</p>
+        <p className="eyebrow">{title}</p>
         <h1>Preparando las preguntas…</h1>
       </main>
     );
@@ -231,7 +235,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
         attemptId: body.attemptId,
         competitive: body.competitive,
         durationBucket: durationBucket(Date.now() - startedAt.current),
-        gameType: "quiz",
+        gameType,
         gameId,
         scoreBucket: scoreBucket(body.provisional.score),
       });
@@ -241,7 +245,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
       setNotice(
         ready.pendingEvents.length
           ? "Conecta el dispositivo para sincronizar antes de enviar."
-          : "No se pudo enviar el quiz. Tus respuestas siguen guardadas.",
+          : "No se pudo enviar el reto. Tus respuestas siguen guardadas.",
       );
     } finally {
       setSaving(false);
@@ -257,7 +261,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
         <Link className="play-topbar__brand" href="/">
           Lúdico
         </Link>
-        <span className="play-topbar__status">Quiz diario</span>
+        <span className="play-topbar__status">{title}</span>
       </header>
       <p aria-live="polite" className={`sync-status ${session.syncStatus}`}>
         {session.syncStatus === "saved"
@@ -328,7 +332,7 @@ export function QuizPlayer({ gameId }: Readonly<{ gameId: string }>) {
           onClick={() => void advance()}
           type="button"
         >
-          {saving ? "Guardando…" : last ? "Enviar quiz" : "Siguiente"}
+          {saving ? "Guardando…" : last ? "Enviar respuestas" : "Siguiente"}
         </button>
       </section>
     </main>
@@ -346,7 +350,7 @@ async function start(
     const gameResponse = await fetch(`/api/player/games/${gameId}`, { signal });
     if (!gameResponse.ok) throw new Error(gameResponse.status === 404 ? "game" : "offline");
     const game: unknown = await gameResponse.json();
-    if (!isPublicQuizGame(game)) throw new Error("game");
+    if (!isPublicQuizStyleGame(game)) throw new Error("game");
     const attemptResponse = await fetch(`/api/player/games/${gameId}/attempts`, {
       method: "POST",
       signal,

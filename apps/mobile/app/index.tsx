@@ -85,14 +85,18 @@ export default function HomeScreen() {
           {edition.games.map((game) => (
             <View key={game.id} style={styles.card}>
               <Text accessibilityRole="header" style={styles.cardTitle}>
-                {game.type === "quiz" ? "Quiz diario" : "Crucigrama diario"}
+                {game.type === "quiz"
+                  ? "Quiz diario"
+                  : game.type === "true_false"
+                    ? "Verdadero o falso"
+                    : "Crucigrama diario"}
               </Text>
               <Pressable
                 accessibilityRole="button"
                 disabled={game.status !== "active"}
                 onPress={() =>
                   router.push({
-                    pathname: game.type === "quiz" ? "/quiz/[gameId]" : "/crossword/[gameId]",
+                    pathname: game.type === "crossword" ? "/crossword/[gameId]" : "/quiz/[gameId]",
                     params: { gameId: game.id },
                   })
                 }

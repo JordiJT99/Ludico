@@ -1,7 +1,7 @@
 import {
   isCrosswordPublicSolutionPayload,
   isPublicCrosswordGame,
-  isPublicQuizGame,
+  isPublicQuizStyleGame,
   isPublicSolution,
   isQuizPublicSolutionPayload,
   type PublicSolution,
@@ -78,7 +78,7 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
           }}
         />
         <p className="eyebrow">Revisión publicada</p>
-        {isPublicQuizGame(solution.game) && isQuizPublicSolutionPayload(solution.payload) ? (
+        {isPublicQuizStyleGame(solution.game) && isQuizPublicSolutionPayload(solution.payload) ? (
           <QuizSolution solution={solution} />
         ) : isPublicCrosswordGame(solution.game) &&
           isCrosswordPublicSolutionPayload(solution.payload) ? (
@@ -110,7 +110,7 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
 }
 
 function QuizSolution({ solution }: Readonly<{ solution: PublicSolution }>) {
-  if (!isPublicQuizGame(solution.game) || !isQuizPublicSolutionPayload(solution.payload))
+  if (!isPublicQuizStyleGame(solution.game) || !isQuizPublicSolutionPayload(solution.payload))
     return null;
   const answers = new Map(solution.payload.questions.map((answer) => [answer.questionId, answer]));
   const percentages = new Map(

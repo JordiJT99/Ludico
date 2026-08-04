@@ -3,6 +3,8 @@ import type {
   ContentFinding,
   GeneratedContentType,
 } from "@ludico/domain";
+import type { QuizPrivateSolution } from "@ludico/domain";
+import type { QuizPublicPayload } from "@ludico/contracts";
 import { generatedContentTypes, validateGeneratedContent } from "@ludico/domain";
 import { createHash } from "node:crypto";
 import type { QueryResultRow } from "pg";
@@ -53,6 +55,7 @@ export class ContentPipelineError extends Error {
       | "CONTENT_NOT_FOUND"
       | "CONTENT_NOT_REVIEWABLE"
       | "EDITION_ALREADY_EXISTS"
+      | "EDITION_GAME_UNSUPPORTED"
       | "INSUFFICIENT_APPROVED_CONTENT"
       | "JOB_NOT_RUNNING"
       | "INVALID_BLOCKED_TERM"
@@ -608,14 +611,14 @@ export async function assembleApprovedEdition(
     );
     const present = existing.rows[0];
     if (present && present.gameCount > 0) {
-      if (present.status === "approved" && present.gameCount === 2) {
+      if (present.status === "approved" && present.gameCount === 3) {
         return { changed: false, editionId: present.editionId, status: "approved" };
       }
       throw new ContentPipelineError("EDITION_ALREADY_EXISTS");
     }
 
     const selected: GeneratedContentRecord[] = [];
-    for (const type of ["quiz", "crossword"] as const) {
+    for (const type of ["quiz", "crossword", "true_false"] as const) {
       const result = await transaction.query<GeneratedContentRecord & QueryResultRow>(
         `select id, content_type as "contentType", target_date::text as "targetDate", status,
                 public_payload as "publicPayload", private_payload as "privatePayload",
@@ -641,16 +644,22 @@ export async function assembleApprovedEdition(
           )
         ).rows[0]!;
     for (const content of selected) {
+      const playable = toPlayableContent({
+        privatePayload: content.privatePayload,
+        publicPayload: content.publicPayload,
+        sources: content.sources,
+        type: content.contentType,
+      } as GeneratedContentCandidate);
       const game = await transaction.query<{ id: string } & QueryResultRow>(
         `insert into games
            (edition_id, type, status, public_payload, created_at, updated_at)
          values ($1, $2, 'active', $3::jsonb, $4, $4) returning id`,
-        [edition.id, content.contentType, JSON.stringify(content.publicPayload), now],
+        [edition.id, playable.type, JSON.stringify(playable.publicPayload), now],
       );
       await transaction.query(
         `insert into game_solutions (game_id, private_payload, created_at, updated_at)
          values ($1, $2::jsonb, $3, $3)`,
-        [game.rows[0]!.id, JSON.stringify(content.privatePayload), now],
+        [game.rows[0]!.id, JSON.stringify(playable.privatePayload), now],
       );
       await transaction.query(
         `update generated_contents
@@ -674,6 +683,60 @@ export async function assembleApprovedEdition(
     });
     return { changed: true, editionId: edition.id, status: "approved" };
   });
+}
+
+function toPlayableContent(candidate: GeneratedContentCandidate): {
+  readonly privatePayload: unknown;
+  readonly publicPayload: unknown;
+  readonly type: "crossword" | "quiz" | "true_false";
+} {
+  if (candidate.type !== "true_false") {
+    if (candidate.type === "guess_word" || candidate.type === "word_search") {
+      throw new ContentPipelineError("EDITION_GAME_UNSUPPORTED");
+    }
+    return candidate;
+  }
+  const solutionById = new Map(candidate.privatePayload.items.map((item) => [item.id, item]));
+  const questions = candidate.publicPayload.items.map((item) => ({
+    category: item.category,
+    difficulty: quizDifficulty(item.difficulty),
+    id: item.id,
+    options: [
+      { id: trueFalseOptionId(item.id, true), text: "Verdadero" },
+      { id: trueFalseOptionId(item.id, false), text: "Falso" },
+    ],
+    prompt: item.statement,
+  }));
+  const privatePayload: QuizPrivateSolution = {
+    kind: "quiz-solution",
+    questions: questions.map((question) => {
+      const solution = solutionById.get(question.id);
+      if (!solution) throw new ContentPipelineError("VALIDATION_FAILED");
+      return {
+        correctOptionId: trueFalseOptionId(question.id, solution.value),
+        explanation: solution.explanation,
+        questionId: question.id,
+      };
+    }),
+  };
+  const publicPayload: QuizPublicPayload = {
+    kind: "quiz",
+    questions,
+    title: candidate.publicPayload.title,
+  };
+  return { privatePayload, publicPayload, type: "true_false" };
+}
+
+const quizDifficulties = ["very_easy", "easy", "medium", "hard", "expert"] as const;
+
+function quizDifficulty(
+  value: 1 | 2 | 3 | 4 | 5,
+): QuizPublicPayload["questions"][number]["difficulty"] {
+  return quizDifficulties[value - 1]!;
+}
+
+function trueFalseOptionId(itemId: string, value: boolean): string {
+  return `${itemId.slice(0, 14)}${value ? "a" : "b"}${itemId.slice(15)}`;
 }
 
 async function listSemanticCandidates(

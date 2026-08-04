@@ -53,7 +53,7 @@ describe("content generation pipeline", () => {
     });
   });
 
-  it("plans idempotently, validates both games and assembles an approved edition", async () => {
+  it("plans idempotently, validates playable games and assembles an approved edition", async () => {
     const { client, database } = await setup();
     const firstPlan = await planContentGenerationJobs(client, "2026-08-03", 1, "fake", 1_000);
     const repeated = await planContentGenerationJobs(client, "2026-08-03", 1, "other", 2_000);
@@ -61,13 +61,20 @@ describe("content generation pipeline", () => {
     expect(repeated.map(({ id }) => id)).toEqual(firstPlan.map(({ id }) => id));
 
     for (const job of firstPlan.filter(
-      (job) => job.contentType === "quiz" || job.contentType === "crossword",
+      (job) =>
+        job.contentType === "quiz" ||
+        job.contentType === "crossword" ||
+        job.contentType === "true_false",
     )) {
       expect(await claimContentGenerationJob(client, job.id, now)).toMatchObject({ id: job.id });
       const generated = await recordGeneratedContent(
         client,
         job.id,
-        job.contentType === "quiz" ? quizCandidate() : crosswordCandidate(),
+        job.contentType === "quiz"
+          ? quizCandidate()
+          : job.contentType === "crossword"
+            ? crosswordCandidate()
+            : trueFalseCandidate(),
         { evaluatorPassed: true, sourcesVerified: true },
         500,
         now,
@@ -92,11 +99,11 @@ describe("content generation pipeline", () => {
       "select type, public_payload from games where edition_id = $1 order by type",
       [assembled.editionId],
     );
-    expect(games.rows.map(({ type }) => type)).toEqual(["crossword", "quiz"]);
+    expect(games.rows.map(({ type }) => type)).toEqual(["crossword", "quiz", "true_false"]);
     expect(JSON.stringify(games.rows)).not.toMatch(
-      /correctOptionId|quiz-solution|vocabularyVersion/,
+      /correctOptionId|quiz-solution|vocabularyVersion|true-false-solution|"value":true/,
     );
-    expect((await database.query("select * from game_solutions")).rows).toHaveLength(2);
+    expect((await database.query("select * from game_solutions")).rows).toHaveLength(3);
   });
 
   it("quarantines sensitive content and prevents overriding deterministic failures", async () => {
@@ -398,6 +405,58 @@ function crosswordCandidate(): GeneratedContentCandidate {
       itemId: item.id,
       url: `https://example.com/${item.id}`,
     })),
+  };
+}
+
+function trueFalseCandidate(): GeneratedContentCandidate {
+  const items = [
+    {
+      id: "60000000-0000-4000-8000-000000000001",
+      statement: "La Tierra gira alrededor del Sol.",
+      value: true,
+    },
+    {
+      id: "60000000-0000-4000-8000-000000000002",
+      statement: "La Luna es un planeta del sistema solar.",
+      value: false,
+    },
+    {
+      id: "60000000-0000-4000-8000-000000000003",
+      statement: "El agua contiene hidrogeno y oxigeno.",
+      value: true,
+    },
+    {
+      id: "60000000-0000-4000-8000-000000000004",
+      statement: "Los murcielagos son mamiferos nocturnos.",
+      value: true,
+    },
+    {
+      id: "60000000-0000-4000-8000-000000000005",
+      statement: "El Sol gira alrededor de la Tierra cada dia.",
+      value: false,
+    },
+  ] as const;
+  return {
+    type: "true_false",
+    publicPayload: {
+      items: items.map(({ id, statement }) => ({
+        category: "Ciencia",
+        difficulty: 1 as const,
+        id,
+        statement,
+      })),
+      kind: "true-false",
+      title: "Verdadero o falso de ciencia",
+    },
+    privatePayload: {
+      items: items.map(({ id, value }) => ({
+        explanation: "Explicacion revisada para el item de ciencia.",
+        id,
+        value,
+      })),
+      kind: "true-false-solution",
+    },
+    sources: items.map(({ id }) => ({ itemId: id, url: `https://example.com/${id}` })),
   };
 }
 

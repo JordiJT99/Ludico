@@ -35,7 +35,13 @@ export function PreviousResultsPanel() {
       <div className="games">
         {results.map((result) => (
           <article className="game" key={result.attemptId}>
-            <h3>{result.gameType === "quiz" ? "Quiz" : "Crucigrama"}</h3>
+            <h3>
+              {result.gameType === "quiz"
+                ? "Quiz"
+                : result.gameType === "true_false"
+                  ? "Verdadero o falso"
+                  : "Crucigrama"}
+            </h3>
             <p>
               <strong>{result.points} puntos</strong>
               {result.rank && result.total ? ` · Puesto ${result.rank} de ${result.total}` : ""}

@@ -7,6 +7,7 @@ const secure = process.env.NODE_ENV === "production";
 const cookieName = secure ? "__Host-ludico_guest" : "ludico_guest";
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 const publicGamePath = new RegExp(`^games/${uuid}$`, "i");
+const publicSolutionPath = new RegExp(`^games/${uuid}/solution$`, "i");
 const startPath = new RegExp(`^games/${uuid}/attempts$`, "i");
 const progressPath = new RegExp(`^attempts/${uuid}/progress$`, "i");
 const hintPath = new RegExp(`^attempts/${uuid}/hints$`, "i");
@@ -24,7 +25,12 @@ type RouteContext = { params: Promise<{ path: string[] }> };
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   const path = (await context.params).path.join("/");
-  if (publicGamePath.test(path)) return proxy(path, { method: "GET", cache: "no-store" });
+  if (publicGamePath.test(path)) {
+    return proxy(path, { method: "GET", cache: "no-store" });
+  }
+  if (publicSolutionPath.test(path)) {
+    return proxy(path, { method: "GET", cache: "no-store" }, "private, no-store");
+  }
   if (
     !reviewPath.test(path) &&
     !leaderboardPath.test(path) &&
@@ -124,13 +130,14 @@ async function playerHeaders(): Promise<Record<string, string> | null> {
   return token ? { "x-guest-token": token } : null;
 }
 
-async function proxy(path: string, init: RequestInit) {
+async function proxy(path: string, init: RequestInit, cacheControl?: string) {
   try {
     const response = await fetch(`${apiUrl()}/${path}`, init);
     return new NextResponse(await response.text(), {
       status: response.status,
       headers: {
         "Cache-Control":
+          cacheControl ??
           response.headers.get("Cache-Control") ??
           (init.method === "GET"
             ? "public, max-age=30, stale-while-revalidate=60"

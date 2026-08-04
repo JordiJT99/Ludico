@@ -121,6 +121,50 @@ describe("guest quiz attempt", () => {
     expect(submitted.competitive).toBe(false);
   });
 
+  it("scores a binary true-false attempt without treating it as a four-option quiz", async () => {
+    const { client, database, quiz } = await setupQuiz();
+    const binaryQuiz: QuizPublicPayload = {
+      ...quiz,
+      title: "Verdadero o falso",
+      questions: quiz.questions.slice(0, 3).map((question) => ({
+        ...question,
+        options: question.options.slice(0, 2),
+      })),
+    };
+    const solution: QuizPrivateSolution = {
+      kind: "quiz-solution",
+      questions: binaryQuiz.questions.map((question) => ({
+        correctOptionId: question.options[0]!.id,
+        explanation: "Explicacion binaria revisada.",
+        questionId: question.id,
+      })),
+    };
+    await database.query(
+      `update games set type = 'true_false', public_payload = $2::jsonb where id = $1`,
+      [gameId, JSON.stringify(binaryQuiz)],
+    );
+    await database.query(
+      `update game_solutions set private_payload = $2::jsonb where game_id = $1`,
+      [gameId, JSON.stringify(solution)],
+    );
+
+    const guest = await createGuestSession(client, "web", now);
+    const attempt = await startGuestQuizAttempt(client, gameId, guest.token, now);
+    const events = binaryQuiz.questions.map((question, index) => ({
+      clientEventId: `71000000-0000-4000-8000-00000000000${index}`,
+      elapsedMs: 1_000,
+      questionId: question.id,
+      selectedOptionId: question.options[0]!.id,
+    }));
+    await saveGuestQuizProgress(client, attempt.attemptId, guest.token, 1, events, now);
+    expect(await submitGuestQuizAttempt(client, attempt.attemptId, guest.token, now)).toMatchObject(
+      {
+        competitive: true,
+        provisional: { completed: true },
+      },
+    );
+  });
+
   it("limits an impossible client timer with the server window", async () => {
     const { client, quiz } = await setupQuiz();
     const guest = await createGuestSession(client, "web", now);

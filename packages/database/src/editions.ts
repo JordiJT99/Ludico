@@ -25,7 +25,7 @@ interface DueEditionRow extends QueryResultRow {
 
 interface SolutionRow extends QueryResultRow {
   gameId: string;
-  type: "quiz" | "crossword";
+  type: "quiz" | "crossword" | "true_false";
   status: "active" | "disabled";
   publicPayload: Record<string, unknown>;
   contentVersion: number;
@@ -298,7 +298,10 @@ async function getSolutionStatisticDetails(
   payload: Record<string, unknown>,
   attemptCount: number,
 ): Promise<Pick<NonNullable<PublicSolution["statistics"]>, "crosswordEntries" | "quizQuestions">> {
-  if (game.type === "quiz" && isQuizPublicSolutionPayload(payload)) {
+  if (
+    (game.type === "quiz" || game.type === "true_false") &&
+    isQuizPublicSolutionPayload(payload)
+  ) {
     const counts = await client.query<QuizAnswerCountRow>(
       `select answer.question_id::text as "questionId",
               answer.selected_option_id::text as "selectedOptionId", count(*)::integer as count
@@ -374,6 +377,10 @@ async function publishSolutions(
     `update game_solutions solution
      set public_payload = case game.type
            when 'quiz' then jsonb_build_object(
+             'kind', 'quiz-solution',
+             'questions', solution.private_payload -> 'questions'
+           )
+           when 'true_false' then jsonb_build_object(
              'kind', 'quiz-solution',
              'questions', solution.private_payload -> 'questions'
            )
