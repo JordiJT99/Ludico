@@ -88,11 +88,11 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
     };
     try {
       const ready = session.pendingEvents.length ? await sync(session) : session;
-      const next = await sendGuess(ready, event);
+      const result = await sendGuess(ready, event);
+      const next = result.session;
       setSession(next);
       setValue("");
-      const outcome = next.attempt.result ? "complete" : "incorrect";
-      if (outcome === "incorrect") {
+      if (result.outcome === "incorrect") {
         setNotice("No es la palabra. Prueba de nuevo o consulta la siguiente pista.");
         return;
       }
@@ -108,7 +108,11 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
           scoreBucket: scoreBucket(next.attempt.result.provisional.score),
         });
       }
-      setNotice("Reto enviado. La solución se publicará al cierre de la edición.");
+      setNotice(
+        result.outcome === "correct"
+          ? "¡Correcto! Has resuelto el reto."
+          : "Se han acabado los intentos. La solución se publicará al cierre de la edición.",
+      );
     } catch {
       setSession({ ...session, pendingEvents: [...session.pendingEvents, event] });
       setValue("");
@@ -267,11 +271,14 @@ async function start(
 
 async function sync(session: Session): Promise<Session> {
   let next = { ...session, pendingEvents: [] as readonly GuessWordGuessEvent[] };
-  for (const event of session.pendingEvents) next = await sendGuess(next, event);
+  for (const event of session.pendingEvents) next = (await sendGuess(next, event)).session;
   return next;
 }
 
-async function sendGuess(session: Session, event: GuessWordGuessEvent): Promise<Session> {
+async function sendGuess(
+  session: Session,
+  event: GuessWordGuessEvent,
+): Promise<{ outcome: "correct" | "incorrect" | "exhausted"; session: Session }> {
   const response = await fetch(`/api/player/attempts/${session.attempt.attemptId}/guesses`, {
     body: JSON.stringify({ ...event, version: session.attempt.version }),
     headers: { "Content-Type": "application/json" },
@@ -279,7 +286,7 @@ async function sendGuess(session: Session, event: GuessWordGuessEvent): Promise<
   });
   const body: unknown = await response.json();
   if (!response.ok || !isGuessWordGuessResult(body)) throw new Error("guess");
-  return { ...session, attempt: body.attempt };
+  return { outcome: body.outcome, session: { ...session, attempt: body.attempt } };
 }
 
 function toDraft(gameId: string, session: Session): GuessWordLocalDraft {

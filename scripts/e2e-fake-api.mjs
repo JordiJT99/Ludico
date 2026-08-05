@@ -360,6 +360,32 @@ createServer(async (request, response) => {
       reserve: { crossword: 8, quiz: 9, true_false: 8, guess_word: 8, word_search: 8 },
     });
   }
+  if (request.method === "GET" && path === "/v1/admin/publication-settings") {
+    return json(response, 200, {
+      closesAtLocalTime: "00:00",
+      contentPlanLocalTime: "02:00",
+      market: "ES",
+      opensAtLocalTime: "00:00",
+      reserveDays: 14,
+    });
+  }
+  if (request.method === "GET" && path === "/v1/admin/content/health") {
+    return json(response, 200, {
+      alerts: [{ code: "CONTENT_RESERVE_LOW", severity: "warning" }],
+      generatedAt: "2026-07-29T12:00:00.000Z",
+      healthy: true,
+      jobs: {
+        failedLast24Hours: 0,
+        latestSuccessfulAt: "2026-07-29T11:00:00.000Z",
+        queued: 0,
+        running: 0,
+        succeededLast24Hours: 5,
+      },
+      nextEdition: { localDate: "2026-07-30", ready: true },
+      reserve: { crossword: 8, quiz: 9, true_false: 8, guess_word: 8, word_search: 8 },
+      spendMicrosToday: 0,
+    });
+  }
   if (request.method === "POST" && /^\/v1\/admin\/editions\/[0-9a-f-]+\/schedule$/i.test(path)) {
     const id = path.split("/")[4];
     scheduledEditions.push({ id, ...JSON.parse(await readBody(request)) });

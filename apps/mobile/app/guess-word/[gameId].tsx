@@ -77,10 +77,17 @@ export default function GuessWordScreen() {
     };
     try {
       const ready = session.pendingEvents.length ? await sync(session) : session;
-      const next = await sendGuess(ready, event);
+      const result = await sendGuess(ready, event);
+      const next = result.session;
       setSession(next);
       setValue("");
-      setNotice(next.attempt.result ? "Reto enviado." : "No es la palabra. Prueba de nuevo.");
+      setNotice(
+        result.outcome === "correct"
+          ? "¡Correcto!"
+          : result.outcome === "exhausted"
+            ? "Se acabaron los intentos. La solución se publicará al cierre."
+            : "No es la palabra. Prueba de nuevo.",
+      );
       if (next.attempt.result && gameId) await removeGuessWordDraft(gameId);
     } catch {
       setSession({ ...session, pendingEvents: [...session.pendingEvents, event] });
@@ -207,11 +214,14 @@ async function start(gameId: string, signal: AbortSignal): Promise<Session> {
 
 async function sync(session: Session): Promise<Session> {
   let next = { ...session, pendingEvents: [] as readonly GuessWordGuessEvent[] };
-  for (const event of session.pendingEvents) next = await sendGuess(next, event);
+  for (const event of session.pendingEvents) next = (await sendGuess(next, event)).session;
   return next;
 }
 
-async function sendGuess(session: Session, event: GuessWordGuessEvent): Promise<Session> {
+async function sendGuess(
+  session: Session,
+  event: GuessWordGuessEvent,
+): Promise<{ outcome: "correct" | "incorrect" | "exhausted"; session: Session }> {
   const headers = await getPlayerHeaders(new AbortController().signal);
   if (!headers) throw new Error("guest");
   const response = await fetch(`${apiUrl()}/attempts/${session.attempt.attemptId}/guesses`, {
@@ -221,7 +231,7 @@ async function sendGuess(session: Session, event: GuessWordGuessEvent): Promise<
   });
   const body: unknown = await response.json();
   if (!response.ok || !isGuessWordGuessResult(body)) throw new Error("guess");
-  return { ...session, attempt: body.attempt };
+  return { outcome: body.outcome, session: { ...session, attempt: body.attempt } };
 }
 
 function toDraft(gameId: string, session: Session): GuessWordLocalDraft {
