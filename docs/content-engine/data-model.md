@@ -20,7 +20,7 @@ Game-specific tables are `WordBankEntry`, `Crossword`, `CrosswordEntry`, `Crossw
 
 ## Required extensions
 
-The present database supports only `quiz` and `crossword`, and its candidate status is `approved`, `pending_review`, `rejected`, `selected`. A backwards-compatible migration will add the three new game types, richer lifecycle metadata, variant/difficulty/locale columns, attempt/provider usage tables and reserve projections. Existing rows retain their current values through an explicit mapping.
+The database supports `quiz`, `crossword`, `true_false`, `guess_word` and `word_search`. Candidate persistence uses `approved`, `pending_review`, `rejected` and `selected`; published edition lifecycle is stored separately in `daily_editions`. Typed attempt tables cover answers, crossword cells, guesses and word-search finds. Public and private payloads remain split, while job, validation, audit, source and cost records retain reproducibility.
 
 `WordBankEntry` stores visible and comparison-normalized answers, category, locale, aliases, variants, source/risk flags, quality and validation version. Spanish normalization folds accents for comparison but preserves `Ñ` (it never becomes `N`). Grid letters are uppercase letters only unless a template explicitly permits compounds.
 

@@ -45,12 +45,15 @@ describe("word search attempt", () => {
     expect(bad).toMatchObject({ outcome: "incorrect", attempt: { version: 1 } });
 
     let version = 1;
+    let finalEvent: ReturnType<typeof selection> | undefined;
+    let finalResult: Awaited<ReturnType<typeof recordGuestWordSearchSelection>> | undefined;
     for (const [index, entry] of entries.entries()) {
+      const event = selection(words[index]!.id, entry, version, index + 2);
       const found = await recordGuestWordSearchSelection(
         client,
         attempt.attemptId,
         guest.token,
-        selection(words[index]!.id, entry, version, index + 2),
+        event,
         now,
       );
       expect(found.outcome).toBe("found");
@@ -58,6 +61,8 @@ describe("word search attempt", () => {
       if (index < entries.length - 1)
         expect(found.attempt).toMatchObject({ status: "in_progress", version });
       else {
+        finalEvent = event;
+        finalResult = found;
         expect(found.attempt).toMatchObject({
           result: { provisional: { score: 1000 } },
           status: "accepted",
@@ -65,6 +70,15 @@ describe("word search attempt", () => {
         });
       }
     }
+    expect(
+      await recordGuestWordSearchSelection(
+        client,
+        attempt.attemptId,
+        guest.token,
+        finalEvent!,
+        now,
+      ),
+    ).toEqual(finalResult);
     const stored = await database.query<{ entry_id: string }>(
       "select entry_id from word_search_finds where attempt_id = $1 order by created_at",
       [attempt.attemptId],

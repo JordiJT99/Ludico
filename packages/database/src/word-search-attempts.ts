@@ -147,18 +147,24 @@ async function recordSelection(
     throw new WordSearchAttemptError("ATTEMPT_NOT_FOUND", "El intento no existe");
   validateGame(attempt.publicPayload, attempt.privatePayload);
   assertEvent(event, attempt.publicPayload);
-  if (attempt.status !== "in_progress")
-    throw new WordSearchAttemptError("ATTEMPT_NOT_EDITABLE", "El intento ya está enviado");
   const duplicateEvent = await transaction.query<{ id: string }>(
     "select id from attempt_events where attempt_id = $1 and client_event_id = $2 limit 1",
     [attempt.id, event.clientEventId],
   );
   if (duplicateEvent.rows[0]) {
     return {
-      attempt: await readState(transaction, attempt.id, attempt.status, attempt.version),
-      outcome: "already_found",
+      attempt: await readState(
+        transaction,
+        attempt.id,
+        attempt.status,
+        attempt.version,
+        new Date(attempt.closesAt),
+      ),
+      outcome: "found",
     };
   }
+  if (attempt.status !== "in_progress")
+    throw new WordSearchAttemptError("ATTEMPT_NOT_EDITABLE", "El intento ya está enviado");
   if (attempt.version !== event.version)
     throw new WordSearchAttemptError("VERSION_CONFLICT", "El progreso ha cambiado");
   const entryIndex = attempt.publicPayload.words.findIndex((word) => word.id === event.entryId);
