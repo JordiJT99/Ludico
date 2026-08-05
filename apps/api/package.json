@@ -14,6 +14,6 @@
     "@ludico/contracts": "workspace:*",
     "@ludico/database": "workspace:*",
     "@ludico/domain": "workspace:*",
-    "fastify": "^5.10.0"
+    "fastify": "^5.11.0"
   }
 }

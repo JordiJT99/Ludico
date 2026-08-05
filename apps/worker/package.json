@@ -14,7 +14,7 @@
     "@ludico/contracts": "workspace:*",
     "@ludico/database": "workspace:*",
     "@ludico/domain": "workspace:*",
-    "pg-boss": "12.26.3"
+    "pg-boss": "12.26.4"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.4",
