@@ -314,6 +314,7 @@ export interface QuizLocalDraft {
   readonly attempt: QuizAttemptState;
   readonly contentVersion: number;
   readonly current: number;
+  readonly gameType?: "quiz" | "true_false";
   readonly gameId: string;
   readonly pendingEvents: readonly QuizProgressEvent[];
   readonly quiz: QuizPublicPayload;
@@ -1626,6 +1627,9 @@ export function isQuizLocalDraft(value: unknown, gameId: string): value is QuizL
   if (!isRecord(value)) return false;
   return (
     value.gameId === gameId &&
+    (value.gameType === undefined ||
+      value.gameType === "quiz" ||
+      value.gameType === "true_false") &&
     Number.isInteger(value.contentVersion) &&
     Number(value.contentVersion) >= 1 &&
     Number.isInteger(value.current) &&
