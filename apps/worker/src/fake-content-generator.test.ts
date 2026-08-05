@@ -197,19 +197,25 @@ describe("curated deterministic content provider", () => {
     },
   );
 
-  it("fails explicitly when an inactive difficulty has no curated fallback", async () => {
-    await expect(
-      deterministicContentGenerator.generate({
-        budgetMicros: 0,
-        contentType: "true_false",
-        id: "unsupported-level",
-        promptVersion: "v1",
-        provider: "deterministic",
-        targetDifficulty: 5,
-        targetDate: "2026-08-03",
-      }),
-    ).rejects.toThrow("No curated content exists for this target difficulty");
-  });
+  it.each(["true_false", "guess_word"] as const)(
+    "generates valid %s content for every difficulty",
+    async (contentType) => {
+      for (const targetDifficulty of [1, 2, 3, 4, 5] as const) {
+        const generated = await deterministicContentGenerator.generate({
+          budgetMicros: 0,
+          contentType,
+          id: `${contentType}-${targetDifficulty}`,
+          promptVersion: "v1",
+          provider: "deterministic",
+          targetDifficulty,
+          targetDate: "2026-08-03",
+        });
+        expect(validateGeneratedContent(generated.candidate, { targetDifficulty })).toMatchObject({
+          status: "valid",
+        });
+      }
+    },
+  );
 
   it("publishes the configured word-search difficulty through the public contract", async () => {
     const generated = await deterministicContentGenerator.generate({

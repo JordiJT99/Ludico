@@ -115,7 +115,7 @@ function fakeTrueFalse(
   targetDifficulty: 1 | 2 | 3 | 4 | 5,
 ): GeneratedContentCandidate {
   const items = cyclicDaily(
-    trueFalseFacts.filter((item) => item.difficulty === targetDifficulty),
+    allTrueFalseFacts.filter((item) => item.difficulty === targetDifficulty),
     targetDate,
     3,
   );
@@ -153,7 +153,7 @@ function fakeGuessWord(
 ): GeneratedContentCandidate {
   const id = uuid(targetDate, 400);
   const game = cyclic(
-    guessWords.filter((item) => item.difficulty === targetDifficulty),
+    allGuessWords.filter((item) => item.difficulty === targetDifficulty),
     targetDate,
     1,
   )[0]!;
@@ -1208,6 +1208,107 @@ const trueFalseFacts = [
   ),
 ] as const;
 
+const additionalTrueFalseFacts = [
+  trueFalse(
+    "Lisboa es la capital de Portugal.",
+    true,
+    "Lisboa es la capital portuguesa.",
+    "Geografía",
+    2,
+    "https://www.britannica.com/place/Lisbon",
+  ),
+  trueFalse(
+    "Un triángulo tiene cuatro lados.",
+    false,
+    "Un triángulo tiene tres lados.",
+    "Matemáticas",
+    2,
+    "https://www.britannica.com/science/triangle",
+  ),
+  trueFalse(
+    "Un día completo tiene veinticuatro horas.",
+    true,
+    "Por convención, un día civil se divide en veinticuatro horas.",
+    "Vida cotidiana",
+    2,
+    "https://www.britannica.com/science/day",
+  ),
+  trueFalse(
+    "La fotosíntesis libera oxígeno.",
+    true,
+    "La fotosíntesis produce oxígeno como subproducto.",
+    "Ciencia",
+    3,
+    "https://www.britannica.com/science/photosynthesis",
+  ),
+  trueFalse(
+    "El ADN utiliza uracilo como una de sus bases.",
+    false,
+    "El uracilo forma parte del ARN; el ADN utiliza timina.",
+    "Ciencia",
+    3,
+    "https://www.britannica.com/science/DNA",
+  ),
+  trueFalse(
+    "La península ibérica incluye territorio de España y Portugal.",
+    true,
+    "España y Portugal ocupan la mayor parte de la península ibérica.",
+    "Geografía",
+    3,
+    "https://www.britannica.com/place/Iberian-Peninsula",
+  ),
+  trueFalse(
+    "Un pársec equivale aproximadamente a 3,26 años luz.",
+    true,
+    "Un pársec corresponde aproximadamente a 3,26 años luz.",
+    "Astronomía",
+    4,
+    "https://science.nasa.gov/exoplanets/",
+  ),
+  trueFalse(
+    "El número de Avogadro es aproximadamente 6,022 × 10²³.",
+    true,
+    "El número de Avogadro expresa cuántas entidades hay en un mol.",
+    "Química",
+    4,
+    "https://www.britannica.com/science/Avogadros-number",
+  ),
+  trueFalse(
+    "El meridiano de Greenwich pasa por Madrid.",
+    false,
+    "El meridiano cero pasa por Greenwich, en el Reino Unido.",
+    "Geografía",
+    4,
+    "https://www.britannica.com/place/Greenwich",
+  ),
+  trueFalse(
+    "El bosón W interviene en la interacción nuclear débil.",
+    true,
+    "Los bosones W transmiten la interacción nuclear débil.",
+    "Física",
+    5,
+    "https://home.cern/science/physics/standard-model",
+  ),
+  trueFalse(
+    "El ATP contiene ribosa.",
+    true,
+    "El ATP incluye una molécula de ribosa, adenina y grupos fosfato.",
+    "Bioquímica",
+    5,
+    "https://www.britannica.com/science/adenosine-triphosphate",
+  ),
+  trueFalse(
+    "Los gluones transmiten la interacción electromagnética.",
+    false,
+    "Los gluones transmiten la interacción fuerte; el fotón media la electromagnética.",
+    "Física",
+    5,
+    "https://home.cern/science/physics/standard-model",
+  ),
+] as const;
+
+const allTrueFalseFacts = [...trueFalseFacts, ...additionalTrueFalseFacts] as const;
+
 const guessWords = [
   guessWord(
     "ARBOL",
@@ -1354,6 +1455,59 @@ const guessWords = [
     "https://dle.rae.es/ventana",
   ),
 ] as const;
+
+const advancedGuessWords = [
+  guessWord(
+    "ECUACION",
+    "Matemáticas",
+    "Igualdad entre dos expresiones que puede contener incógnitas.",
+    4,
+    ["Se resuelve para hallar un valor desconocido.", 2],
+    "https://dle.rae.es/ecuación",
+  ),
+  guessWord(
+    "ECOSISTEMA",
+    "Naturaleza",
+    "Conjunto formado por seres vivos y el medio con el que se relacionan.",
+    4,
+    ["Incluye organismos y su entorno.", 2],
+    "https://www.britannica.com/science/ecosystem",
+  ),
+  guessWord(
+    "PENINSULA",
+    "Geografía",
+    "Tierra rodeada de agua salvo por una zona que la une a otra extensión terrestre.",
+    4,
+    ["La ibérica es un ejemplo europeo.", 2],
+    "https://dle.rae.es/península",
+  ),
+  guessWord(
+    "FOTOSINTESIS",
+    "Ciencia",
+    "Proceso por el que plantas y otros organismos transforman energía luminosa en energía química.",
+    5,
+    ["Las plantas la realizan principalmente en las hojas.", 3],
+    "https://www.britannica.com/science/photosynthesis",
+  ),
+  guessWord(
+    "METEORITO",
+    "Astronomía",
+    "Fragmento de un cuerpo celeste que alcanza la superficie de un planeta o satélite.",
+    5,
+    ["Procede del espacio y puede llegar al suelo.", 3],
+    "https://science.nasa.gov/solar-system/meteors-meteorites/",
+  ),
+  guessWord(
+    "CONSTITUCION",
+    "Derecho",
+    "Norma fundamental que organiza un Estado y reconoce derechos básicos.",
+    5,
+    ["En España fue aprobada en 1978.", 3],
+    "https://www.britannica.com/topic/constitution-politics",
+  ),
+] as const;
+
+const allGuessWords = [...guessWords, ...advancedGuessWords] as const;
 
 const wordSearchWords = [
   "SOL",
@@ -1587,7 +1741,7 @@ function trueFalse(
   value: boolean,
   explanation: string,
   category: string,
-  difficulty: 1 | 2,
+  difficulty: 1 | 2 | 3 | 4 | 5,
   sourceUrl: string,
 ) {
   return { statement, value, explanation, category, difficulty, sourceUrl };
@@ -1597,7 +1751,7 @@ function guessWord(
   answer: string,
   category: string,
   definition: string,
-  difficulty: 1 | 2 | 3,
+  difficulty: 1 | 2 | 3 | 4 | 5,
   hints: readonly [string, number],
   sourceUrl: string,
 ) {
