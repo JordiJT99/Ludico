@@ -792,6 +792,7 @@ function guessWord(
 }
 
 function cyclic<T>(items: readonly T[], targetDate: string, count: number): readonly T[] {
+  if (items.length === 0) throw new Error("No curated content exists for this target difficulty");
   const start = Math.abs(Date.parse(`${targetDate}T12:00:00Z`) / 86_400_000) % items.length;
   return Array.from(
     { length: count },
@@ -800,6 +801,7 @@ function cyclic<T>(items: readonly T[], targetDate: string, count: number): read
 }
 
 function cyclicDaily<T>(items: readonly T[], targetDate: string, count: number): readonly T[] {
+  if (items.length === 0) throw new Error("No curated content exists for this target difficulty");
   const day = Math.floor(Date.parse(`${targetDate}T12:00:00Z`) / 86_400_000);
   const start = Math.abs(day * count) % items.length;
   return Array.from({ length: count }, (_, index) => items[(start + index) % items.length]!);

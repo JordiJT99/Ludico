@@ -190,6 +190,20 @@ describe("curated deterministic content provider", () => {
     ).toBe(true);
   });
 
+  it("fails explicitly when an inactive difficulty has no curated fallback", async () => {
+    await expect(
+      deterministicContentGenerator.generate({
+        budgetMicros: 0,
+        contentType: "true_false",
+        id: "unsupported-level",
+        promptVersion: "v1",
+        provider: "deterministic",
+        targetDifficulty: 5,
+        targetDate: "2026-08-03",
+      }),
+    ).rejects.toThrow("No curated content exists for this target difficulty");
+  });
+
   it("publishes the configured word-search difficulty through the public contract", async () => {
     const generated = await deterministicContentGenerator.generate({
       budgetMicros: 0,
