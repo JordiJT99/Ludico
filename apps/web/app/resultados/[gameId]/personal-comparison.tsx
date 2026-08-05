@@ -7,7 +7,9 @@ import {
   isPublicCrosswordGame,
   isPublicGuessWordGame,
   isPublicQuizStyleGame,
+  isPublicWordSearchGame,
   isQuizPublicSolutionPayload,
+  isWordSearchPublicSolutionPayload,
   type AttemptReview,
 } from "@ludico/contracts";
 import { foldCrosswordLetter } from "@ludico/domain/crossword";
@@ -69,8 +71,28 @@ export function PersonalComparison({ attemptId }: Readonly<{ attemptId: string }
         isPublicGuessWordGame(review.solution.game) &&
         isGuessWordPublicSolutionPayload(review.solution.payload) ? (
         <GuessWordComparison review={review} />
+      ) : review.progress.kind === "word-search-progress" &&
+        isPublicWordSearchGame(review.solution.game) &&
+        isWordSearchPublicSolutionPayload(review.solution.payload) ? (
+        <WordSearchComparison review={review} />
       ) : null}
     </section>
+  );
+}
+
+function WordSearchComparison({ review }: Readonly<{ review: AttemptReview }>) {
+  if (
+    review.progress.kind !== "word-search-progress" ||
+    !isPublicWordSearchGame(review.solution.game) ||
+    !isWordSearchPublicSolutionPayload(review.solution.payload)
+  ) {
+    return null;
+  }
+  const found = new Set(review.progress.foundEntries.map((entry) => entry.entryId));
+  return (
+    <p>
+      Encontraste {found.size} de {review.solution.game.payload.words.length} palabras.
+    </p>
   );
 }
 

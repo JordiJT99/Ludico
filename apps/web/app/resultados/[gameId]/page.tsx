@@ -4,8 +4,10 @@ import {
   isPublicCrosswordGame,
   isPublicGuessWordGame,
   isPublicQuizStyleGame,
+  isPublicWordSearchGame,
   isPublicSolution,
   isQuizPublicSolutionPayload,
+  isWordSearchPublicSolutionPayload,
   type PublicSolution,
 } from "@ludico/contracts";
 import type { Metadata } from "next";
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { gameId } = await params;
   const result = await loadSolution(gameId);
   return result.status === "available"
-    ? { title: `Solución · ${result.solution.game.type === "quiz" ? "Quiz" : "Crucigrama"}` }
+    ? { title: `Solución · ${gameTitle(result.solution.game.type)}` }
     : { robots: { follow: false, index: false }, title: "Solución pendiente · Lúdico" };
 }
 
@@ -88,6 +90,9 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
         ) : isPublicGuessWordGame(solution.game) &&
           isGuessWordPublicSolutionPayload(solution.payload) ? (
           <GuessWordSolution solution={solution} />
+        ) : isPublicWordSearchGame(solution.game) &&
+          isWordSearchPublicSolutionPayload(solution.payload) ? (
+          <WordSearchSolution solution={solution} />
         ) : (
           <p role="alert">La revisión publicada no tiene un formato válido.</p>
         )}
@@ -111,6 +116,37 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
         </Link>
       </main>
     </>
+  );
+}
+
+function WordSearchSolution({ solution }: Readonly<{ solution: PublicSolution }>) {
+  if (
+    !isPublicWordSearchGame(solution.game) ||
+    !isWordSearchPublicSolutionPayload(solution.payload)
+  )
+    return null;
+  const entries = new Map(solution.payload.entries.map((entry) => [entry.answer, entry]));
+  return (
+    <section className="solution-section">
+      <h1>{solution.game.payload.title}</h1>
+      <p>Solución publicada el {formatPublishedAt(solution.publishedAt)}.</p>
+      <ul className="review-list">
+        {solution.game.payload.words.map((word) => {
+          const entry = entries.get(word.answer);
+          return (
+            <li key={word.id}>
+              <strong>{word.answer}</strong>
+              {entry ? (
+                <span>
+                  {" "}
+                  — fila {entry.row + 1}, columna {entry.column + 1}
+                </span>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
@@ -259,4 +295,16 @@ function formatPublishedAt(value: string): string {
 function formatDuration(value: number): string {
   const seconds = Math.round(value / 1_000);
   return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+}
+
+function gameTitle(type: PublicSolution["game"]["type"]): string {
+  return type === "quiz"
+    ? "Quiz"
+    : type === "true_false"
+      ? "Verdadero o falso"
+      : type === "guess_word"
+        ? "Adivina la palabra"
+        : type === "word_search"
+          ? "Sopa de letras"
+          : "Crucigrama";
 }

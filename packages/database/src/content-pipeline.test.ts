@@ -1,6 +1,6 @@
 import { PGlite } from "@electric-sql/pglite";
 import type { CrosswordPublicPayload, QuizPublicPayload } from "@ludico/contracts";
-import type { GeneratedContentCandidate } from "@ludico/domain";
+import { constructWordSearch, type GeneratedContentCandidate } from "@ludico/domain";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { fileURLToPath } from "node:url";
@@ -65,7 +65,8 @@ describe("content generation pipeline", () => {
         job.contentType === "quiz" ||
         job.contentType === "crossword" ||
         job.contentType === "true_false" ||
-        job.contentType === "guess_word",
+        job.contentType === "guess_word" ||
+        job.contentType === "word_search",
     )) {
       expect(await claimContentGenerationJob(client, job.id, now)).toMatchObject({ id: job.id });
       const generated = await recordGeneratedContent(
@@ -77,7 +78,9 @@ describe("content generation pipeline", () => {
             ? crosswordCandidate()
             : job.contentType === "true_false"
               ? trueFalseCandidate()
-              : guessWordCandidate(),
+              : job.contentType === "guess_word"
+                ? guessWordCandidate()
+                : wordSearchCandidate(),
         { evaluatorPassed: true, sourcesVerified: true },
         500,
         now,
@@ -107,11 +110,15 @@ describe("content generation pipeline", () => {
       "guess_word",
       "quiz",
       "true_false",
+      "word_search",
     ]);
     expect(JSON.stringify(games.rows)).not.toMatch(
-      /correctOptionId|quiz-solution|vocabularyVersion|true-false-solution|guess-word-solution|"answer":|"value":true/,
+      /correctOptionId|quiz-solution|vocabularyVersion|true-false-solution|guess-word-solution|word-search-solution|"value":true/,
     );
-    expect((await database.query("select * from game_solutions")).rows).toHaveLength(4);
+    expect(
+      JSON.stringify(games.rows.find(({ type }) => type === "word_search")?.public_payload),
+    ).not.toContain("direction");
+    expect((await database.query("select * from game_solutions")).rows).toHaveLength(5);
   });
 
   it("quarantines sensitive content and prevents overriding deterministic failures", async () => {
@@ -485,6 +492,38 @@ function guessWordCandidate(): GeneratedContentCandidate {
     },
     privatePayload: { alternativeAnswers: [], answer: "ARBOL", kind: "guess-word-solution" },
     sources: [{ itemId: id, url: "https://example.com/arbol" }],
+  };
+}
+
+function wordSearchCandidate(): GeneratedContentCandidate {
+  const game = constructWordSearch({
+    columns: 8,
+    directions: ["east", "south", "southEast"],
+    rows: 8,
+    seed: "pipeline-word-search",
+    words: ["LUNA", "NUBE", "SOL"],
+  });
+  const ids = [
+    "62111111-1111-4111-8111-111111111111",
+    "62222222-2222-4222-8222-222222222222",
+    "62333333-3333-4333-8333-333333333333",
+  ];
+  return {
+    type: "word_search",
+    publicPayload: {
+      columns: game.columns,
+      grid: game.grid,
+      kind: "word-search",
+      rows: game.rows,
+      seed: game.seed,
+      title: "Sopa de letras de naturaleza",
+      words: game.entries.map((entry, index) => ({ answer: entry.answer, id: ids[index]! })),
+    },
+    privatePayload: { entries: game.entries, kind: "word-search-solution" },
+    sources: game.entries.map((_, index) => ({
+      itemId: ids[index]!,
+      url: `https://example.com/word-search-${index}`,
+    })),
   };
 }
 

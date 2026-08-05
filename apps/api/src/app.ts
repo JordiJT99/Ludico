@@ -38,6 +38,12 @@ import {
   type QuizAttemptState,
   type QuizProgressEvent,
   type QuizSubmitResult,
+  type WordSearchAttemptState,
+  type WordSearchSelectionEvent,
+  type WordSearchSelectionResult,
+  wordSearchAttemptStateSchema,
+  wordSearchSelectionEventSchema,
+  wordSearchSelectionResultSchema,
   publicGameSchema,
   publicEditionSchema,
   publicSolutionSchema,
@@ -71,6 +77,7 @@ import {
   QuizAttemptError,
   type GuestOrigin,
   GuessWordAttemptError,
+  WordSearchAttemptError,
   type QuizProgressResult,
   type ShareResultData,
   WordBankError,
@@ -219,13 +226,21 @@ interface AppOptions {
     gameId: string,
     player: PlayerCredential,
     now: Date,
-  ) => Promise<QuizAttemptState | CrosswordAttemptState | GuessWordAttemptState>;
+  ) => Promise<
+    QuizAttemptState | CrosswordAttemptState | GuessWordAttemptState | WordSearchAttemptState
+  >;
   readonly submitGuessWordGuess?: (
     attemptId: string,
     player: PlayerCredential,
     event: GuessWordGuessEvent,
     now: Date,
   ) => Promise<GuessWordGuessResult>;
+  readonly submitWordSearchSelection?: (
+    attemptId: string,
+    player: PlayerCredential,
+    event: WordSearchSelectionEvent,
+    now: Date,
+  ) => Promise<WordSearchSelectionResult>;
   readonly submitAttempt?: (
     attemptId: string,
     player: PlayerCredential,
@@ -965,7 +980,11 @@ export function buildApp(options: AppOptions = {}) {
     Params: { id: string };
     Headers: PlayerCommandHeaders;
     Reply:
-      QuizAttemptState | CrosswordAttemptState | GuessWordAttemptState | { code: "UNAVAILABLE" };
+      | QuizAttemptState
+      | CrosswordAttemptState
+      | GuessWordAttemptState
+      | WordSearchAttemptState
+      | { code: "UNAVAILABLE" };
   }>(
     "/v1/games/:id/attempts",
     {
@@ -978,6 +997,7 @@ export function buildApp(options: AppOptions = {}) {
               quizAttemptStateSchema,
               crosswordAttemptStateSchema,
               guessWordAttemptStateSchema,
+              wordSearchAttemptStateSchema,
             ],
           },
         },
@@ -989,6 +1009,34 @@ export function buildApp(options: AppOptions = {}) {
       reply.header("Cache-Control", "private, no-store");
       const player = await resolvePlayer(request.headers, options);
       return startAttempt(request.params.id, player, (options.now ?? (() => new Date()))());
+    },
+  );
+
+  app.post<{
+    Params: { id: string };
+    Headers: PlayerCommandHeaders;
+    Body: WordSearchSelectionEvent;
+    Reply: WordSearchSelectionResult | { code: "UNAVAILABLE" };
+  }>(
+    "/v1/attempts/:id/word-search-selections",
+    {
+      schema: {
+        params: idParamsSchema,
+        headers: playerCommandHeadersSchema,
+        body: wordSearchSelectionEventSchema,
+        response: { 200: wordSearchSelectionResultSchema },
+      },
+    },
+    async (request, reply) => {
+      if (!options.submitWordSearchSelection) return reply.code(503).send({ code: "UNAVAILABLE" });
+      reply.header("Cache-Control", "private, no-store");
+      const player = await resolvePlayer(request.headers, options);
+      return options.submitWordSearchSelection(
+        request.params.id,
+        player,
+        request.body,
+        (options.now ?? (() => new Date()))(),
+      );
     },
   );
 
@@ -1282,6 +1330,17 @@ export function buildApp(options: AppOptions = {}) {
         ATTEMPT_NOT_FOUND: 404,
         GAME_UNAVAILABLE: 409,
         INVALID_GUESS: 422,
+        UNAUTHORIZED: 401,
+        VERSION_CONFLICT: 409,
+      }[error.code];
+      return reply.code(status).send({ code: error.code });
+    }
+    if (error instanceof WordSearchAttemptError) {
+      const status = {
+        ATTEMPT_NOT_EDITABLE: 409,
+        ATTEMPT_NOT_FOUND: 404,
+        GAME_UNAVAILABLE: 409,
+        INVALID_SELECTION: 422,
         UNAUTHORIZED: 401,
         VERSION_CONFLICT: 409,
       }[error.code];

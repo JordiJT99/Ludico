@@ -667,6 +667,7 @@ describe("account data rights", () => {
     },
     quizAnswers: [],
     wordGuesses: [],
+    wordSearchFinds: [],
   };
 
   it("exports private portable JSON and deletes only after explicit confirmation", async () => {

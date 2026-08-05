@@ -290,7 +290,9 @@ function validateCandidateStructure(candidate: GeneratedContentCandidate): void 
   if (
     answers.size !== candidate.publicPayload.words.length ||
     candidate.privatePayload.entries.length !== candidate.publicPayload.words.length ||
-    candidate.privatePayload.entries.some((entry) => !answers.has(entry.answer))
+    candidate.privatePayload.entries.some(
+      (entry, index) => candidate.publicPayload.words[index]?.answer !== entry.answer,
+    )
   ) {
     throw new Error("INVALID_WORD_SEARCH");
   }

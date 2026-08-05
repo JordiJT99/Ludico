@@ -46,6 +46,8 @@ import {
   revealUserCrosswordCell,
   rotateGuestSession,
   recordUserGuessWordGuess,
+  recordGuestWordSearchSelection,
+  recordUserWordSearchSelection,
   saveGuestCrosswordProgress,
   saveGuestQuizProgress,
   saveUserCrosswordProgress,
@@ -56,6 +58,8 @@ import {
   startGuestQuizAttempt,
   startUserCrosswordAttempt,
   startUserGuessWordAttempt,
+  startGuestWordSearchAttempt,
+  startUserWordSearchAttempt,
   startUserQuizAttempt,
   submitGuestQuizAttempt,
   submitGuestCrosswordAttempt,
@@ -199,6 +203,11 @@ const app = buildApp({
         ? startGuestGuessWordAttempt(database, gameId, player.token, now)
         : startUserGuessWordAttempt(database, gameId, player.userId, now);
     }
+    if (game?.type === "word_search") {
+      return player.kind === "guest"
+        ? startGuestWordSearchAttempt(database, gameId, player.token, now)
+        : startUserWordSearchAttempt(database, gameId, player.userId, now);
+    }
     return player.kind === "guest"
       ? startGuestQuizAttempt(database, gameId, player.token, now)
       : startUserQuizAttempt(database, gameId, player.userId, now);
@@ -215,6 +224,10 @@ const app = buildApp({
     player.kind === "guest"
       ? recordGuestGuessWordGuess(database, attemptId, player.token, event, now)
       : recordUserGuessWordGuess(database, attemptId, player.userId, event, now),
+  submitWordSearchSelection: (attemptId, player, event, now) =>
+    player.kind === "guest"
+      ? recordGuestWordSearchSelection(database, attemptId, player.token, event, now)
+      : recordUserWordSearchSelection(database, attemptId, player.userId, event, now),
   submitAttempt: async (attemptId, player, now) => {
     const crossword = (await getAttemptGameType(database, attemptId)) === "crossword";
     if (crossword) {

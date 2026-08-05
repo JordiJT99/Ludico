@@ -11,7 +11,7 @@ export type HealthResponse = { status: "ok" };
 
 export interface PublicGame {
   readonly id: string;
-  readonly type: "quiz" | "crossword" | "true_false" | "guess_word";
+  readonly type: "quiz" | "crossword" | "true_false" | "guess_word" | "word_search";
   readonly status: "active" | "disabled";
   readonly payload: object;
   readonly contentVersion: number;
@@ -31,7 +31,7 @@ export const publicGameSchema = {
   required: ["id", "type", "status", "payload", "contentVersion"],
   properties: {
     id: { type: "string", format: "uuid" },
-    type: { enum: ["quiz", "crossword", "true_false", "guess_word"] },
+    type: { enum: ["quiz", "crossword", "true_false", "guess_word", "word_search"] },
     status: { enum: ["active", "disabled"] },
     payload: { type: "object", additionalProperties: true },
     contentVersion: { type: "integer", minimum: 1 },
@@ -69,7 +69,8 @@ export function isPublicEdition(value: unknown): value is PublicEdition {
         (game.type === "quiz" ||
           game.type === "crossword" ||
           game.type === "true_false" ||
-          game.type === "guess_word") &&
+          game.type === "guess_word" ||
+          game.type === "word_search") &&
         (game.status === "active" || game.status === "disabled") &&
         isRecord(game.payload) &&
         Number.isInteger(game.contentVersion),
@@ -172,6 +173,26 @@ export interface GuessWordPublicPayload {
 export interface GuessWordPublicSolutionPayload {
   readonly answer: string;
   readonly kind: "guess-word-solution";
+}
+
+export interface WordSearchPublicPayload {
+  readonly columns: number;
+  readonly grid: readonly (readonly string[])[];
+  readonly kind: "word-search";
+  readonly rows: number;
+  readonly seed: string;
+  readonly title: string;
+  readonly words: readonly { readonly answer: string; readonly id: string }[];
+}
+
+export interface WordSearchPublicSolutionPayload {
+  readonly entries: readonly {
+    readonly answer: string;
+    readonly column: number;
+    readonly direction: string;
+    readonly row: number;
+  }[];
+  readonly kind: "word-search-solution";
 }
 
 export interface GuestSessionCredential {
@@ -331,6 +352,36 @@ export interface GuessWordGuessResult {
   readonly outcome: "correct" | "incorrect" | "exhausted";
 }
 
+export interface WordSearchFoundEntry {
+  readonly elapsedMs: number;
+  readonly entryId: string;
+}
+
+export interface WordSearchAttemptState {
+  readonly attemptId: string;
+  readonly foundEntries: readonly WordSearchFoundEntry[];
+  readonly result?: QuizSubmitResult;
+  readonly status: "in_progress" | "accepted";
+  readonly version: number;
+}
+
+export interface WordSearchSelectionEvent {
+  readonly clientEventId: string;
+  readonly clientOccurredAt?: string;
+  readonly elapsedMs: number;
+  readonly endColumn: number;
+  readonly endRow: number;
+  readonly entryId: string;
+  readonly startColumn: number;
+  readonly startRow: number;
+  readonly version: number;
+}
+
+export interface WordSearchSelectionResult {
+  readonly attempt: WordSearchAttemptState;
+  readonly outcome: "found" | "incorrect" | "already_found";
+}
+
 export type CrosswordDirection = "across" | "down";
 
 export interface CrosswordCoordinate {
@@ -435,6 +486,10 @@ export type AttemptReviewProgress =
   | {
       readonly guesses: readonly GuessWordAttempt[];
       readonly kind: "guess-word-progress";
+    }
+  | {
+      readonly foundEntries: readonly WordSearchFoundEntry[];
+      readonly kind: "word-search-progress";
     };
 
 export interface AttemptReview {
@@ -481,7 +536,7 @@ export interface PreviousResultSummary {
   readonly attemptId: string;
   readonly competitive: boolean;
   readonly gameId: string;
-  readonly gameType: "crossword" | "quiz" | "true_false" | "guess_word";
+  readonly gameType: "crossword" | "quiz" | "true_false" | "guess_word" | "word_search";
   readonly localDate: string;
   readonly points: number;
   readonly rank?: number;
@@ -496,7 +551,7 @@ export interface AccountDataExport {
   }[];
   readonly attempts: readonly {
     readonly competitive: boolean | null;
-    readonly gameType: "crossword" | "quiz" | "true_false" | "guess_word";
+    readonly gameType: "crossword" | "quiz" | "true_false" | "guess_word" | "word_search";
     readonly id: string;
     readonly localDate: string;
     readonly mode: "casual" | "competitive";
@@ -537,6 +592,7 @@ export interface AccountDataExport {
     readonly elapsedMs: number;
     readonly guess: string;
   }[];
+  readonly wordSearchFinds: readonly (WordSearchFoundEntry & { readonly attemptId: string })[];
 }
 
 export interface UserLeaderboardSettings {
@@ -797,6 +853,67 @@ export const guessWordGuessResultSchema = {
   },
 } as const;
 
+export const wordSearchAttemptStateSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["attemptId", "status", "version", "foundEntries"],
+  properties: {
+    attemptId: { type: "string", format: "uuid" },
+    status: { enum: ["in_progress", "accepted"] },
+    version: { type: "integer", minimum: 1 },
+    foundEntries: {
+      type: "array",
+      maxItems: 40,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["entryId", "elapsedMs"],
+        properties: {
+          entryId: { type: "string", format: "uuid" },
+          elapsedMs: { type: "integer", minimum: 0, maximum: 3_600_000 },
+        },
+      },
+    },
+    result: quizSubmitResultSchema,
+  },
+} as const;
+
+export const wordSearchSelectionEventSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "clientEventId",
+    "elapsedMs",
+    "endColumn",
+    "endRow",
+    "entryId",
+    "startColumn",
+    "startRow",
+    "version",
+  ],
+  properties: {
+    clientEventId: { type: "string", format: "uuid" },
+    clientOccurredAt: { type: "string", format: "date-time" },
+    elapsedMs: { type: "integer", minimum: 0, maximum: 3_600_000 },
+    endColumn: { type: "integer", minimum: 0, maximum: 20 },
+    endRow: { type: "integer", minimum: 0, maximum: 20 },
+    entryId: { type: "string", format: "uuid" },
+    startColumn: { type: "integer", minimum: 0, maximum: 20 },
+    startRow: { type: "integer", minimum: 0, maximum: 20 },
+    version: { type: "integer", minimum: 1 },
+  },
+} as const;
+
+export const wordSearchSelectionResultSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["attempt", "outcome"],
+  properties: {
+    attempt: wordSearchAttemptStateSchema,
+    outcome: { enum: ["found", "incorrect", "already_found"] },
+  },
+} as const;
+
 export const attemptReviewSchema = {
   type: "object",
   additionalProperties: false,
@@ -821,6 +938,15 @@ export const attemptReviewSchema = {
           properties: {
             kind: { const: "guess-word-progress" },
             guesses: guessWordAttemptStateSchema.properties.guesses,
+          },
+        },
+        {
+          type: "object",
+          additionalProperties: false,
+          required: ["kind", "foundEntries"],
+          properties: {
+            kind: { const: "word-search-progress" },
+            foundEntries: wordSearchAttemptStateSchema.properties.foundEntries,
           },
         },
         {
@@ -907,7 +1033,7 @@ export const previousResultSummariesSchema = {
       attemptId: { type: "string", format: "uuid" },
       competitive: { type: "boolean" },
       gameId: { type: "string", format: "uuid" },
-      gameType: { enum: ["crossword", "quiz", "true_false", "guess_word"] },
+      gameType: { enum: ["crossword", "quiz", "true_false", "guess_word", "word_search"] },
       localDate: { type: "string", format: "date" },
       points: { type: "integer", minimum: 0 },
       rank: { type: "integer", minimum: 1 },
@@ -929,6 +1055,7 @@ export const accountDataExportSchema = {
     "profile",
     "quizAnswers",
     "wordGuesses",
+    "wordSearchFinds",
   ],
   properties: {
     analyticsEvents: {
@@ -962,7 +1089,7 @@ export const accountDataExportSchema = {
         ],
         properties: {
           competitive: { anyOf: [{ type: "boolean" }, { type: "null" }] },
-          gameType: { enum: ["crossword", "quiz", "true_false", "guess_word"] },
+          gameType: { enum: ["crossword", "quiz", "true_false", "guess_word", "word_search"] },
           id: { type: "string", format: "uuid" },
           localDate: { type: "string", format: "date" },
           mode: { enum: ["casual", "competitive"] },
@@ -1063,6 +1190,19 @@ export const accountDataExportSchema = {
           attemptId: { type: "string", format: "uuid" },
           elapsedMs: { type: "integer", minimum: 0, maximum: 3_600_000 },
           guess: { type: "string", minLength: 1, maxLength: 21 },
+        },
+      },
+    },
+    wordSearchFinds: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["attemptId", "entryId", "elapsedMs"],
+        properties: {
+          attemptId: { type: "string", format: "uuid" },
+          entryId: { type: "string", format: "uuid" },
+          elapsedMs: { type: "integer", minimum: 0, maximum: 3_600_000 },
         },
       },
     },
@@ -1206,6 +1346,65 @@ export function isPublicGuessWordGame(
   );
 }
 
+export function isPublicWordSearchGame(
+  value: unknown,
+): value is PublicGame & { payload: WordSearchPublicPayload } {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    value.type === "word_search" &&
+    (value.status === "active" || value.status === "disabled") &&
+    Number.isInteger(value.contentVersion) &&
+    isWordSearchPublicPayload(value.payload)
+  );
+}
+
+export function isWordSearchPublicPayload(value: unknown): value is WordSearchPublicPayload {
+  return (
+    isRecord(value) &&
+    value.kind === "word-search" &&
+    typeof value.title === "string" &&
+    typeof value.seed === "string" &&
+    Number.isInteger(value.rows) &&
+    Number(value.rows) >= 4 &&
+    Number(value.rows) <= 21 &&
+    Number.isInteger(value.columns) &&
+    Number(value.columns) >= 4 &&
+    Number(value.columns) <= 21 &&
+    Array.isArray(value.grid) &&
+    value.grid.length === value.rows &&
+    value.grid.every(
+      (row) =>
+        Array.isArray(row) &&
+        row.length === value.columns &&
+        row.every((letter) => typeof letter === "string"),
+    ) &&
+    Array.isArray(value.words) &&
+    value.words.length >= 3 &&
+    value.words.every(
+      (word) => isRecord(word) && typeof word.id === "string" && typeof word.answer === "string",
+    )
+  );
+}
+
+export function isWordSearchPublicSolutionPayload(
+  value: unknown,
+): value is WordSearchPublicSolutionPayload {
+  return (
+    isRecord(value) &&
+    value.kind === "word-search-solution" &&
+    Array.isArray(value.entries) &&
+    value.entries.every(
+      (entry) =>
+        isRecord(entry) &&
+        typeof entry.answer === "string" &&
+        typeof entry.direction === "string" &&
+        Number.isInteger(entry.row) &&
+        Number.isInteger(entry.column),
+    )
+  );
+}
+
 export function isGuessWordPublicPayload(value: unknown): value is GuessWordPublicPayload {
   if (
     !isRecord(value) ||
@@ -1326,6 +1525,44 @@ export function isGuessWordAttemptState(value: unknown): value is GuessWordAttem
     Array.isArray(value.guesses) &&
     value.guesses.every(isGuessWordAttempt) &&
     (value.result === undefined || isQuizSubmitResult(value.result))
+  );
+}
+
+export function isWordSearchAttemptState(value: unknown): value is WordSearchAttemptState {
+  return (
+    isRecord(value) &&
+    typeof value.attemptId === "string" &&
+    (value.status === "in_progress" || value.status === "accepted") &&
+    Number.isInteger(value.version) &&
+    Array.isArray(value.foundEntries) &&
+    value.foundEntries.every(
+      (entry) =>
+        isRecord(entry) &&
+        typeof entry.entryId === "string" &&
+        Number.isInteger(entry.elapsedMs) &&
+        Number(entry.elapsedMs) >= 0,
+    ) &&
+    (value.result === undefined || isQuizSubmitResult(value.result))
+  );
+}
+
+function isWordSearchFoundEntry(value: unknown): value is WordSearchFoundEntry {
+  return (
+    isRecord(value) &&
+    typeof value.entryId === "string" &&
+    Number.isInteger(value.elapsedMs) &&
+    Number(value.elapsedMs) >= 0 &&
+    Number(value.elapsedMs) <= 3_600_000
+  );
+}
+
+export function isWordSearchSelectionResult(value: unknown): value is WordSearchSelectionResult {
+  return (
+    isRecord(value) &&
+    (value.outcome === "found" ||
+      value.outcome === "incorrect" ||
+      value.outcome === "already_found") &&
+    isWordSearchAttemptState(value.attempt)
   );
 }
 
@@ -1520,7 +1757,8 @@ export function isPublicSolution(value: unknown): value is PublicSolution {
   return (
     (isPublicQuizStyleGame(value.game) && isQuizPublicSolutionPayload(value.payload)) ||
     (isPublicCrosswordGame(value.game) && isCrosswordPublicSolutionPayload(value.payload)) ||
-    (isPublicGuessWordGame(value.game) && isGuessWordPublicSolutionPayload(value.payload))
+    (isPublicGuessWordGame(value.game) && isGuessWordPublicSolutionPayload(value.payload)) ||
+    (isPublicWordSearchGame(value.game) && isWordSearchPublicSolutionPayload(value.payload))
   );
 }
 
@@ -1550,7 +1788,10 @@ export function isAttemptReview(value: unknown): value is AttemptReview {
       Number(value.progress.hintsUsed) >= 0) ||
     (value.progress.kind === "guess-word-progress" &&
       Array.isArray(value.progress.guesses) &&
-      value.progress.guesses.every(isGuessWordAttempt))
+      value.progress.guesses.every(isGuessWordAttempt)) ||
+    (value.progress.kind === "word-search-progress" &&
+      Array.isArray(value.progress.foundEntries) &&
+      value.progress.foundEntries.every(isWordSearchFoundEntry))
   );
 }
 
@@ -1589,7 +1830,8 @@ export function isPreviousResultSummaries(value: unknown): value is PreviousResu
         (result.gameType === "quiz" ||
           result.gameType === "crossword" ||
           result.gameType === "true_false" ||
-          result.gameType === "guess_word") &&
+          result.gameType === "guess_word" ||
+          result.gameType === "word_search") &&
         typeof result.localDate === "string" &&
         Number.isInteger(result.points) &&
         (result.rank === undefined || Number.isInteger(result.rank)) &&

@@ -59,7 +59,9 @@ export default async function Home() {
                             ? "Ciencia y curiosidades"
                             : game.type === "guess_word"
                               ? "Léxico y deducción"
-                              : "Palabras cruzadas"}
+                              : game.type === "word_search"
+                                ? "Atención y vocabulario"
+                                : "Palabras cruzadas"}
                       </p>
                       <h3>
                         {game.type === "quiz"
@@ -68,7 +70,9 @@ export default async function Home() {
                             ? "Verdadero o falso"
                             : game.type === "guess_word"
                               ? "Adivina la palabra"
-                              : "Crucigrama diario"}
+                              : game.type === "word_search"
+                                ? "Sopa de letras"
+                                : "Crucigrama diario"}
                       </h3>
                       <p>
                         {game.status === "active"
@@ -78,7 +82,9 @@ export default async function Home() {
                               ? "Decide qué afirmaciones son correctas."
                               : game.type === "guess_word"
                                 ? "Una definición, pistas y una sola palabra."
-                                : "Una cuadrícula para tomarse el tiempo necesario."
+                                : game.type === "word_search"
+                                  ? "Encuentra las palabras escondidas en la cuadrícula."
+                                  : "Una cuadrícula para tomarse el tiempo necesario."
                           : "Temporalmente no disponible"}
                       </p>
                       {game.status === "active" ? (

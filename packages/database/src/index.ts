@@ -16,3 +16,4 @@ export * from "./reviews.js";
 export * from "./schema.js";
 export * from "./sql-client.js";
 export * from "./word-bank.js";
+export * from "./word-search-attempts.js";

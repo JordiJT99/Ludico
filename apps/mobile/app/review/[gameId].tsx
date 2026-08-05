@@ -3,8 +3,10 @@ import {
   isCrosswordPublicSolutionPayload,
   isPublicCrosswordGame,
   isPublicQuizStyleGame,
+  isPublicWordSearchGame,
   isPublicSolution,
   isQuizPublicSolutionPayload,
+  isWordSearchPublicSolutionPayload,
   type AttemptReview,
   type PublicSolution,
 } from "@ludico/contracts";
@@ -83,6 +85,9 @@ export default function ReviewScreen() {
       ) : isPublicCrosswordGame(solution.game) &&
         isCrosswordPublicSolutionPayload(solution.payload) ? (
         <CrosswordReview review={state.review} solution={solution} />
+      ) : isPublicWordSearchGame(solution.game) &&
+        isWordSearchPublicSolutionPayload(solution.payload) ? (
+        <WordSearchReview review={state.review} solution={solution} />
       ) : (
         <Text accessibilityLiveRegion="assertive" style={styles.notice}>
           La revisión publicada no tiene un formato válido.
@@ -91,6 +96,39 @@ export default function ReviewScreen() {
       {state.review ? <PersonalReview review={state.review} /> : null}
       <Action label="Volver al inicio" onPress={() => router.replace("/")} />
     </ScrollView>
+  );
+}
+
+function WordSearchReview({
+  review,
+  solution,
+}: Readonly<{ review?: AttemptReview; solution: PublicSolution }>) {
+  if (
+    !isPublicWordSearchGame(solution.game) ||
+    !isWordSearchPublicSolutionPayload(solution.payload)
+  )
+    return null;
+  const found = new Set(
+    review?.progress.kind === "word-search-progress"
+      ? review.progress.foundEntries.map((entry) => entry.entryId)
+      : [],
+  );
+  return (
+    <>
+      <Text accessibilityRole="header" style={styles.title}>
+        {solution.game.payload.title}
+      </Text>
+      {solution.game.payload.words.map((word) => (
+        <View key={word.id} style={styles.card}>
+          <Text style={styles.answer}>{word.answer}</Text>
+          {review ? (
+            <Text style={styles.body}>
+              {found.has(word.id) ? "La encontraste." : "No la encontraste."}
+            </Text>
+          ) : null}
+        </View>
+      ))}
+    </>
   );
 }
 
@@ -205,6 +243,8 @@ function PersonalReview({ review }: Readonly<{ review: AttemptReview }>) {
         <Text style={styles.body}>Ayudas utilizadas: {review.progress.hintsUsed}</Text>
       ) : review.progress.kind === "guess-word-progress" ? (
         <Text style={styles.body}>Intentos realizados: {review.progress.guesses.length}</Text>
+      ) : review.progress.kind === "word-search-progress" ? (
+        <Text style={styles.body}>Palabras encontradas: {review.progress.foundEntries.length}</Text>
       ) : (
         <Text style={styles.body}>Respuestas guardadas: {review.progress.answers.length}</Text>
       )}

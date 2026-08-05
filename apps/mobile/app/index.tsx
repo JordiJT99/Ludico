@@ -91,7 +91,9 @@ export default function HomeScreen() {
                     ? "Verdadero o falso"
                     : game.type === "guess_word"
                       ? "Adivina la palabra"
-                      : "Crucigrama diario"}
+                      : game.type === "word_search"
+                        ? "Sopa de letras"
+                        : "Crucigrama diario"}
               </Text>
               <Pressable
                 accessibilityRole="button"
@@ -103,7 +105,9 @@ export default function HomeScreen() {
                         ? "/crossword/[gameId]"
                         : game.type === "guess_word"
                           ? "/guess-word/[gameId]"
-                          : "/quiz/[gameId]",
+                          : game.type === "word_search"
+                            ? "/word-search/[gameId]"
+                            : "/quiz/[gameId]",
                     params: { gameId: game.id },
                   })
                 }

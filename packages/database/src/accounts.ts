@@ -129,7 +129,9 @@ async function readAttempts(
     `select attempt.id, attempt.game_id as "gameId", attempt.mode, attempt.status,
             attempt.version,
             (select count(*)::int from answers where attempt_id = attempt.id) +
-            (select count(*)::int from crossword_cells where attempt_id = attempt.id)
+            (select count(*)::int from crossword_cells where attempt_id = attempt.id) +
+            (select count(*)::int from word_guesses where attempt_id = attempt.id) +
+            (select count(*)::int from word_search_finds where attempt_id = attempt.id)
               as "progressCount"
      from game_attempts attempt
      where attempt.${subjectColumn} = $1 ${gameId ? "and attempt.game_id = $2" : ""}
@@ -184,7 +186,7 @@ interface AccountProfileRow extends QueryResultRow {
 
 interface AccountAttemptRow extends QueryResultRow {
   competitive: boolean | null;
-  gameType: "crossword" | "quiz";
+  gameType: "crossword" | "quiz" | "true_false" | "guess_word" | "word_search";
   id: string;
   localDate: string;
   mode: "casual" | "competitive";
@@ -228,6 +230,12 @@ interface AccountWordGuessRow extends QueryResultRow {
   guess: string;
 }
 
+interface AccountWordSearchFindRow extends QueryResultRow {
+  attemptId: string;
+  elapsedMs: number;
+  entryId: string;
+}
+
 type AccountNotificationRow = NotificationPreferences & QueryResultRow;
 
 export async function getUserAccountData(
@@ -244,10 +252,18 @@ export async function getUserAccountData(
   const user = profile.rows[0];
   if (!user) return null;
 
-  const [attempts, consents, analytics, quizAnswers, crosswordCells, wordGuesses, notifications] =
-    await Promise.all([
-      client.query<AccountAttemptRow>(
-        `select attempt.id, game.type as "gameType", edition.local_date as "localDate",
+  const [
+    attempts,
+    consents,
+    analytics,
+    quizAnswers,
+    crosswordCells,
+    wordGuesses,
+    wordSearchFinds,
+    notifications,
+  ] = await Promise.all([
+    client.query<AccountAttemptRow>(
+      `select attempt.id, game.type as "gameType", edition.local_date as "localDate",
               attempt.mode, attempt.status, attempt.started_at as "startedAt",
               attempt.submitted_at as "submittedAt", score.points, score.competitive
        from game_attempts attempt
@@ -256,48 +272,55 @@ export async function getUserAccountData(
        left join scores score on score.attempt_id = attempt.id
        where attempt.user_id = $1
        order by edition.local_date, game.type`,
-        [userId],
-      ),
-      client.query<AccountConsentRow>(
-        `select policy_version as "policyVersion", analytics, ads, source,
+      [userId],
+    ),
+    client.query<AccountConsentRow>(
+      `select policy_version as "policyVersion", analytics, ads, source,
               recorded_at as "recordedAt"
        from consent_records where user_id = $1 order by recorded_at`,
-        [userId],
-      ),
-      client.query<AccountAnalyticsRow>(
-        `select event_name as "eventName", occurred_at as "occurredAt", properties
+      [userId],
+    ),
+    client.query<AccountAnalyticsRow>(
+      `select event_name as "eventName", occurred_at as "occurredAt", properties
        from analytics_events
        where subject_type = 'user' and subject_id = $1 order by occurred_at`,
-        [userId],
-      ),
-      client.query<AccountQuizAnswerRow>(
-        `select answer.attempt_id as "attemptId", answer.question_id as "questionId",
+      [userId],
+    ),
+    client.query<AccountQuizAnswerRow>(
+      `select answer.attempt_id as "attemptId", answer.question_id as "questionId",
               answer.selected_option_id as "selectedOptionId", answer.elapsed_ms as "elapsedMs"
        from answers answer join game_attempts attempt on attempt.id = answer.attempt_id
        where attempt.user_id = $1 order by answer.created_at`,
-        [userId],
-      ),
-      client.query<AccountCrosswordCellRow>(
-        `select cell.attempt_id as "attemptId", cell.cell_id as "cellId", cell.value,
+      [userId],
+    ),
+    client.query<AccountCrosswordCellRow>(
+      `select cell.attempt_id as "attemptId", cell.cell_id as "cellId", cell.value,
               cell.elapsed_ms as "elapsedMs"
        from crossword_cells cell join game_attempts attempt on attempt.id = cell.attempt_id
        where attempt.user_id = $1 order by cell.created_at`,
-        [userId],
-      ),
-      client.query<AccountWordGuessRow>(
-        `select guess.attempt_id as "attemptId", guess.guess, guess.elapsed_ms as "elapsedMs"
+      [userId],
+    ),
+    client.query<AccountWordGuessRow>(
+      `select guess.attempt_id as "attemptId", guess.guess, guess.elapsed_ms as "elapsedMs"
          from word_guesses guess join game_attempts attempt on attempt.id = guess.attempt_id
          where attempt.user_id = $1 order by guess.created_at`,
-        [userId],
-      ),
-      client.query<AccountNotificationRow>(
-        `select enabled, edition_available as "editionAvailable",
+      [userId],
+    ),
+    client.query<AccountWordSearchFindRow>(
+      `select found.attempt_id as "attemptId", found.entry_id as "entryId",
+                found.elapsed_ms as "elapsedMs"
+         from word_search_finds found join game_attempts attempt on attempt.id = found.attempt_id
+         where attempt.user_id = $1 order by found.created_at`,
+      [userId],
+    ),
+    client.query<AccountNotificationRow>(
+      `select enabled, edition_available as "editionAvailable",
               previous_solution as "previousSolution", time_zone as "timeZone",
               quiet_start as "quietStart", quiet_end as "quietEnd"
        from notification_preferences where user_id = $1`,
-        [userId],
-      ),
-    ]);
+      [userId],
+    ),
+  ]);
 
   return {
     analyticsEvents: analytics.rows.map((event) => ({
@@ -325,6 +348,7 @@ export async function getUserAccountData(
     },
     quizAnswers: quizAnswers.rows,
     wordGuesses: wordGuesses.rows,
+    wordSearchFinds: wordSearchFinds.rows,
   };
 }
 

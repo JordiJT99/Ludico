@@ -12,6 +12,7 @@ const startPath = new RegExp(`^games/${uuid}/attempts$`, "i");
 const progressPath = new RegExp(`^attempts/${uuid}/progress$`, "i");
 const hintPath = new RegExp(`^attempts/${uuid}/hints$`, "i");
 const guessPath = new RegExp(`^attempts/${uuid}/guesses$`, "i");
+const wordSearchSelectionPath = new RegExp(`^attempts/${uuid}/word-search-selections$`, "i");
 const submitPath = new RegExp(`^attempts/${uuid}/submit$`, "i");
 const reviewPath = new RegExp(`^attempts/${uuid}/review$`, "i");
 const leaderboardPath = new RegExp(
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     !submitPath.test(path) &&
     !hintPath.test(path) &&
     !guessPath.test(path) &&
+    !wordSearchSelectionPath.test(path) &&
     path !== "share-results" &&
     path !== "consents" &&
     path !== "analytics/events" &&
@@ -107,6 +109,7 @@ async function forwardCommand(
     method === "PATCH" ||
     hintPath.test(path) ||
     guessPath.test(path) ||
+    wordSearchSelectionPath.test(path) ||
     path === "share-results" ||
     path === "consents" ||
     path === "analytics/events" ||

@@ -265,6 +265,33 @@ test("adivina la palabra valida en servidor sin revelar la solución", async ({ 
   expect(locked.headers()["cache-control"]).toBe("private, no-store");
 });
 
+test("la sopa de letras valida selecciones en servidor sin exponer coordenadas", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const card = page.getByRole("article").filter({
+    has: page.getByRole("heading", { name: "Sopa de letras", exact: true }),
+  });
+  await card.getByRole("link", { name: "Jugar", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Sopa de letras E2E" })).toBeVisible();
+  for (const word of ["SOL", "LUNA", "NUBE"]) {
+    await page.getByRole("button", { name: word, exact: true }).click();
+    await page.getByRole("button", { name: /Fila 1, columna 1/ }).click();
+    await page.getByRole("button", { name: /Fila 1, columna 2/ }).click();
+    await expect(page.getByText("Palabra encontrada.")).toBeVisible();
+  }
+  await expect(page.getByRole("heading", { name: "1000 puntos" })).toBeVisible();
+  const publicGame = await page.request.get(
+    "/api/player/games/22222222-2222-4222-8222-222222222226",
+  );
+  expect(await publicGame.text()).not.toContain("direction");
+  const locked = await page.request.get(
+    "/api/player/games/22222222-2222-4222-8222-222222222226/solution",
+  );
+  expect(locked.status()).toBe(423);
+  expect(locked.headers()["cache-control"]).toBe("private, no-store");
+});
+
 test("el crucigrama funciona offline, conserva pulsaciones lentas y coordina sus vistas", async ({
   context,
   page,
