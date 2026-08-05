@@ -761,7 +761,113 @@ const additionalQuizFacts = [
   ),
 ] as const;
 
-const quizFacts = [...baseQuizFacts, ...additionalQuizFacts] as const;
+const levelQuizFacts = [
+  quizFact("very_easy", "¿Cuánto es 2 más 2?", ["4", "3", "5", "6"], "Dos más dos es cuatro."),
+  quizFact(
+    "very_easy",
+    "¿Qué figura tiene tres lados?",
+    ["Triángulo", "Cuadrado", "Círculo", "Rectángulo"],
+    "Un triángulo tiene tres lados.",
+  ),
+  quizFact(
+    "very_easy",
+    "¿Qué animal suele maullar?",
+    ["Gato", "Perro", "Caballo", "Pez"],
+    "El maullido es propio del gato.",
+  ),
+  quizFact(
+    "very_easy",
+    "¿Qué astro ilumina la Tierra durante el día?",
+    ["El Sol", "La Luna", "Marte", "Venus"],
+    "El Sol es la estrella de nuestro sistema.",
+  ),
+  quizFact(
+    "very_easy",
+    "¿Qué día sigue al lunes?",
+    ["Martes", "Domingo", "Jueves", "Sábado"],
+    "Martes sigue a lunes.",
+  ),
+  quizFact(
+    "medium",
+    "¿En qué capa de la atmósfera ocurre la mayor parte del tiempo meteorológico?",
+    ["Troposfera", "Exosfera", "Termosfera", "Mesosfera"],
+    "La troposfera es la capa atmosférica más baja.",
+  ),
+  quizFact(
+    "medium",
+    "¿Qué civilización construyó Machu Picchu?",
+    ["Inca", "Romana", "Egipcia", "Maya"],
+    "Machu Picchu fue construido por los incas.",
+  ),
+  quizFact(
+    "medium",
+    "¿Qué novela escribió Mary Shelley?",
+    ["Frankenstein", "Drácula", "Jane Eyre", "La isla del tesoro"],
+    "Mary Shelley escribió Frankenstein.",
+  ),
+  quizFact(
+    "hard",
+    "¿Qué unidad del SI mide la intensidad luminosa?",
+    ["Candela", "Lumen", "Lux", "Vatio"],
+    "La candela es la unidad base del SI para la intensidad luminosa.",
+  ),
+  quizFact(
+    "hard",
+    "¿Cómo se llama el estudio científico de los hongos?",
+    ["Micología", "Ornitología", "Geología", "Citología"],
+    "La micología estudia los hongos.",
+  ),
+  quizFact(
+    "hard",
+    "¿Qué proceso libera vapor de agua desde las plantas?",
+    ["Transpiración", "Fermentación", "Germinación", "Polinización"],
+    "La transpiración libera agua en forma de vapor.",
+  ),
+  quizFact(
+    "hard",
+    "¿Qué mineral ocupa el valor 10 de la escala de Mohs?",
+    ["Diamante", "Cuarzo", "Talco", "Yeso"],
+    "El diamante ocupa el extremo superior de la escala de Mohs.",
+  ),
+  quizFact(
+    "hard",
+    "¿Cómo se llaman los dos satélites de Marte?",
+    ["Fobos y Deimos", "Ío y Europa", "Titán y Rea", "Ariel y Umbriel"],
+    "Fobos y Deimos son los satélites naturales de Marte.",
+  ),
+  quizFact(
+    "expert",
+    "¿Qué unidad del SI expresa la actividad catalítica?",
+    ["Katal", "Siemens", "Weber", "Becquerel"],
+    "El katal es la unidad derivada para la actividad catalítica.",
+  ),
+  quizFact(
+    "expert",
+    "¿Qué elemento tiene el símbolo W?",
+    ["Wolframio", "Rutenio", "Renio", "Hafnio"],
+    "W es el símbolo del wolframio.",
+  ),
+  quizFact(
+    "expert",
+    "¿Qué tipo de enlace une las dos hebras de ADN?",
+    ["Puentes de hidrógeno", "Enlaces iónicos", "Enlaces metálicos", "Enlaces peptídicos"],
+    "Las bases complementarias se unen con puentes de hidrógeno.",
+  ),
+  quizFact(
+    "expert",
+    "¿Qué disciplina estudia el significado de las expresiones lingüísticas?",
+    ["Semántica", "Fonética", "Morfología", "Ortografía"],
+    "La semántica estudia el significado lingüístico.",
+  ),
+  quizFact(
+    "expert",
+    "¿Qué partícula media la interacción electromagnética?",
+    ["Fotón", "Gluón", "Neutrino", "Bosón de Higgs"],
+    "El fotón es el cuanto del campo electromagnético.",
+  ),
+] as const;
+
+const quizFacts = [...baseQuizFacts, ...additionalQuizFacts, ...levelQuizFacts] as const;
 
 const trueFalseFacts = [
   trueFalse(
@@ -1433,7 +1539,7 @@ function word(id: string, answer: string, clue: string): WordBankEntry {
 
 function fact(
   category: string,
-  difficulty: "easy" | "medium",
+  difficulty: "very_easy" | "easy" | "medium" | "hard" | "expert",
   prompt: string,
   options: readonly [string, string, string, string],
   correctIndex: number,
@@ -1453,8 +1559,27 @@ function easyQuiz(
   return fact(category, "easy", prompt, options, 0, explanation, sourceUrl);
 }
 
-function quizDifficultyLevel(difficulty: "easy" | "medium"): 2 | 3 {
-  return difficulty === "easy" ? 2 : 3;
+function quizFact(
+  difficulty: "very_easy" | "medium" | "hard" | "expert",
+  prompt: string,
+  options: readonly [string, string, string, string],
+  explanation: string,
+) {
+  return fact(
+    "Cultura general",
+    difficulty,
+    prompt,
+    options,
+    0,
+    explanation,
+    "https://www.britannica.com/",
+  );
+}
+
+function quizDifficultyLevel(
+  difficulty: "very_easy" | "easy" | "medium" | "hard" | "expert",
+): 1 | 2 | 3 | 4 | 5 {
+  return ({ very_easy: 1, easy: 2, medium: 3, hard: 4, expert: 5 } as const)[difficulty];
 }
 
 function trueFalse(

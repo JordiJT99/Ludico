@@ -177,28 +177,25 @@ describe("curated deterministic content provider", () => {
     expect(new Set(prompts)).toHaveLength(70);
   });
 
-  it("keeps every supported quiz difficulty playable through the public contract", async () => {
-    const generated = await deterministicContentGenerator.generate({
-      budgetMicros: 0,
-      contentType: "quiz",
-      id: "all-levels",
-      promptVersion: "v1",
-      provider: "deterministic",
-      targetDifficulty: 2,
-      targetDate: "2026-08-03",
-    });
-    if (generated.candidate.type !== "quiz") throw new Error("quiz");
-    const difficulties = ["very_easy", "easy", "medium", "hard", "expert"] as const;
-    expect(
-      isQuizPublicPayload({
-        ...generated.candidate.publicPayload,
-        questions: generated.candidate.publicPayload.questions.map((question, index) => ({
-          ...question,
-          difficulty: difficulties[index]!,
-        })),
-      }),
-    ).toBe(true);
-  });
+  it.each([1, 2, 3, 4, 5] as const)(
+    "generates a valid quiz for difficulty %i",
+    async (targetDifficulty) => {
+      const generated = await deterministicContentGenerator.generate({
+        budgetMicros: 0,
+        contentType: "quiz",
+        id: `quiz-${targetDifficulty}`,
+        promptVersion: "v1",
+        provider: "deterministic",
+        targetDifficulty,
+        targetDate: "2026-08-03",
+      });
+      if (generated.candidate.type !== "quiz") throw new Error("quiz");
+      expect(isQuizPublicPayload(generated.candidate.publicPayload)).toBe(true);
+      expect(validateGeneratedContent(generated.candidate, { targetDifficulty })).toMatchObject({
+        status: "valid",
+      });
+    },
+  );
 
   it("fails explicitly when an inactive difficulty has no curated fallback", async () => {
     await expect(
