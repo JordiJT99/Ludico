@@ -127,6 +127,13 @@
       "when": 1785913457827,
       "tag": "0017_smart_ender_wiggin",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1785921326302,
+      "tag": "0018_supreme_scalphunter",
+      "breakpoints": true
     }
   ]
 }

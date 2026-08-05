@@ -1303,8 +1303,8 @@ describe("human content administration", () => {
     const entry = {
       active: true,
       answer: "SOL",
-      category: "AstronomÃ­a",
-      clue: "Astro que ilumina el dÃ­a",
+      category: "Astronom\u00eda",
+      clue: "Astro que ilumina el d\u00eda",
       difficulty: 1,
       id: "66666666-6666-4666-8666-666666666666",
       letterCount: 3,
@@ -1379,14 +1379,14 @@ describe("human content administration", () => {
         "idempotency-key": "word-bank-deactivate-1",
       },
       method: "POST",
-      payload: { reason: "La fuente dejÃ³ de estar vigente" },
+      payload: { reason: "La fuente dej\u00f3 de estar vigente" },
       url: `/v1/admin/word-bank/${entry.id}/deactivate`,
     });
     expect(deactivated.statusCode).toBe(200);
     expect(deactivateWordBankEntry).toHaveBeenCalledWith(
       entry.id,
       "user-editor",
-      "La fuente dejÃ³ de estar vigente",
+      "La fuente dej\u00f3 de estar vigente",
       "word-bank-deactivate-1",
       now,
     );
@@ -1396,8 +1396,8 @@ describe("human content administration", () => {
     const dashboard = {
       daily: [{ activeSubjects: 4, completions: 2, localDate: "2026-08-01", starts: 3 }],
       definitions: {
-        activeSubjects: "Sujetos seudÃ³nimos Ãºnicos con AppOpened en el periodo.",
-        completionRate: "Intentos Ãºnicos completados / intentos Ãºnicos iniciados.",
+        activeSubjects: "Sujetos seud\u00f3nimos \u00fanicos con AppOpened en el periodo.",
+        completionRate: "Intentos \u00fanicos completados / intentos \u00fanicos iniciados.",
       },
       freshness: "2026-08-01T10:00:00.000Z",
       generatedAt: now.toISOString(),

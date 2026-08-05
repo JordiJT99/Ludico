@@ -26,4 +26,6 @@ The database supports `quiz`, `crossword`, `true_false`, `guess_word` and `word_
 
 ## Privacy and retention
 
+Each generated candidate stores a persistent quality score from 0 to 100. It is calculated from validation findings when the candidate or a manual revision is saved, so selection is explainable and does not depend on player data before publication.
+
 Player analytics is aggregated by cohort; raw player identifiers are not copied into content records. Retain audit and cost records according to the product retention policy, and store no provider credentials or unredacted personal data in prompts.

@@ -51,6 +51,7 @@ export interface GeneratedContentRecord {
   readonly privatePayload: unknown;
   readonly sources: unknown;
   readonly findings: readonly ContentFinding[];
+  readonly qualityScore: number;
 }
 
 export interface AdminContentCalendar {
@@ -87,6 +88,22 @@ export class ContentPipelineError extends Error {
   ) {
     super(code);
   }
+}
+
+function calculateQualityScore(findings: readonly ContentFinding[]): number {
+  const penalty = findings.reduce(
+    (total, finding) =>
+      total +
+      (finding.code === "SOURCE_UNVERIFIED"
+        ? 35
+        : finding.code === "EVALUATOR_REVIEW" || finding.code === "HIGH_RISK_REVIEW"
+          ? 20
+          : finding.code === "SEMANTIC_DUPLICATE"
+            ? 15
+            : 10),
+    0,
+  );
+  return Math.max(0, 100 - penalty);
 }
 
 export async function planContentGenerationJobs(
@@ -323,14 +340,15 @@ export async function recordGeneratedContent(
           : "passed";
     const status =
       outcome === "passed" ? "approved" : outcome === "review" ? "pending_review" : "rejected";
+    const qualityScore = calculateQualityScore(findings);
     const created = await transaction.query<GeneratedContentRecord & QueryResultRow>(
       `insert into generated_contents
          (generation_job_id, content_type, target_date, status, public_payload,
-          private_payload, sources, content_hash, findings, created_at, updated_at)
-       values ($1, $2, $3::date, $4, $5::jsonb, $6::jsonb, $7::jsonb, $8, $9::jsonb, $10, $10)
+          private_payload, sources, content_hash, findings, quality_score, created_at, updated_at)
+       values ($1, $2, $3::date, $4, $5::jsonb, $6::jsonb, $7::jsonb, $8, $9::jsonb, $10, $11, $11)
        returning id, content_type as "contentType", target_date::text as "targetDate", status,
                  public_payload as "publicPayload", private_payload as "privatePayload",
-                 sources, findings`,
+                 sources, findings, quality_score as "qualityScore"`,
       [
         jobId,
         candidate.type,
@@ -341,6 +359,7 @@ export async function recordGeneratedContent(
         JSON.stringify(candidate.sources),
         contentHash,
         JSON.stringify(findings),
+        qualityScore,
         now,
       ],
     );
@@ -391,7 +410,8 @@ export async function listGeneratedContent(
 ): Promise<readonly GeneratedContentRecord[]> {
   const result = await client.query<GeneratedContentRecord & QueryResultRow>(
     `select id, content_type as "contentType", target_date::text as "targetDate", status,
-            public_payload as "publicPayload", private_payload as "privatePayload", sources, findings
+            public_payload as "publicPayload", private_payload as "privatePayload", sources, findings,
+            quality_score as "qualityScore"
      from generated_contents
      where ($1::text is null or status = $1)
      order by target_date, content_type, created_at`,
@@ -407,7 +427,7 @@ export async function getGeneratedContent(
   const result = await client.query<GeneratedContentRecord & QueryResultRow>(
     `select id, content_type as "contentType", target_date::text as "targetDate", status,
             public_payload as "publicPayload", private_payload as "privatePayload", sources,
-            findings
+            findings, quality_score as "qualityScore"
      from generated_contents where id = $1`,
     [contentId],
   );
@@ -641,13 +661,21 @@ export async function reviseGeneratedContent(
         generationJobId: string;
         provider: string;
         status: GeneratedContentRecord["status"];
+        targetDifficulty: GameDifficulty;
         targetDate: string;
       } & QueryResultRow
     >(
       `select generated_contents.generation_job_id as "generationJobId",
               generated_contents.content_type as "contentType",
               generated_contents.target_date::text as "targetDate",
-              generated_contents.status, content_generation_jobs.provider
+              generated_contents.status, content_generation_jobs.provider,
+              coalesce(
+                case when content_generation_jobs.config->>'targetDifficulty' ~ '^[1-5]$'
+                  then (content_generation_jobs.config->>'targetDifficulty')::integer end,
+                case content_generation_jobs.content_type
+                  when 'crossword' then 2 when 'guess_word' then 1 when 'quiz' then 2
+                  when 'true_false' then 1 when 'word_search' then 2
+                end)::int as "targetDifficulty"
        from generated_contents
        join content_generation_jobs on content_generation_jobs.id = generated_contents.generation_job_id
        where generated_contents.id = $1 for update of generated_contents`,
@@ -671,6 +699,7 @@ export async function reviseGeneratedContent(
     try {
       validation = validateGeneratedContent(candidate, {
         blockedTerms: blocked.rows.map(({ normalizedTerm }) => normalizedTerm),
+        targetDifficulty: row.targetDifficulty,
         ...(row.provider === "fake"
           ? {}
           : {
@@ -700,15 +729,16 @@ export async function reviseGeneratedContent(
        set status = 'rejected', updated_at = $2, version = version + 1 where id = $1`,
       [contentId, now],
     );
+    const qualityScore = calculateQualityScore(validation.findings);
     const created = await transaction.query<GeneratedContentRecord & QueryResultRow>(
       `insert into generated_contents
          (generation_job_id, content_type, target_date, status, public_payload, private_payload,
-          sources, content_hash, findings, created_at, updated_at)
+          sources, content_hash, findings, quality_score, created_at, updated_at)
        values ($1, $2, $3::date, 'pending_review', $4::jsonb, $5::jsonb, $6::jsonb, $7,
-               $8::jsonb, $9, $9)
+               $8::jsonb, $9, $10, $10)
        returning id, content_type as "contentType", target_date::text as "targetDate", status,
                  public_payload as "publicPayload", private_payload as "privatePayload", sources,
-                 findings`,
+                 findings, quality_score as "qualityScore"`,
       [
         row.generationJobId,
         row.contentType,
@@ -718,6 +748,7 @@ export async function reviseGeneratedContent(
         JSON.stringify(candidate.sources),
         contentHash,
         JSON.stringify(validation.findings),
+        qualityScore,
         now,
       ],
     );
@@ -769,12 +800,16 @@ export async function assembleApprovedEdition(
     const selected: GeneratedContentRecord[] = [];
     for (const type of ["quiz", "crossword", "true_false", "guess_word", "word_search"] as const) {
       const result = await transaction.query<GeneratedContentRecord & QueryResultRow>(
-        `select id, content_type as "contentType", target_date::text as "targetDate", status,
-                public_payload as "publicPayload", private_payload as "privatePayload",
-                sources, findings
-         from generated_contents
-         where status = 'approved' and selected_edition_id is null and content_type = $1
-         order by (target_date = $2::date) desc, abs(target_date - $2::date), created_at
+        `select content.id, content.content_type as "contentType",
+                content.target_date::text as "targetDate", content.status,
+                content.public_payload as "publicPayload", content.private_payload as "privatePayload",
+                sources, findings, content.quality_score as "qualityScore"
+         from generated_contents content
+         join content_generation_jobs job on job.id = content.generation_job_id
+         where content.status = 'approved' and content.selected_edition_id is null
+           and content.content_type = $1
+         order by (content.target_date = $2::date) desc, abs(content.target_date - $2::date),
+                  content.quality_score desc, job.cost_micros asc, content.created_at, content.id
          limit 1 for update`,
         [type, localDate],
       );

@@ -1,0 +1,2 @@
+ALTER TABLE "generated_contents" ADD COLUMN "quality_score" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "generated_contents" ADD CONSTRAINT "generated_content_quality_check" CHECK ("generated_contents"."quality_score" between 0 and 100);

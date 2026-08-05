@@ -71,7 +71,7 @@ export async function startGuestGuessWordAttempt(
 ): Promise<GuessWordAttemptState> {
   return client.transaction(async (transaction) => {
     const guest = await authenticateGuestSession(transaction, guestToken, now);
-    if (!guest) throw new GuessWordAttemptError("UNAUTHORIZED", "SesiÃ³n invitada no vÃ¡lida");
+    if (!guest) throw new GuessWordAttemptError("UNAUTHORIZED", "Sesi\u00f3n invitada no v\u00e1lida");
     return startAttempt(transaction, gameId, { kind: "guest", id: guest.guestSessionId }, now);
   });
 }
@@ -96,7 +96,7 @@ export async function recordGuestGuessWordGuess(
 ): Promise<GuessWordGuessResult> {
   return client.transaction(async (transaction) => {
     const guest = await authenticateGuestSession(transaction, guestToken, now);
-    if (!guest) throw new GuessWordAttemptError("UNAUTHORIZED", "SesiÃ³n invitada no vÃ¡lida");
+    if (!guest) throw new GuessWordAttemptError("UNAUTHORIZED", "Sesi\u00f3n invitada no v\u00e1lida");
     return recordGuess(
       transaction,
       attemptId,
@@ -126,7 +126,7 @@ async function startAttempt(
   now: Date,
 ): Promise<GuessWordAttemptState> {
   const game = await getGame(transaction, gameId, now);
-  if (!game) throw new GuessWordAttemptError("GAME_UNAVAILABLE", "El reto no estÃ¡ disponible");
+  if (!game) throw new GuessWordAttemptError("GAME_UNAVAILABLE", "El reto no est\u00e1 disponible");
   validateGame(game.publicPayload, game.privatePayload);
   const subjectColumn = subject.kind === "guest" ? "guest_session_id" : "user_id";
   const created = await transaction.query<{ id: string; status: string; version: number }>(
@@ -181,7 +181,7 @@ async function recordGuess(
     };
   }
   if (attempt.status !== "in_progress") {
-    throw new GuessWordAttemptError("ATTEMPT_NOT_EDITABLE", "El intento ya estÃ¡ enviado");
+    throw new GuessWordAttemptError("ATTEMPT_NOT_EDITABLE", "El intento ya est\u00e1 enviado");
   }
   if (attempt.version !== event.version) {
     throw new GuessWordAttemptError("VERSION_CONFLICT", "El progreso ha cambiado");
@@ -363,7 +363,7 @@ async function readExistingResult(
       [attemptId],
     )
   ).rows[0];
-  if (!score) throw new Error("El intento aceptado no tiene puntuaciÃ³n");
+  if (!score) throw new Error("El intento aceptado no tiene puntuaci\u00f3n");
   return toSubmitResult(attemptId, score.competitive, score.points, closesAt);
 }
 
@@ -386,14 +386,14 @@ function assertEvent(event: GuessWordGuessEvent, game: GuessWordPublicPayload): 
       game.allowedCharacters.includes(letter),
     )
   ) {
-    throw new GuessWordAttemptError("INVALID_GUESS", "La palabra no es vÃ¡lida");
+    throw new GuessWordAttemptError("INVALID_GUESS", "La palabra no es v\u00e1lida");
   }
 }
 
 function normalizeGuess(value: string): string {
   const guess = foldCrosswordLetter(value.trim());
   if (!/^[A-ZÑ]{3,21}$/u.test(guess)) {
-    throw new GuessWordAttemptError("INVALID_GUESS", "La palabra no es vÃ¡lida");
+    throw new GuessWordAttemptError("INVALID_GUESS", "La palabra no es v\u00e1lida");
   }
   return guess;
 }

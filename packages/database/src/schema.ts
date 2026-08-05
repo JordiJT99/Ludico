@@ -423,6 +423,7 @@ export const generatedContents = pgTable(
     sources: jsonb("sources").notNull(),
     contentHash: text("content_hash").notNull(),
     findings: jsonb("findings").default([]).notNull(),
+    qualityScore: integer("quality_score").default(0).notNull(),
     selectedEditionId: uuid("selected_edition_id").references(() => dailyEditions.id, {
       onDelete: "set null",
     }),
@@ -435,6 +436,7 @@ export const generatedContents = pgTable(
       table.contentType,
     ),
     index("generated_content_hash_idx").on(table.contentHash),
+    check("generated_content_quality_check", sql`${table.qualityScore} between 0 and 100`),
     check(
       "generated_content_type_check",
       sql`${table.contentType} in ('quiz','crossword','true_false','guess_word','word_search')`,

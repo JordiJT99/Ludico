@@ -129,6 +129,27 @@ describe("content generation pipeline", () => {
       expect(generated.status).toBe("approved");
     }
 
+    const quizJob = firstPlan.find(({ contentType }) => contentType === "quiz")!;
+    await database.query(
+      "update generated_contents set quality_score = 20 where generation_job_id = $1",
+      [quizJob.id],
+    );
+    const preferredQuiz = quizCandidate("Quiz de mayor calidad");
+    await database.query(
+      `insert into generated_contents
+         (id, generation_job_id, content_type, target_date, status, public_payload, private_payload,
+          sources, content_hash, quality_score)
+       values ($1, $2, 'quiz', '2026-08-03', 'approved', $3::jsonb, $4::jsonb, $5::jsonb, $6, 100)`,
+      [
+        "20000000-0000-4000-8000-000000000099",
+        quizJob.id,
+        JSON.stringify(preferredQuiz.publicPayload),
+        JSON.stringify(preferredQuiz.privatePayload),
+        JSON.stringify(preferredQuiz.sources),
+        "preferred-quiz",
+      ],
+    );
+
     const opensAt = new Date("2026-08-02T22:00:00Z");
     const closesAt = new Date("2026-08-03T22:00:00Z");
     const assembled = await assembleApprovedEdition(client, "2026-08-03", opensAt, closesAt, now);
@@ -153,6 +174,9 @@ describe("content generation pipeline", () => {
       "true_false",
       "word_search",
     ]);
+    expect(
+      (games.rows.find(({ type }) => type === "quiz")?.public_payload as { title: string }).title,
+    ).toBe("Quiz de mayor calidad");
     expect(JSON.stringify(games.rows)).not.toMatch(
       /correctOptionId|quiz-solution|vocabularyVersion|true-false-solution|guess-word-solution|word-search-solution|"value":true/,
     );

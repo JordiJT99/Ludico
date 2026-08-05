@@ -103,7 +103,7 @@ export function validateQuizEditorial(
   }
   const maximumPerPosition = Math.ceil(quiz.questions.length / 4) + 1;
   if (correctPositions.some((count) => count > maximumPerPosition)) {
-    throw new InvalidQuizError("La posiciÃ³n de respuesta correcta estÃ¡ desequilibrada");
+    throw new InvalidQuizError("La posici\u00f3n de respuesta correcta est\u00e1 desequilibrada");
   }
 }
 

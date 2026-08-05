@@ -40,7 +40,7 @@ function item(statement: string, value: boolean) {
   return {
     category: "Ciencia",
     difficulty: 2 as const,
-    explanation: "ExplicaciÃ³n factual comprobada.",
+    explanation: "Explicaci\u00f3n factual comprobada.",
     sourceUrl: "https://example.com/source",
     statement,
     value,
@@ -53,9 +53,9 @@ function guessWord() {
     alternativeAnswers: [],
     answer: "ARBOL",
     category: "Naturaleza",
-    definition: "Planta leÃ±osa con tronco y copa.",
+    definition: "Planta le\u00f1osa con tronco y copa.",
     difficulty: 2 as const,
-    hints: [{ text: "Tiene raÃ­ces.", unlockAfterAttempts: 1 }],
+    hints: [{ text: "Tiene ra\u00edces.", unlockAfterAttempts: 1 }],
     maxAttempts: 5,
   };
 }

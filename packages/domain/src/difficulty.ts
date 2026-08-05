@@ -71,7 +71,7 @@ export function assessDifficulty(
 
 export function calculateObservedDifficulty(input: ObservedDifficultyInput): number {
   if (!Number.isInteger(input.completedStarts) || input.completedStarts < 0) {
-    throw new RangeError("El nÃºmero de partidas completadas no es vÃ¡lido");
+    throw new RangeError("El n\u00famero de partidas completadas no es v\u00e1lido");
   }
   const failure = clamp01(input.failureRate);
   const time = clamp01(input.normalizedMedianTime ?? failure);
