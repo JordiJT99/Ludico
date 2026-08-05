@@ -1,6 +1,13 @@
 import { generatedContentTypes, type GeneratedContentType } from "@ludico/domain";
 
 export function lowReserveAlert(reserve: Readonly<Record<GeneratedContentType, number>>) {
-  if (generatedContentTypes.every((type) => reserve[type] >= 10)) return null;
-  return { code: "CONTENT_RESERVE_LOW", reserve, thresholdDays: 10 } as const;
+  const days = Math.min(...generatedContentTypes.map((type) => reserve[type]));
+  if (days >= 10) return null;
+  const severity = days < 2 ? "emergency" : days < 5 ? "critical" : "warning";
+  return {
+    code: "CONTENT_RESERVE_LOW",
+    reserve,
+    severity,
+    thresholdDays: severity === "warning" ? 10 : severity === "critical" ? 5 : 2,
+  } as const;
 }

@@ -60,7 +60,16 @@ describe("content reserve alert", () => {
     expect(lowReserveAlert({ ...healthy, crossword: 9, quiz: 12 })).toEqual({
       code: "CONTENT_RESERVE_LOW",
       reserve: { ...healthy, crossword: 9, quiz: 12 },
+      severity: "warning",
       thresholdDays: 10,
+    });
+    expect(lowReserveAlert({ ...healthy, word_search: 4 })).toMatchObject({
+      severity: "critical",
+      thresholdDays: 5,
+    });
+    expect(lowReserveAlert({ ...healthy, guess_word: 1 })).toMatchObject({
+      severity: "emergency",
+      thresholdDays: 2,
     });
   });
 });
