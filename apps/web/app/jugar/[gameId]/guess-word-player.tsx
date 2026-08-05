@@ -86,11 +86,13 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
       }
       setNotice(
         body.outcome === "correct"
-          ? "Â¡Correcto! Has resuelto el reto."
-          : "Se han acabado los intentos. La soluciÃ³n se publicarÃ¡ al cierre de la ediciÃ³n.",
+          ? "\u00a1Correcto! Has resuelto el reto."
+          : "Se han acabado los intentos. La soluci\u00f3n se publicar\u00e1 al cierre de la edici\u00f3n.",
       );
     } catch {
-      setNotice("No se ha podido enviar el intento. Comprueba tu conexiÃ³n y vuelve a intentarlo.");
+      setNotice(
+        "No se ha podido enviar el intento. Comprueba tu conexi\u00f3n y vuelve a intentarlo.",
+      );
     } finally {
       setSaving(false);
     }
@@ -110,7 +112,7 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
     return (
       <main aria-busy="true" className="play-page">
         <p className="eyebrow">Adivina la palabra</p>
-        <h1>Preparando el retoâ€¦</h1>
+        <h1>Preparando el reto{"\u2026"}</h1>
       </main>
     );
   }
@@ -124,10 +126,10 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
     <main className="play-page quiz-page">
       <header className="play-topbar">
         <Link aria-label="Volver a los retos" className="play-topbar__back" href="/">
-          â†
+          {"\u2190"}
         </Link>
         <Link className="play-topbar__brand" href="/">
-          LÃºdico
+          L{"\u00fa"}dico
         </Link>
         <span className="play-topbar__status">Adivina la palabra</span>
       </header>
@@ -157,7 +159,7 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
           onClick={() => void submit()}
           type="button"
         >
-          {saving ? "Comprobandoâ€¦" : "Comprobar palabra"}
+          {saving ? "Comprobando\u2026" : "Comprobar palabra"}
         </button>
         {notice ? <p role="status">{notice}</p> : null}
         {visibleHints.length ? (
@@ -177,14 +179,14 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
       {attempt.result ? (
         <section className="personal-review">
           <h2>{attempt.result.provisional.score} puntos</h2>
-          <p>Las soluciones estarÃ¡n disponibles al cerrar la ediciÃ³n.</p>
+          <p>Las soluciones estar\u00e1n disponibles al cerrar la edici\u00f3n.</p>
           <LeaderboardPanel gameId={gameId} />
           <ShareButton attemptId={attempt.attemptId} />
           <Link
             className="button-link"
             href={`/resultados/${gameId}?attemptId=${attempt.attemptId}`}
           >
-            Ver revisiÃ³n al cierre
+            Ver revisi\u00f3n al cierre
           </Link>
         </section>
       ) : null}

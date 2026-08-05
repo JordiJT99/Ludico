@@ -432,7 +432,7 @@ export function AdminDashboard() {
     } else {
       setMessage(
         response.status === 403
-          ? "Necesitas rol editor y reautenticaciÃ³n reciente."
+          ? "Necesitas rol editor y reautenticaci\u00f3n reciente."
           : "No se pudo validar la entrada lexica.",
       );
     }
@@ -481,12 +481,11 @@ export function AdminDashboard() {
             <section aria-labelledby="content-health-title">
               <h2 id="content-health-title">Salud del motor de contenido</h2>
               <p>
-                EdiciÃ³n de {contentHealth.nextEdition.localDate}:{" "}
+                Edici\u00f3n de {contentHealth.nextEdition.localDate}:{" "}
                 {contentHealth.nextEdition.ready ? "preparada" : "pendiente"}
-                {" Â· "}cola {contentHealth.jobs.queued} {" Â· "}en curso{" "}
-                {contentHealth.jobs.running}
-                {" Â· "}fallidos en 24 h {contentHealth.jobs.failedLast24Hours}
-                {" Â· "}coste hoy {contentHealth.spendMicrosToday} Î¼crÃ©ditos
+                {" · "}cola {contentHealth.jobs.queued} {" · "}en curso {contentHealth.jobs.running}
+                {" · "}fallidos en 24 h {contentHealth.jobs.failedLast24Hours}
+                {" · "}coste hoy {contentHealth.spendMicrosToday} μcr\u00e9ditos
               </p>
               {contentHealth.alerts.length ? (
                 <ul className="admin-calendar">
@@ -999,9 +998,9 @@ function isContentHealth(value: unknown): value is ContentHealth {
 
 function contentHealthAlertLabel(code: ContentHealth["alerts"][number]["code"]): string {
   return {
-    CONTENT_JOB_FAILURES: "Hay trabajos de generaciÃ³n fallidos recientemente.",
+    CONTENT_JOB_FAILURES: "Hay trabajos de generaci\u00f3n fallidos recientemente.",
     CONTENT_RESERVE_LOW: "La reserva aprobada ha bajado del umbral.",
-    NEXT_EDITION_MISSING: "La ediciÃ³n de maÃ±ana todavÃ­a no estÃ¡ preparada.",
+    NEXT_EDITION_MISSING: "La edici\u00f3n de ma\u00f1ana todav\u00eda no est\u00e1 preparada.",
   }[code];
 }
 
