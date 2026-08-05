@@ -1,3 +1,4 @@
+import { isQuizPublicPayload } from "@ludico/contracts";
 import { validateGeneratedContent } from "@ludico/domain";
 import { describe, expect, it } from "vitest";
 import {
@@ -51,6 +52,28 @@ describe("curated deterministic content provider", () => {
     expect(first.candidate.publicPayload.questions.map(({ prompt }) => prompt)).not.toEqual(
       next.candidate.publicPayload.questions.map(({ prompt }) => prompt),
     );
+  });
+
+  it("keeps every supported quiz difficulty playable through the public contract", async () => {
+    const generated = await deterministicContentGenerator.generate({
+      budgetMicros: 0,
+      contentType: "quiz",
+      id: "all-levels",
+      promptVersion: "v1",
+      provider: "deterministic",
+      targetDate: "2026-08-03",
+    });
+    if (generated.candidate.type !== "quiz") throw new Error("quiz");
+    const difficulties = ["very_easy", "easy", "medium", "hard", "expert"] as const;
+    expect(
+      isQuizPublicPayload({
+        ...generated.candidate.publicPayload,
+        questions: generated.candidate.publicPayload.questions.map((question, index) => ({
+          ...question,
+          difficulty: difficulties[index]!,
+        })),
+      }),
+    ).toBe(true);
   });
 });
 

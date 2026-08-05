@@ -1480,7 +1480,7 @@ export function isQuizPublicPayload(value: unknown): value is QuizPublicPayload 
       typeof question.id === "string" &&
       typeof question.prompt === "string" &&
       typeof question.category === "string" &&
-      ["easy", "medium", "hard"].includes(String(question.difficulty)) &&
+      ["very_easy", "easy", "medium", "hard", "expert"].includes(String(question.difficulty)) &&
       Array.isArray(question.options) &&
       question.options.length === 4 &&
       question.options.every(
