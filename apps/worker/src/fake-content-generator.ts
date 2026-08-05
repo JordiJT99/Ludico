@@ -634,22 +634,71 @@ const crosswordBanks: readonly (readonly WordBankEntry[])[] = [
     word("sol", "SOL", "Estrella del sistema solar"),
     word("sal", "SAL", "Condimento mineral"),
     word("luz", "LUZ", "Claridad que permite ver"),
-    word("sur", "SUR", "Punto cardinal opuesto al norte"),
-    word("riel", "RIEL", "Barra de una vía férrea"),
   ],
   [
-    word("sol", "SOL", "Astro que ilumina el día"),
-    word("sal", "SAL", "Sustancia que sazona alimentos"),
-    word("luz", "LUZ", "Energía visible"),
-    word("sur", "SUR", "Dirección hacia el polo austral"),
-    word("riel", "RIEL", "Carril de tren"),
+    word("mar", "MAR", "Masa de agua salada"),
+    word("rama", "RAMA", "Parte de un árbol que nace del tronco"),
+    word("rio", "RIO", "Corriente natural de agua"),
   ],
   [
-    word("sol", "SOL", "Centro de nuestro sistema planetario"),
-    word("sal", "SAL", "Producto que se disuelve en agua"),
-    word("luz", "LUZ", "Brillo de una lámpara"),
-    word("sur", "SUR", "Uno de los cuatro puntos cardinales"),
-    word("riel", "RIEL", "Pieza metálica para trenes"),
+    word("pan", "PAN", "Alimento hecho con harina"),
+    word("pato", "PATO", "Ave acuática de pico ancho"),
+    word("nube", "NUBE", "Masa visible de agua en el cielo"),
+  ],
+  [
+    word("gato", "GATO", "Mamífero doméstico que maúlla"),
+    word("taza", "TAZA", "Recipiente pequeño para beber"),
+    word("tela", "TELA", "Tejido formado por hilos"),
+  ],
+  [
+    word("casa", "CASA", "Edificio destinado a vivienda"),
+    word("cama", "CAMA", "Mueble para dormir"),
+    word("mapa", "MAPA", "Representación de un territorio"),
+  ],
+  [
+    word("mesa", "MESA", "Mueble de superficie horizontal"),
+    word("seda", "SEDA", "Fibra fina producida por un gusano"),
+    word("dado", "DADO", "Cubo usado en juegos de azar"),
+  ],
+  [
+    word("perro", "PERRO", "Mamífero doméstico que ladra"),
+    word("rosa", "ROSA", "Flor de tallo espinoso"),
+    word("roca", "ROCA", "Piedra grande y dura"),
+  ],
+  [
+    word("luna", "LUNA", "Satélite natural de la Tierra"),
+    word("nata", "NATA", "Capa grasa que forma la leche"),
+    word("nido", "NIDO", "Refugio que construyen las aves"),
+  ],
+  [
+    word("flor", "FLOR", "Parte reproductora de una planta"),
+    word("fuego", "FUEGO", "Combustión que produce calor y luz"),
+    word("gota", "GOTA", "Porción pequeña de un líquido"),
+  ],
+  [
+    word("tren", "TREN", "Conjunto de vagones sobre raíles"),
+    word("rana", "RANA", "Anfibio que salta"),
+    word("reloj", "RELOJ", "Instrumento que indica la hora"),
+  ],
+  [
+    word("vela", "VELA", "Cilindro de cera con mecha"),
+    word("lago", "LAGO", "Masa de agua rodeada de tierra"),
+    word("goma", "GOMA", "Material flexible y elástico"),
+  ],
+  [
+    word("vaca", "VACA", "Hembra adulta del ganado bovino"),
+    word("cielo", "CIELO", "Espacio visible sobre la Tierra"),
+    word("cubo", "CUBO", "Sólido de seis caras cuadradas"),
+  ],
+  [
+    word("pez", "PEZ", "Animal vertebrado que vive en agua"),
+    word("zorro", "ZORRO", "Mamífero de hocico puntiagudo"),
+    word("ropa", "ROPA", "Conjunto de prendas de vestir"),
+  ],
+  [
+    word("cafe", "CAFE", "Bebida obtenida de granos tostados"),
+    word("fresa", "FRESA", "Fruto rojo de una planta herbácea"),
+    word("arena", "ARENA", "Conjunto de granos de roca"),
   ],
 ];
 

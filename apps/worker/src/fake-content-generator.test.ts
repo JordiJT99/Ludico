@@ -97,6 +97,27 @@ describe("curated deterministic content provider", () => {
     expect(new Set(answers)).toHaveLength(70);
   });
 
+  it("keeps the crossword reserve free of repeated answers for fourteen days", async () => {
+    const answers = (
+      await Promise.all(
+        reserveHorizon().slice(0, 14).map(async (targetDate) => {
+          const generated = await deterministicContentGenerator.generate({
+            budgetMicros: 0,
+            contentType: "crossword",
+            id: `crossword-${targetDate}`,
+            promptVersion: "v1",
+            provider: "deterministic",
+            targetDifficulty: 2,
+            targetDate,
+          });
+          if (generated.candidate.type !== "crossword") throw new Error("crossword");
+          return generated.candidate.privatePayload.entries.map((entry) => entry.answer);
+        }),
+      )
+    ).flat();
+    expect(new Set(answers)).toHaveLength(42);
+  });
+
   it("keeps every supported quiz difficulty playable through the public contract", async () => {
     const generated = await deterministicContentGenerator.generate({
       budgetMicros: 0,
