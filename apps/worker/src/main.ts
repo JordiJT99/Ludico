@@ -12,7 +12,7 @@ import {
   localDateInMadrid,
   runContentGenerationJob,
   runContentPlan,
-  runEditionAssembly,
+  runEditionAssemblyWithFallback,
 } from "./content-jobs.js";
 import { fakeContentAssurance, fakeContentGenerator } from "./fake-content-generator.js";
 import {
@@ -110,8 +110,8 @@ await boss.work(CONTENT_PLAN_QUEUE, async (jobs) => {
     );
   }
 });
+const contentGenerator = new ContentProviderCircuitBreaker(fakeContentGenerator);
 if (contentProvider === "fake" || contentProvider === "deterministic") {
-  const contentGenerator = new ContentProviderCircuitBreaker(fakeContentGenerator);
   await boss.work(CONTENT_GENERATION_QUEUE, async (jobs) => {
     for (const job of jobs) {
       const jobId = (job.data as { jobId?: unknown }).jobId;
@@ -150,7 +150,16 @@ if (contentProvider === "fake" || contentProvider === "deterministic") {
 await boss.work(CONTENT_ASSEMBLY_QUEUE, async (jobs) => {
   for (const job of jobs) {
     const targetDate = addDays(localDateInMadrid(new Date()), 1);
-    const result = await runEditionAssembly(database, targetDate, new Date());
+    const now = new Date();
+    const result = await runEditionAssemblyWithFallback(
+      database,
+      contentGenerator,
+      fakeContentAssurance,
+      targetDate,
+      contentProvider,
+      Number(process.env.AI_JOB_BUDGET_MICROS ?? 0),
+      now,
+    );
     console.log(JSON.stringify({ jobId: job.id, queue: CONTENT_ASSEMBLY_QUEUE, result }));
   }
 });

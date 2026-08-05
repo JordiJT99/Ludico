@@ -13,7 +13,9 @@ import {
   getAdminContentCalendar,
   listBlockedTerms,
   planContentGenerationJobs,
+  planContentReserveJobs,
   recordGeneratedContent,
+  requeueEmergencyContentJobs,
   regenerateGeneratedContent,
   reviseGeneratedContent,
   reviewGeneratedContent,
@@ -27,6 +29,28 @@ const now = new Date("2026-08-01T10:00:00Z");
 afterEach(async () => Promise.all(databases.splice(0).map((database) => database.close())));
 
 describe("content generation pipeline", () => {
+  it("plans only the missing reserve and requeues one versioned emergency batch", async () => {
+    const { client } = await setup();
+    const first = await planContentReserveJobs(client, "2026-08-03", "deterministic", 0);
+    expect(first).toHaveLength(75);
+    expect(await planContentReserveJobs(client, "2026-08-03", "deterministic", 0)).toEqual([]);
+
+    const emergency = await requeueEmergencyContentJobs(
+      client,
+      "2026-08-03",
+      "deterministic",
+      0,
+      now,
+    );
+    expect(emergency).toHaveLength(5);
+    expect(emergency.map(({ promptVersion }) => promptVersion)).toEqual(
+      Array.from({ length: 5 }, () => "emergency-v2"),
+    );
+    expect(
+      await Promise.all(emergency.map((job) => claimContentGenerationJob(client, job.id, now))),
+    ).toEqual(emergency);
+  });
+
   it("counts only unselected approved content dated today or later in Madrid", async () => {
     const { client, database } = await setup();
     const dates = ["2026-07-31", "2026-08-01", "2026-08-02"];

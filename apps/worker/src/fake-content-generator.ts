@@ -19,28 +19,32 @@ export const fakeContentAssurance: ContentAssurancePort = {
 export const fakeContentGenerator: ContentGeneratorPort = {
   async generate(job) {
     return {
-      candidate: fakeCandidate(job.contentType, job.targetDate),
+      candidate: fakeCandidate(job.contentType, job.targetDate, job.promptVersion),
       costMicros: 0,
     };
   },
 };
 
-function fakeCandidate(type: GeneratedContentCandidate["type"], targetDate: string) {
+function fakeCandidate(
+  type: GeneratedContentCandidate["type"],
+  targetDate: string,
+  promptVersion: string,
+) {
   switch (type) {
     case "quiz":
-      return fakeQuiz(targetDate);
+      return fakeQuiz(targetDate, promptVersion);
     case "crossword":
-      return fakeCrossword(targetDate);
+      return fakeCrossword(targetDate, promptVersion);
     case "true_false":
-      return fakeTrueFalse(targetDate);
+      return fakeTrueFalse(targetDate, promptVersion);
     case "guess_word":
-      return fakeGuessWord(targetDate);
+      return fakeGuessWord(targetDate, promptVersion);
     case "word_search":
-      return fakeWordSearch(targetDate);
+      return fakeWordSearch(targetDate, promptVersion);
   }
 }
 
-function fakeQuiz(targetDate: string) {
+function fakeQuiz(targetDate: string, promptVersion: string) {
   const questions: QuizPublicPayload["questions"] = Array.from({ length: 5 }, (_, index) => ({
     id: uuid(targetDate, 100 + index),
     prompt: `Pregunta sintética ${index + 1} para ${targetDate}`,
@@ -53,7 +57,11 @@ function fakeQuiz(targetDate: string) {
   }));
   return {
     type: "quiz" as const,
-    publicPayload: { kind: "quiz" as const, questions, title: `Quiz sintético ${targetDate}` },
+    publicPayload: {
+      kind: "quiz" as const,
+      questions,
+      title: `Quiz sintético ${label(targetDate, promptVersion)}`,
+    },
     privatePayload: {
       kind: "quiz-solution" as const,
       questions: questions.map((question) => ({
@@ -69,16 +77,16 @@ function fakeQuiz(targetDate: string) {
   };
 }
 
-function fakeCrossword(targetDate: string) {
+function fakeCrossword(targetDate: string, promptVersion: string) {
   return constructCrossword(fakeWordBank, {
     entryCount: 3,
-    seed: targetDate,
-    title: `Crucigrama sintético ${targetDate}`,
+    seed: label(targetDate, promptVersion),
+    title: `Crucigrama sintético ${label(targetDate, promptVersion)}`,
     vocabularyVersion: "fake-v1",
   });
 }
 
-function fakeTrueFalse(targetDate: string): GeneratedContentCandidate {
+function fakeTrueFalse(targetDate: string, promptVersion: string): GeneratedContentCandidate {
   const items = [
     ["La Tierra gira alrededor del Sol.", true],
     ["La Luna es un planeta.", false],
@@ -96,7 +104,7 @@ function fakeTrueFalse(targetDate: string): GeneratedContentCandidate {
         statement,
       })),
       kind: "true-false",
-      title: `Verdadero o falso ${targetDate}`,
+      title: `Verdadero o falso ${label(targetDate, promptVersion)}`,
     },
     privatePayload: {
       items: items.map(([, value], index) => ({
@@ -113,7 +121,7 @@ function fakeTrueFalse(targetDate: string): GeneratedContentCandidate {
   };
 }
 
-function fakeGuessWord(targetDate: string): GeneratedContentCandidate {
+function fakeGuessWord(targetDate: string, promptVersion: string): GeneratedContentCandidate {
   const id = uuid(targetDate, 400);
   return {
     type: "guess_word",
@@ -126,19 +134,19 @@ function fakeGuessWord(targetDate: string): GeneratedContentCandidate {
       id,
       kind: "guess-word",
       maxAttempts: 5,
-      title: `Adivina la palabra ${targetDate}`,
+      title: `Adivina la palabra ${label(targetDate, promptVersion)}`,
     },
     privatePayload: { alternativeAnswers: [], answer: "ARBOL", kind: "guess-word-solution" },
     sources: [{ itemId: id, url: "https://example.com/test/guess-word/arbol" }],
   };
 }
 
-function fakeWordSearch(targetDate: string): GeneratedContentCandidate {
+function fakeWordSearch(targetDate: string, promptVersion: string): GeneratedContentCandidate {
   const game = constructWordSearch({
     columns: 8,
     directions: ["east", "south", "southEast"],
     rows: 8,
-    seed: targetDate,
+    seed: label(targetDate, promptVersion),
     words: ["SOL", "LUNA", "NUBE"],
   });
   return {
@@ -149,7 +157,7 @@ function fakeWordSearch(targetDate: string): GeneratedContentCandidate {
       kind: "word-search",
       rows: game.rows,
       seed: game.seed,
-      title: `Sopa de letras ${targetDate}`,
+      title: `Sopa de letras ${label(targetDate, promptVersion)}`,
       words: game.entries.map((entry, index) => ({
         answer: entry.answer,
         id: uuid(targetDate, 500 + index),
@@ -178,4 +186,8 @@ function word(id: string, answer: string, clue: string): WordBankEntry {
 function uuid(targetDate: string, suffix: number): string {
   const date = targetDate.replaceAll("-", "").padEnd(12, "0").slice(0, 12);
   return `${date.slice(0, 8)}-${date.slice(8, 12)}-4000-8000-${suffix.toString().padStart(12, "0")}`;
+}
+
+function label(targetDate: string, promptVersion: string): string {
+  return promptVersion === "v1" ? targetDate : `${targetDate} ${promptVersion}`;
 }

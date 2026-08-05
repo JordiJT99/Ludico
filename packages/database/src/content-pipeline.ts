@@ -98,6 +98,112 @@ export async function planContentGenerationJobs(
   });
 }
 
+/** Keeps a real reserve without continually adding candidates already in flight. */
+export async function planContentReserveJobs(
+  client: SqlClient,
+  startDate: string,
+  provider: string,
+  budgetMicros: number,
+  options: Readonly<{ candidateSurplus?: number; horizonDays?: number; reserveDays?: number }> = {},
+): Promise<readonly ContentJob[]> {
+  const reserveDays = options.reserveDays ?? 14;
+  const candidateSurplus = options.candidateSurplus ?? 1;
+  const horizonDays = options.horizonDays ?? 21;
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+    reserveDays < 1 ||
+    candidateSurplus < 0 ||
+    horizonDays < reserveDays ||
+    horizonDays > 60 ||
+    budgetMicros < 0
+  ) {
+    throw new RangeError("Reserva de contenido inválida");
+  }
+  return client.transaction(async (transaction) => {
+    const [approved, pending, occupied] = await Promise.all([
+      transaction.query<{ contentType: GeneratedContentType; count: number } & QueryResultRow>(
+        `select content_type as "contentType", count(*)::int as count
+         from generated_contents
+         where status = 'approved' and selected_edition_id is null and target_date >= $1::date
+         group by content_type`,
+        [startDate],
+      ),
+      transaction.query<{ contentType: GeneratedContentType; count: number } & QueryResultRow>(
+        `select content_type as "contentType", count(*)::int as count
+         from content_generation_jobs
+         where target_date >= $1::date and status in ('queued', 'running')
+         group by content_type`,
+        [startDate],
+      ),
+      transaction.query<{ contentType: GeneratedContentType; targetDate: string } & QueryResultRow>(
+        `select content_type as "contentType", target_date::text as "targetDate"
+         from content_generation_jobs
+         where target_date >= $1::date and target_date < ($1::date + $2::int)`,
+        [startDate, horizonDays],
+      ),
+    ]);
+    const approvedByType = new Map(approved.rows.map((row) => [row.contentType, row.count]));
+    const pendingByType = new Map(pending.rows.map((row) => [row.contentType, row.count]));
+    const datesByType = new Map<GeneratedContentType, Set<string>>(
+      generatedContentTypes.map((type) => [type, new Set<string>()]),
+    );
+    for (const row of occupied.rows) datesByType.get(row.contentType)?.add(row.targetDate);
+
+    const jobs: ContentJob[] = [];
+    for (const contentType of generatedContentTypes) {
+      let needed =
+        reserveDays +
+        candidateSurplus -
+        (approvedByType.get(contentType) ?? 0) -
+        (pendingByType.get(contentType) ?? 0);
+      for (let offset = 0; offset < horizonDays && needed > 0; offset += 1) {
+        const targetDate = addDays(startDate, offset);
+        if (datesByType.get(contentType)?.has(targetDate)) continue;
+        const result = await transaction.query<ContentJob & QueryResultRow>(
+          `insert into content_generation_jobs
+             (content_type, target_date, provider, budget_micros)
+           values ($1, $2::date, $3, $4)
+           returning id, content_type as "contentType", target_date::text as "targetDate",
+                     provider, prompt_version as "promptVersion", budget_micros as "budgetMicros"`,
+          [contentType, targetDate, provider, budgetMicros],
+        );
+        jobs.push(result.rows[0]!);
+        needed -= 1;
+      }
+    }
+    return jobs;
+  });
+}
+
+/** Reuses the normal validation pipeline to restore a missing daily edition. */
+export async function requeueEmergencyContentJobs(
+  client: SqlClient,
+  targetDate: string,
+  provider: string,
+  budgetMicros: number,
+  now: Date,
+): Promise<readonly ContentJob[]> {
+  await planContentGenerationJobs(client, targetDate, 1, provider, budgetMicros);
+  return client.transaction(async (transaction) => {
+    const result = await transaction.query<ContentJob & QueryResultRow>(
+      `update content_generation_jobs job
+       set status = 'queued', cost_micros = 0, error_code = null, started_at = null,
+           finished_at = null, prompt_version = concat('emergency-v', job.version + 1),
+           updated_at = $2, version = job.version + 1
+       where job.target_date = $1::date and job.status <> 'running'
+         and not exists (
+           select 1 from generated_contents content
+           where content.content_type = job.content_type
+             and content.status = 'approved' and content.selected_edition_id is null
+         )
+       returning job.id, job.content_type as "contentType", job.target_date::text as "targetDate",
+                 job.provider, job.prompt_version as "promptVersion", job.budget_micros as "budgetMicros"`,
+      [targetDate, now],
+    );
+    return result.rows;
+  });
+}
+
 export async function claimContentGenerationJob(
   client: SqlClient,
   jobId: string,

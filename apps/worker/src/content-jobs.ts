@@ -3,9 +3,11 @@ import { getEditionWindow } from "@ludico/domain";
 import {
   assembleApprovedEdition,
   claimContentGenerationJob,
+  ContentPipelineError,
   failContentGenerationJob,
-  planContentGenerationJobs,
+  planContentReserveJobs,
   recordGeneratedContent,
+  requeueEmergencyContentJobs,
   type ContentJob,
   type SqlClient,
 } from "@ludico/database";
@@ -165,12 +167,38 @@ export async function runContentPlan(
   provider: string,
   budgetMicros: number,
 ) {
-  return planContentGenerationJobs(database, addDays(today, 1), 21, provider, budgetMicros);
+  return planContentReserveJobs(database, addDays(today, 1), provider, budgetMicros);
 }
 
 export function runEditionAssembly(database: SqlClient, localDate: string, now: Date) {
   const { opensAt, closesAt } = getEditionWindow(localDate);
   return assembleApprovedEdition(database, localDate, opensAt, closesAt, now);
+}
+
+export async function runEditionAssemblyWithFallback(
+  database: SqlClient,
+  generator: ContentGeneratorPort,
+  assurance: ContentAssurancePort,
+  localDate: string,
+  provider: string,
+  budgetMicros: number,
+  now: Date,
+) {
+  try {
+    return { emergency: false, ...(await runEditionAssembly(database, localDate, now)) };
+  } catch (error) {
+    if (
+      !(error instanceof ContentPipelineError) ||
+      error.code !== "INSUFFICIENT_APPROVED_CONTENT"
+    ) {
+      throw error;
+    }
+  }
+  const jobs = await requeueEmergencyContentJobs(database, localDate, provider, budgetMicros, now);
+  for (const job of jobs) {
+    await runContentGenerationJob(database, generator, assurance, job.id, now);
+  }
+  return { emergency: true, ...(await runEditionAssembly(database, localDate, now)) };
 }
 
 export function localDateInMadrid(now: Date): string {
