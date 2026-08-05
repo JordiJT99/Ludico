@@ -228,6 +228,37 @@ describe("curated deterministic content provider", () => {
     expect(generated.candidate.publicPayload.difficulty).toBe(2);
     expect(isWordSearchPublicPayload(generated.candidate.publicPayload)).toBe(true);
   });
+
+  it.each([
+    [1, 6, 3],
+    [2, 8, 5],
+    [3, 10, 6],
+    [4, 12, 7],
+    [5, 14, 8],
+  ] as const)(
+    "builds a word-search variant for difficulty %i",
+    async (targetDifficulty, size, wordCount) => {
+      const generated = await deterministicContentGenerator.generate({
+        budgetMicros: 0,
+        contentType: "word_search",
+        id: `word-search-${targetDifficulty}`,
+        promptVersion: "v1",
+        provider: "deterministic",
+        targetDifficulty,
+        targetDate: "2026-08-03",
+      });
+      if (generated.candidate.type !== "word_search") throw new Error("word_search");
+      expect(generated.candidate.publicPayload).toMatchObject({
+        columns: size,
+        difficulty: targetDifficulty,
+        rows: size,
+      });
+      expect(generated.candidate.publicPayload.words).toHaveLength(wordCount);
+      expect(validateGeneratedContent(generated.candidate, { targetDifficulty })).toMatchObject({
+        status: "valid",
+      });
+    },
+  );
 });
 
 function reserveHorizon(): readonly string[] {

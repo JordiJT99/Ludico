@@ -184,11 +184,16 @@ function fakeWordSearch(
   promptVersion: string,
   targetDifficulty: 1 | 2 | 3 | 4 | 5,
 ): GeneratedContentCandidate {
-  const words = cyclicDaily(wordSearchWords, targetDate, 5);
+  const config = wordSearchDifficultyConfig[targetDifficulty];
+  const words = cyclicDaily(
+    wordSearchWords.filter((word) => word.length <= Math.min(config.rows, config.columns)),
+    targetDate,
+    config.wordCount,
+  );
   const game = constructWordSearch({
-    columns: 8,
-    directions: ["east", "south", "southEast"],
-    rows: 8,
+    columns: config.columns,
+    directions: config.directions,
+    rows: config.rows,
     seed: label(targetDate, promptVersion),
     words,
   });
@@ -1316,6 +1321,38 @@ const wordSearchWords = [
   "CEREZA",
   "CONEJO",
 ];
+
+const wordSearchDifficultyConfig = {
+  1: { columns: 6, directions: ["east", "south"], rows: 6, wordCount: 3 },
+  2: { columns: 8, directions: ["east", "south", "southEast"], rows: 8, wordCount: 5 },
+  3: {
+    columns: 10,
+    directions: ["east", "south", "southEast", "northEast", "west"],
+    rows: 10,
+    wordCount: 6,
+  },
+  4: {
+    columns: 12,
+    directions: ["east", "south", "southEast", "northEast", "west", "north", "northWest"],
+    rows: 12,
+    wordCount: 7,
+  },
+  5: {
+    columns: 14,
+    directions: [
+      "east",
+      "south",
+      "southEast",
+      "northEast",
+      "west",
+      "north",
+      "northWest",
+      "southWest",
+    ],
+    rows: 14,
+    wordCount: 8,
+  },
+} as const;
 
 const crosswordBanks: readonly (readonly WordBankEntry[])[] = [
   [
