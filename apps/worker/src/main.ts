@@ -40,15 +40,20 @@ if (!connectionString) throw new Error("DATABASE_URL es obligatoria");
 
 const boss = new PgBoss({ application_name: "ludico-worker", connectionString });
 const database = new PostgresClient(connectionString);
-const contentProvider = process.env.AI_PROVIDER ?? "deterministic";
-if (!(["disabled", "deterministic", "fake"] as const).includes(contentProvider as never)) {
+const configuredContentProvider = process.env.AI_PROVIDER ?? "deterministic";
+if (
+  !(["disabled", "deterministic", "fake"] as const).includes(configuredContentProvider as never)
+) {
   throw new Error(
     "AI_PROVIDER no soportado; use deterministic, disabled o fake fuera de producción",
   );
 }
-if (contentProvider === "fake" && process.env.NODE_ENV === "production") {
+if (configuredContentProvider === "fake" && process.env.NODE_ENV === "production") {
   throw new Error("AI_PROVIDER=fake no está permitido en producción");
 }
+// Disabled AI never disables the daily edition: use the deterministic reserve generator instead.
+const contentProvider =
+  configuredContentProvider === "disabled" ? "deterministic" : configuredContentProvider;
 const pushProviderName = process.env.PUSH_PROVIDER ?? "disabled";
 if (!(["disabled", "expo", "fake"] as const).includes(pushProviderName as never)) {
   throw new Error("PUSH_PROVIDER no soportado; use disabled, expo o fake");
@@ -87,10 +92,6 @@ await boss.work(PRIVACY_RETENTION_QUEUE, async (jobs) => {
 await boss.work(CONTENT_PLAN_QUEUE, async (jobs) => {
   for (const job of jobs) {
     await logLowReserve(job.id);
-    if (contentProvider === "disabled") {
-      console.log(JSON.stringify({ jobId: job.id, queue: CONTENT_PLAN_QUEUE, status: "disabled" }));
-      continue;
-    }
     const planned = await runContentPlan(
       database,
       localDateInMadrid(new Date()),
