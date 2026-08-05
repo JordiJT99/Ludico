@@ -19,18 +19,20 @@ describe("daily game validators", () => {
     expect(() => validateGuessWord(guessWord())).not.toThrow();
   });
 
-  it("constructs reproducible, reconstructible word searches", () => {
-    const config = {
-      columns: 8,
-      directions: ["east", "south", "southEast"] as const,
-      rows: 8,
-      seed: "2026-08-01-naturaleza",
-      words: ["SOL", "LUNA", "NUBE"],
-    };
-    const first = constructWordSearch(config);
-    expect(constructWordSearch(config)).toEqual(first);
-    expect(() => validateWordSearch(first)).not.toThrow();
-    expect(() => validateWordSearch({ ...first, grid: [] })).toThrow(DailyGameValidationError);
+  it("constructs reproducible, reconstructible word searches across 200 seeds", () => {
+    for (let seed = 1; seed <= 200; seed += 1) {
+      const config = {
+        columns: 8,
+        directions: ["east", "south", "southEast"] as const,
+        rows: 8,
+        seed: `word-search-${seed}`,
+        words: ["SOL", "LUNA", "NUBE"],
+      };
+      const first = constructWordSearch(config);
+      expect(constructWordSearch(config)).toEqual(first);
+      expect(() => validateWordSearch(first)).not.toThrow();
+      expect(() => validateWordSearch({ ...first, grid: [] })).toThrow(DailyGameValidationError);
+    }
   });
 });
 

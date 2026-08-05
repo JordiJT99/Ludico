@@ -22,7 +22,7 @@ const bank: WordBankEntry[] = [
 
 describe("bounded deterministic crossword construction", () => {
   it("recomposes a valid unique grid reproducibly from a curated bank", () => {
-    for (let seed = 1; seed <= 12; seed += 1) {
+    for (let seed = 1; seed <= 200; seed += 1) {
       const options = {
         entryCount: 3,
         seed: `seed-${seed}`,
