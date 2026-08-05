@@ -181,7 +181,7 @@ export interface GuessWordPublicSolutionPayload {
 
 export interface WordSearchPublicPayload {
   readonly columns: number;
-  readonly difficulty: 1 | 2 | 3 | 4 | 5;
+  readonly difficulty?: 1 | 2 | 3 | 4 | 5;
   readonly grid: readonly (readonly string[])[];
   readonly kind: "word-search";
   readonly rows: number;
@@ -1408,9 +1408,10 @@ export function isWordSearchPublicPayload(value: unknown): value is WordSearchPu
     isRecord(value) &&
     value.kind === "word-search" &&
     typeof value.title === "string" &&
-    Number.isInteger(value.difficulty) &&
-    Number(value.difficulty) >= 1 &&
-    Number(value.difficulty) <= 5 &&
+    (value.difficulty === undefined ||
+      (Number.isInteger(value.difficulty) &&
+        Number(value.difficulty) >= 1 &&
+        Number(value.difficulty) <= 5)) &&
     typeof value.seed === "string" &&
     Number.isInteger(value.rows) &&
     Number(value.rows) >= 4 &&
