@@ -23,7 +23,8 @@ PK `uuid` (UUIDv7 cuando esté disponible); `created_at`, `updated_at`, `version
 | Score | 1:1 intento y fórmula | unique attempt; elegibility, inputs_hash, score_version |
 | Streak | por usuario y tipo | unique `(user,scope)`; last_qualifying_date |
 | Leaderboard, LeaderboardEntry | snapshot diario/semanal | unique scope/period; rank; unique `(leaderboard,user)` |
-| Achievement, UserAchievement, ExperienceTransaction | definiciones/versiones y ledger XP | unique key/version; unique idempotency_key; XP nunca deriva de saldo mutable solo |
+| ExperienceTransaction | ledger XP por intento y bonus multijuego | unique `(attempt, kind)`; XP nunca deriva de saldo mutable solo |
+| Achievement, UserAchievement | catálogo editorial ampliado | Fase 2; los dos logros MVP se derivan del ledger versionado y no guardan PII adicional |
 | Friendship, PrivateLeague, LeagueMember, Challenge | Fase 2, privacidad | pares canónicos; memberships únicos; expiración/estado |
 | ContentGenerationJob, GeneratedContent, ValidationResult | lineage de generación | provider/model/prompt/config/hash/cost; índices state/type/date |
 | BlockedTerm | vocabulario editorial activo y motivo | término normalizado único; cambios auditables desde backoffice futuro |
@@ -35,7 +36,7 @@ PK `uuid` (UUIDv7 cuando esté disponible); `created_at`, `updated_at`, `version
 | AnalyticsEventQuarantine | metadatos sanitizados de lotes inválidos, sin payload ni sujeto | huella estructural SHA-256, motivo/count, índice received_at y TTL 30 días |
 | AuditLog, OutboxEvent, IdempotencyRecord | operación, eventos e idempotencia | append-only; aggregate/version; key+scope único y request_hash |
 
-Las entidades de Fase 2 se modelan aquí para límites, pero no se migran hasta su historia: evitar tablas especulativas.
+Las entidades de Fase 2 se modelan aquí para límites, pero no se migran hasta su historia. El ledger XP sí se migra porque soporta la progresión MVP sin crear un saldo mutable ni una tabla de logros especulativa.
 
 ## Diagrama esencial MVP
 

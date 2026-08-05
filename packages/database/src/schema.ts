@@ -314,6 +314,27 @@ export const scores = pgTable(
   ],
 );
 
+export const experienceTransactions = pgTable(
+  "experience_transactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    attemptId: uuid("attempt_id")
+      .references(() => gameAttempts.id, { onDelete: "cascade" })
+      .notNull(),
+    kind: text("kind").notNull(),
+    amount: integer("amount").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("experience_transactions_attempt_kind_uidx").on(table.attemptId, table.kind),
+    check(
+      "experience_transactions_kind_check",
+      sql`${table.kind} in ('completion','daily_double')`,
+    ),
+    check("experience_transactions_amount_check", sql`${table.amount} > 0`),
+  ],
+);
+
 export const consentRecords = pgTable(
   "consent_records",
   {

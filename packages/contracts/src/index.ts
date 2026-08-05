@@ -538,6 +538,42 @@ export interface StreakSummary {
   readonly lastCompletedDate: string | null;
 }
 
+export interface PlayerProgression {
+  readonly achievements: readonly {
+    readonly earnedAt: string;
+    readonly key: "daily-double" | "first-game";
+  }[];
+  readonly experience: number;
+  readonly level: number;
+  readonly nextLevelExperience: number;
+  readonly version: "xp-v1";
+}
+
+export const playerProgressionSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["achievements", "experience", "level", "nextLevelExperience", "version"],
+  properties: {
+    achievements: {
+      type: "array",
+      maxItems: 2,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["earnedAt", "key"],
+        properties: {
+          earnedAt: { type: "string", format: "date-time" },
+          key: { enum: ["first-game", "daily-double"] },
+        },
+      },
+    },
+    experience: { type: "integer", minimum: 0 },
+    level: { type: "integer", minimum: 1 },
+    nextLevelExperience: { type: "integer", minimum: 100 },
+    version: { const: "xp-v1" },
+  },
+} as const;
+
 export interface PreviousResultSummary {
   readonly attemptId: string;
   readonly competitive: boolean;
@@ -1836,6 +1872,27 @@ export function isStreakSummary(value: unknown): value is StreakSummary {
     Number.isInteger(value.current) &&
     Number(value.current) >= 0 &&
     (value.lastCompletedDate === null || typeof value.lastCompletedDate === "string")
+  );
+}
+
+export function isPlayerProgression(value: unknown): value is PlayerProgression {
+  return (
+    isRecord(value) &&
+    Number.isInteger(value.experience) &&
+    Number(value.experience) >= 0 &&
+    Number.isInteger(value.level) &&
+    Number(value.level) >= 1 &&
+    Number.isInteger(value.nextLevelExperience) &&
+    Number(value.nextLevelExperience) >= 100 &&
+    value.version === "xp-v1" &&
+    Array.isArray(value.achievements) &&
+    value.achievements.length <= 2 &&
+    value.achievements.every(
+      (achievement) =>
+        isRecord(achievement) &&
+        typeof achievement.earnedAt === "string" &&
+        (achievement.key === "first-game" || achievement.key === "daily-double"),
+    )
   );
 }
 

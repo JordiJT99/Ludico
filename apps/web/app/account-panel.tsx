@@ -2,9 +2,11 @@
 
 import {
   isNotificationPreferences,
+  isPlayerProgression,
   isStreakSummary,
   isUserLeaderboardSettings,
   type NotificationPreferences,
+  type PlayerProgression,
   type StreakSummary,
 } from "@ludico/contracts";
 import { useEffect, useState, type SyntheticEvent } from "react";
@@ -20,6 +22,7 @@ export function AccountPanel() {
   const [alias, setAlias] = useState("");
   const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [streak, setStreak] = useState<StreakSummary>();
+  const [progression, setProgression] = useState<PlayerProgression>();
   const [notifications, setNotifications] = useState<NotificationPreferences>();
   const [deletionPassword, setDeletionPassword] = useState("");
   const [deletionConfirmation, setDeletionConfirmation] = useState("");
@@ -39,19 +42,26 @@ export function AccountPanel() {
       fetch("/api/player/me/streaks", { cache: "no-store" }),
       fetch("/api/player/me/leaderboard-settings", { cache: "no-store" }),
       fetch("/api/player/me/notification-preferences", { cache: "no-store" }),
-    ]).then(async ([streakResponse, settingsResponse, notificationResponse]) => {
-      const streakBody: unknown = await streakResponse.json();
-      const settingsBody: unknown = await settingsResponse.json();
-      const notificationBody: unknown = await notificationResponse.json();
-      if (streakResponse.ok && isStreakSummary(streakBody)) setStreak(streakBody);
-      if (settingsResponse.ok && isUserLeaderboardSettings(settingsBody)) {
-        setAlias(settingsBody.alias ?? "");
-        setLeaderboardOptIn(settingsBody.leaderboardOptIn);
-      }
-      if (notificationResponse.ok && isNotificationPreferences(notificationBody)) {
-        setNotifications(notificationBody);
-      }
-    });
+      fetch("/api/player/me/achievements", { cache: "no-store" }),
+    ]).then(
+      async ([streakResponse, settingsResponse, notificationResponse, progressionResponse]) => {
+        const streakBody: unknown = await streakResponse.json();
+        const settingsBody: unknown = await settingsResponse.json();
+        const notificationBody: unknown = await notificationResponse.json();
+        const progressionBody: unknown = await progressionResponse.json();
+        if (streakResponse.ok && isStreakSummary(streakBody)) setStreak(streakBody);
+        if (settingsResponse.ok && isUserLeaderboardSettings(settingsBody)) {
+          setAlias(settingsBody.alias ?? "");
+          setLeaderboardOptIn(settingsBody.leaderboardOptIn);
+        }
+        if (notificationResponse.ok && isNotificationPreferences(notificationBody)) {
+          setNotifications(notificationBody);
+        }
+        if (progressionResponse.ok && isPlayerProgression(progressionBody)) {
+          setProgression(progressionBody);
+        }
+      },
+    );
   }, [sessionEmail]);
 
   if (!configured) return null;
@@ -189,6 +199,14 @@ export function AccountPanel() {
           {streak ? (
             <p>
               Racha actual: <strong>{streak.current}</strong> días · Mejor: {streak.best}
+            </p>
+          ) : null}
+          {progression ? (
+            <p>
+              Nivel <strong>{progression.level}</strong> · {progression.experience} XP
+              {progression.achievements.length
+                ? ` · Logros: ${progression.achievements.map((achievement) => (achievement.key === "first-game" ? "Primer reto" : "Doble diario")).join(", ")}`
+                : ""}
             </p>
           ) : null}
           <form className="account-form" onSubmit={saveRankingSettings}>

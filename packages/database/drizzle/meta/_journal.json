@@ -134,6 +134,13 @@
       "when": 1785921326302,
       "tag": "0018_supreme_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1785924643824,
+      "tag": "0019_spotty_karen_page",
+      "breakpoints": true
     }
   ]
 }

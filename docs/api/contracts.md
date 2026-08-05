@@ -39,7 +39,7 @@ Las rutas privadas de juego aceptan exactamente un propietario: `X-Guest-Token` 
 | GET `/me/streaks` | racha | cuenta; fecha local Madrid, un día por edición elegible |
 | GET `/me/previous-results` | resumen personal de ayer | sólo cuenta; hasta quiz y crucigrama, puntos y puesto final si fue competitivo; `private,no-store` |
 | GET/PATCH `/me/leaderboard-settings` | alias y opt-in | privado/no-store; auditado |
-| GET `/me/achievements` | progreso | achievements básico puede diferirse |
+| GET `/me/achievements` | progreso | XP total, nivel `xp-v1` y logros cosméticos derivados; privado/no-store, disponible para invitado o cuenta |
 | POST `/share-results` | payload seguro | exige intento propietario; servidor genera solo juego, puntos, modo y URL pública sin `attemptId` |
 | POST `/devices/push-token` | registrar token Expo | sólo cuenta; Android/iOS, idempotente por hash; secreto cifrado y respuesta no-store |
 | GET `/config/public` | flags/placements seguros | firmado/ETag, sin secretos |

@@ -21,6 +21,7 @@ El workflow CI está configurado para aplicar las migraciones sobre un PostgreSQ
 | T-UNIT-005 | crucigrama: conectividad, letras, numeración, densidad, tamaño, unicidad, semilla y roundtrip |
 | T-UNIT-006 | validación de quiz: schema, ambigüedad señalada, fuente, longitud, duplicidad exacta/semántica y sensible |
 | T-UNIT-007 | RBAC, consentimiento, experimentos, idempotencia/hash |
+| T-UNIT-008 | XP `xp-v1`, umbrales de nivel y reglas cosméticas derivadas |
 | T-INT-001 | repositorios/constraints/migraciones y concurrencia de submit |
 | T-INT-002 | pg-boss: schedule, retry/backoff, DLQ, singleton y reanudación |
 | T-INT-003 | adapters IA/push/auth/ads/analytics con sandbox/fake contractual y circuit breaker por proveedor/tipo |
@@ -32,6 +33,7 @@ El workflow CI está configurado para aplicar las migraciones sobre un PostgreSQ
 | T-INT-010 | dashboard analítico: días Madrid, ventana acotada, dedupe de intento, tasa vacía, freshness y ausencia de IDs |
 | T-INT-011 | auditoría administrativa: orden reciente, límite, proyección sin metadata y acceso exclusivo superadmin |
 | T-INT-012 | cuarentena analítica: rollback atómico, metadatos sin valores/sujeto, conteo agregado y TTL 30 días |
+| T-INT-013 | ledger XP: finalización idempotente, bonus de dos tipos, migración invitado→cuenta y consulta privada |
 | T-INT-004 | caché/ETag y garantía de no cachear solución/PII |
 | T-E2E-001 | invitado completa quiz y resultado no filtra respuestas |
 | T-E2E-002 | registro migra progreso sin duplicarlo |

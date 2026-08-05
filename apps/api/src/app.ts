@@ -31,6 +31,8 @@ import {
   type NotificationPreferences,
   notificationPreferencesSchema,
   type PreviousResultSummary,
+  type PlayerProgression,
+  playerProgressionSchema,
   previousResultSummariesSchema,
   type PublicEdition,
   type PublicGame,
@@ -137,6 +139,10 @@ interface AppOptions {
     userId: string,
     now: Date,
   ) => Promise<readonly PreviousResultSummary[]>;
+  readonly getProgression?: (
+    player: PlayerCredential,
+    now: Date,
+  ) => Promise<PlayerProgression | null>;
   readonly getShareResultData?: (
     attemptId: string,
     player: PlayerCredential,
@@ -645,6 +651,25 @@ export function buildApp(options: AppOptions = {}) {
       reply.header("Cache-Control", "private, no-store");
       const now = (options.now ?? (() => new Date()))();
       return options.getStreak(player.userId, dateInMadrid(now));
+    },
+  );
+
+  app.get<{
+    Headers: PlayerAuthHeaders;
+    Reply: PlayerProgression | { code: "UNAUTHORIZED" | "UNAVAILABLE" };
+  }>(
+    "/v1/me/achievements",
+    { schema: { headers: playerAuthHeadersSchema, response: { 200: playerProgressionSchema } } },
+    async (request, reply) => {
+      if (!options.getProgression) return reply.code(503).send({ code: "UNAVAILABLE" });
+      const player = await resolvePlayer(request.headers, options);
+      const progression = await options.getProgression(
+        player,
+        (options.now ?? (() => new Date()))(),
+      );
+      if (!progression) return reply.code(401).send({ code: "UNAUTHORIZED" });
+      reply.header("Cache-Control", "private, no-store");
+      return progression;
     },
   );
 

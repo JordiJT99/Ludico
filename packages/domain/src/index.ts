@@ -11,3 +11,4 @@ export * from "./notifications.js";
 export * from "./share.js";
 export * from "./streak.js";
 export * from "./quiz-progress.js";
+export * from "./progression.js";

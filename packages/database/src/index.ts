@@ -12,6 +12,7 @@ export * from "./guess-word-attempts.js";
 export * from "./notifications.js";
 export * from "./quiz-attempts.js";
 export * from "./privacy.js";
+export * from "./progression.js";
 export * from "./publication-settings.js";
 export * from "./rankings.js";
 export * from "./reviews.js";

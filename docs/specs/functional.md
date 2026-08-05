@@ -38,7 +38,7 @@ Job `close-edition(localDate)` adquiere lock lógico, fija `closedAt`, bloquea n
 
 Fórmula del PRD, ejecutada por paquete de dominio en servidor. Se conserva entrada, salida, versión y elegibilidad. Racha: un día cuenta si completa cualquier juego elegible; actualización por fecha local única; recuperación limitada queda fuera de MVP. Ranking diario por juego y combinado, semanal derivado; orden: puntos desc, duración verificada asc, `submittedAt` asc, id estable asc. Alias y opt-in; anónimos ven percentil pero no tabla nominal.
 
-XP se registra en un ledger separado de la puntuación competitiva. En MVP solo se concede por finalización válida y bonus multijuego; nivel es una función versionada del XP acumulado. Logros e insignias se evalúan mediante reglas versionadas después de eventos confirmados y son cosméticos. Una corrección de score emite transacción compensatoria, nunca reescribe silenciosamente el historial.
+XP se registra en un ledger separado de la puntuación competitiva. El corte MVP concede 100 XP por cada finalización válida y 200 XP una sola vez al completar dos tipos distintos de juego en la misma edición; nivel es una función `xp-v1` del XP acumulado. Las reglas cosméticas iniciales son `first-game` (primera finalización) y `daily-double` (bonus multijuego), derivadas exclusivamente de transacciones confirmadas. Una corrección de score emite transacción compensatoria, nunca reescribe silenciosamente el historial. XP, nivel y logros no alteran score, ranking ni anuncios.
 
 ## Compartir (`FR-010`)
 
@@ -60,7 +60,7 @@ Premium Fase 2 añade archivo ampliado, estadísticas avanzadas, temas y retos e
 
 Archivo MVP: siete fechas anteriores; cualquiera puede revisar soluciones publicadas y un usuario puede reanudar solo mientras la edición siga abierta. Jugar una edición cerrada es casual y no altera ranking/racha histórica. SEO histórico usa una URL canónica estable y solo indexa explicación/solución después del cierre.
 
-Fase 2: logros versionados, amigos por invitación/aceptación, bloqueo, ligas privadas y desafíos asíncronos. Privacidad por defecto: perfil no público, contactos no se suben sin opt-in, ranking de amigos solo para relaciones aceptadas y abandono/bloqueo surte efecto inmediato. Ligas tienen propietario, miembros, período y reglas inmutables durante competición. Los retos reutilizan una edición pública o semilla aprobada; nunca exponen solución al creador.
+El MVP muestra los dos logros cosméticos versionados en el perfil. Fase 2 añade catálogo editorial ampliado de logros, amigos por invitación/aceptación, bloqueo, ligas privadas y desafíos asíncronos. Privacidad por defecto: perfil no público, contactos no se suben sin opt-in, ranking de amigos solo para relaciones aceptadas y abandono/bloqueo surte efecto inmediato. Ligas tienen propietario, miembros, período y reglas inmutables durante competición. Los retos reutilizan una edición pública o semilla aprobada; nunca exponen solución al creador.
 
 ## SEO, ASO y crecimiento
 

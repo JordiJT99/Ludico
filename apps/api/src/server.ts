@@ -26,6 +26,7 @@ import {
   getUserLeaderboardSettings,
   getUserNotificationPreferences,
   getUserPreviousResults,
+  getPlayerProgression,
   getUserShareResultData,
   getUserStreak,
   listGeneratedContent,
@@ -139,6 +140,7 @@ const app = buildApp({
   getNotificationPreferences: (userId) => getUserNotificationPreferences(database, userId),
   getStreak: (userId, today) => getUserStreak(database, userId, today),
   getPreviousResults: (userId, now) => getUserPreviousResults(database, userId, now),
+  getProgression: (player, now) => getPlayerProgression(database, player, now),
   getShareResultData: (attemptId, player, now) =>
     player.kind === "guest"
       ? getGuestShareResultData(database, attemptId, player.token, now)
