@@ -118,6 +118,34 @@ describe("curated deterministic content provider", () => {
     expect(new Set(answers)).toHaveLength(42);
   });
 
+  it("keeps the true-false reserve balanced and free of repeated statements for fourteen days", async () => {
+    const items = (
+      await Promise.all(
+        reserveHorizon().slice(0, 14).map(async (targetDate) => {
+          const generated = await deterministicContentGenerator.generate({
+            budgetMicros: 0,
+            contentType: "true_false",
+            id: `true-false-${targetDate}`,
+            promptVersion: "v1",
+            provider: "deterministic",
+            targetDifficulty: 1,
+            targetDate,
+          });
+          if (generated.candidate.type !== "true_false") throw new Error("true_false");
+          const values = new Map(
+            generated.candidate.privatePayload.items.map((item) => [item.id, item.value]),
+          );
+          return generated.candidate.publicPayload.items.map((item) => ({
+            statement: item.statement,
+            value: values.get(item.id),
+          }));
+        }),
+      )
+    ).flat();
+    expect(new Set(items.map(({ statement }) => statement))).toHaveLength(42);
+    expect(items.filter(({ value }) => value)).toHaveLength(21);
+  });
+
   it("keeps every supported quiz difficulty playable through the public contract", async () => {
     const generated = await deterministicContentGenerator.generate({
       budgetMicros: 0,
