@@ -19,7 +19,10 @@ import {
   runContentPlan,
   runEditionAssemblyWithFallback,
 } from "./content-jobs.js";
-import { fakeContentAssurance, fakeContentGenerator } from "./fake-content-generator.js";
+import {
+  deterministicContentAssurance,
+  deterministicContentGenerator,
+} from "./fake-content-generator.js";
 import {
   configureQueues,
   configureSchedules,
@@ -130,7 +133,7 @@ await boss.work(CONTENT_HEALTH_QUEUE, async (jobs) => {
     else console.log(log);
   }
 });
-const contentGenerator = new ContentProviderCircuitBreaker(fakeContentGenerator);
+const contentGenerator = new ContentProviderCircuitBreaker(deterministicContentGenerator);
 if (contentProvider === "fake" || contentProvider === "deterministic") {
   await boss.work(CONTENT_GENERATION_QUEUE, async (jobs) => {
     for (const job of jobs) {
@@ -140,7 +143,7 @@ if (contentProvider === "fake" || contentProvider === "deterministic") {
         const result = await runContentGenerationJob(
           database,
           contentGenerator,
-          fakeContentAssurance,
+          deterministicContentAssurance,
           jobId,
           new Date(),
         );
@@ -182,7 +185,7 @@ await boss.work(CONTENT_ASSEMBLY_QUEUE, async (jobs) => {
         await runEditionAssemblyWithFallback(
           database,
           contentGenerator,
-          fakeContentAssurance,
+          deterministicContentAssurance,
           targetDate,
           contentProvider,
           Number(process.env.AI_JOB_BUDGET_MICROS ?? 0),

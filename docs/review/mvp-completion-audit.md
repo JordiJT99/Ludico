@@ -18,7 +18,7 @@ La base operativa del MVP está implementada y comprobada localmente: edición d
 | Consentimiento, anuncios de prueba y analítica sin respuestas | Implementada | `packages/domain/src/consent.ts`, E2E 1 |
 | Administración, calendario, auditoría, banco y revisión | Implementada | `apps/web/app/admin`, E2E 5 |
 | Planificación, reserva, emergencia y validación de contenido | Implementada | `packages/database/src/content-pipeline.ts`, `apps/worker/src/content-jobs.ts` |
-| Cinco formatos en el motor | Implementada | `packages/domain/src/content-validation.ts`, `packages/domain/src/daily-games.ts`, `apps/worker/src/fake-content-generator.ts` |
+| Cinco formatos en el motor | Implementada | `packages/domain/src/content-validation.ts`, `packages/domain/src/daily-games.ts`, generador determinista curado en `apps/worker/src/fake-content-generator.ts` |
 
 ## Cinco formatos jugables
 

@@ -14,7 +14,7 @@ Verified with 12 deterministic seeds plus domain tests: 12 files / 38 tests pass
 
 ## Slice 3/4 foundation
 
-Quiz editorial validation now checks repeated prompts/options and answer-position concentration; contracts accept all five difficulty levels. Added a common difficulty engine and validated deterministic implementations for true/false, adivina la palabra and sopa de letras. The worker defaults to deterministic generation when no AI provider is configured; `fake` remains prohibited in production.
+Quiz editorial validation now checks repeated prompts/options and answer-position concentration; contracts accept all five difficulty levels. Added a common difficulty engine and validated deterministic implementations for true/false, adivina la palabra and sopa de letras. The worker defaults to a rotating curated deterministic generator when no external provider is configured; it contains playable content rather than development fixtures, so an AI outage does not make daily editions repetitive or unavailable. `fake` remains prohibited in production.
 
 ## Slice 3/4 — content pipeline integration
 
