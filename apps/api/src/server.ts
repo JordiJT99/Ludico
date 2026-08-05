@@ -92,8 +92,8 @@ const database = new PostgresClient(connectionString);
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
 const contentProvider = process.env.AI_PROVIDER ?? "disabled";
-if (contentProvider !== "disabled" && contentProvider !== "fake") {
-  throw new Error("AI_PROVIDER no soportado; use disabled o fake fuera de producción");
+if (!(["disabled", "deterministic", "fake"] as const).includes(contentProvider as never)) {
+  throw new Error("AI_PROVIDER no soportado; use disabled, deterministic o fake");
 }
 const pushProvider = process.env.PUSH_PROVIDER ?? "disabled";
 if (pushProvider !== "disabled" && pushProvider !== "expo" && pushProvider !== "fake") {
@@ -149,7 +149,7 @@ const app = buildApp({
   listBlockedTerms: () => listBlockedTerms(database),
   listCuratedWordBank: (now) => listCuratedWordBank(database, now),
   migrateGuest: (token, identity, now) => migrateGuestToUser(database, token, identity, now),
-  ...(contentProvider === "fake"
+  ...(contentProvider === "fake" || contentProvider === "deterministic"
     ? {
         planContentJobs: (startDate: string, days: number, budgetMicros: number) =>
           planContentGenerationJobs(database, startDate, days, contentProvider, budgetMicros),

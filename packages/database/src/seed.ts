@@ -1,5 +1,11 @@
-import type { CrosswordPublicPayload, QuizPublicPayload } from "@ludico/contracts";
+import type {
+  CrosswordPublicPayload,
+  GuessWordPublicPayload,
+  QuizPublicPayload,
+  WordSearchPublicPayload,
+} from "@ludico/contracts";
 import {
+  constructWordSearch,
   type CrosswordPrivateSolution,
   getEditionWindow,
   type QuizPrivateSolution,
@@ -20,6 +26,9 @@ const quiz = makeQuiz();
 const quizSolution = makeQuizSolution();
 const crossword = makeCrossword();
 const crosswordSolution = makeCrosswordSolution(crossword);
+const trueFalse = makeTrueFalse();
+const guessWord = makeGuessWord();
+const wordSearch = makeWordSearch();
 validateQuiz(quiz, quizSolution.questions);
 validateCrossword(crossword, crosswordSolution);
 
@@ -84,7 +93,11 @@ try {
       target: gameSolutions.gameId,
       set: { privatePayload: crosswordSolution, publicPayload: null, publishedAt: null },
     });
-  console.log(`Seed publicado para ${localDate}: quiz ${game.id}, crucigrama ${crosswordGame.id}.`);
+
+  await seedGame(edition.id, "true_false", trueFalse.payload, trueFalse.solution);
+  await seedGame(edition.id, "guess_word", guessWord.payload, guessWord.solution);
+  await seedGame(edition.id, "word_search", wordSearch.payload, wordSearch.solution);
+  console.log(`Seed publicado para ${localDate}: cinco retos listos.`);
 } finally {
   await pool.end();
 }
@@ -281,4 +294,101 @@ function makeCrosswordSolution(crossword: CrosswordPublicPayload): CrosswordPriv
     kind: "crossword-solution",
     uniqueness: { alternativeCount: 1, vocabularyVersion: "seed-es-v1" },
   };
+}
+
+function makeTrueFalse(): { payload: QuizPublicPayload; solution: QuizPrivateSolution } {
+  const statements = [
+    ["La Tierra gira alrededor del Sol.", true],
+    ["La Luna es un planeta.", false],
+    ["El agua contiene hidrógeno y oxígeno.", true],
+    ["Los murciélagos son reptiles.", false],
+    ["El Sol es una estrella.", true],
+  ] as const;
+  const questions = statements.map(([prompt], index) => ({
+    category: "Ciencia",
+    difficulty: "easy" as const,
+    id: `30000000-0000-4000-8000-00000000000${index + 1}`,
+    options: [
+      { id: `31000000-0000-4000-8000-00000000000${index}1`, text: "Verdadero" },
+      { id: `31000000-0000-4000-8000-00000000000${index}2`, text: "Falso" },
+    ],
+    prompt,
+  }));
+  return {
+    payload: { kind: "quiz", questions, title: "Verdadero o falso" },
+    solution: {
+      kind: "quiz-solution",
+      questions: questions.map((question, index) => ({
+        correctOptionId: question.options[statements[index]![1] ? 0 : 1]!.id,
+        explanation: "Explicación incluida en la solución de esta afirmación.",
+        questionId: question.id,
+      })),
+    },
+  };
+}
+
+function makeGuessWord(): { payload: GuessWordPublicPayload; solution: unknown } {
+  return {
+    payload: {
+      allowedCharacters: Array.from("ABCDEFGHIJKLMNÑOPQRSTUVWXYZ"),
+      category: "Naturaleza",
+      definition: "Planta leñosa con tronco y copa de ramas.",
+      difficulty: 1,
+      hints: [{ text: "Puede dar sombra.", unlockAfterAttempts: 1 }],
+      id: "40000000-0000-4000-8000-000000000001",
+      kind: "guess-word",
+      maxAttempts: 5,
+      title: "Adivina la palabra",
+    },
+    solution: { alternativeAnswers: [], answer: "ARBOL", kind: "guess-word-solution" },
+  };
+}
+
+function makeWordSearch(): { payload: WordSearchPublicPayload; solution: unknown } {
+  const game = constructWordSearch({
+    columns: 8,
+    directions: ["east", "south", "southEast"],
+    rows: 8,
+    seed: `seed-${localDate}`,
+    words: ["SOL", "LUNA", "NUBE"],
+  });
+  return {
+    payload: {
+      columns: game.columns,
+      grid: game.grid,
+      kind: "word-search",
+      rows: game.rows,
+      seed: game.seed,
+      title: "Sopa de letras",
+      words: game.entries.map((entry, index) => ({
+        answer: entry.answer,
+        id: `50000000-0000-4000-8000-00000000000${index + 1}`,
+      })),
+    },
+    solution: { entries: game.entries, kind: "word-search-solution" },
+  };
+}
+
+async function seedGame(
+  editionId: string,
+  type: "true_false" | "guess_word" | "word_search",
+  publicPayload: unknown,
+  privatePayload: unknown,
+) {
+  const [game] = await db
+    .insert(games)
+    .values({ editionId, publicPayload, status: "active", type })
+    .onConflictDoUpdate({
+      target: [games.editionId, games.type],
+      set: { publicPayload, status: "active" },
+    })
+    .returning({ id: games.id });
+  if (!game) throw new Error(`No se pudo preparar ${type}`);
+  await db
+    .insert(gameSolutions)
+    .values({ gameId: game.id, privatePayload })
+    .onConflictDoUpdate({
+      target: gameSolutions.gameId,
+      set: { privatePayload, publicPayload: null, publishedAt: null },
+    });
 }
