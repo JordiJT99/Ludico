@@ -4,7 +4,7 @@ Estado: `DRAFT-EVIDENCE` · La aplicación está preparada para staging; G5 no e
 
 ## Evidencia automatizada disponible
 
-Última ejecución integral: 2026-08-05. [GitHub Actions #31003801103](https://github.com/JordiJT99/Ludico/actions/runs/31003801103) ejecutó `secrets`, `check` y `containers` correctamente sobre `29aab0e7a20e229ef1a6b14cf1258a429d21198f`. La misma fecha tiene evidencia local adicional: 46 tests de dominio, 2 web, 47 de base de datos, 45 de API, 36 de worker, 8 E2E Chromium, 38 documentos y `pnpm security:check` sin vulnerabilidades altas ni críticas.
+Ejecución integral de referencia: 2026-08-05. [GitHub Actions #31003801103](https://github.com/JordiJT99/Ludico/actions/runs/31003801103) ejecutó `secrets`, `check` y `containers` correctamente sobre `29aab0e7a20e229ef1a6b14cf1258a429d21198f`. La misma fecha tiene evidencia local adicional: 46 tests de dominio, 2 web, 47 de base de datos, 45 de API, 36 de worker, 8 E2E Chromium, 38 documentos y `pnpm security:check` sin vulnerabilidades altas ni críticas.
 
 | Área | Estado | Evidencia |
 |---|---|---|
@@ -29,7 +29,7 @@ El 2026-07-30 se auditó `http://127.0.0.1:3101/` con Lighthouse 12.8.2, Chrome 
 
 ### CI remota confirmada
 
-La última ejecución con evidencia está completada: [GitHub Actions #31003801103](https://github.com/JordiJT99/Ludico/actions/runs/31003801103) sobre `29aab0e7a20e229ef1a6b14cf1258a429d21198f`, con `secrets`, `check` y `containers` verdes. `check` instaló dependencias bloqueadas, aplicó las migraciones en PostgreSQL 18 efímero, ejecutó la comprobación de seguridad, instaló Chromium y terminó `pnpm check` correctamente; `containers` construyó las imágenes OCI de API, worker y web con dependencias de producción y arrancó API/web para sus smoke tests.
+La ejecución de referencia está completada: [GitHub Actions #31003801103](https://github.com/JordiJT99/Ludico/actions/runs/31003801103) sobre `29aab0e7a20e229ef1a6b14cf1258a429d21198f`, con `secrets`, `check` y `containers` verdes. `check` instaló dependencias bloqueadas, aplicó las migraciones en PostgreSQL 18 efímero, ejecutó la comprobación de seguridad, instaló Chromium y terminó `pnpm check` correctamente; `containers` construyó las imágenes OCI de API, worker y web con dependencias de producción y arrancó API/web para sus smoke tests.
 
 Cada cambio posterior en `main` debe conservar los tres jobs verdes. Si el repositorio pasa a una organización que lo requiera, configurar `GITLEAKS_LICENSE` antes del siguiente push.
 
