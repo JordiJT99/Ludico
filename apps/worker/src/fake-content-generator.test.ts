@@ -57,6 +57,25 @@ describe("curated deterministic content provider", () => {
     );
   });
 
+  it("keeps the very-easy guess-word reserve free of repeated answers for fourteen days", async () => {
+    const answers = await Promise.all(
+      reserveHorizon().slice(0, 14).map(async (targetDate) => {
+        const generated = await deterministicContentGenerator.generate({
+          budgetMicros: 0,
+          contentType: "guess_word",
+          id: `guess-${targetDate}`,
+          promptVersion: "v1",
+          provider: "deterministic",
+          targetDifficulty: 1,
+          targetDate,
+        });
+        if (generated.candidate.type !== "guess_word") throw new Error("guess_word");
+        return generated.candidate.privatePayload.answer;
+      }),
+    );
+    expect(new Set(answers)).toHaveLength(14);
+  });
+
   it("keeps every supported quiz difficulty playable through the public contract", async () => {
     const generated = await deterministicContentGenerator.generate({
       budgetMicros: 0,

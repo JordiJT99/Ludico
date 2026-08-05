@@ -2,6 +2,8 @@
 
 The current MVP keeps fourteen eligible future days for every enabled game type using its fixed, visible default difficulty profile, plus one candidate in flight. The stored job configuration already carries targetDifficulty; reserve partitioning by every difficulty and locale becomes active when alternate variants are enabled. Alerts are warning below ten, critical below five and emergency below two. Planning counts approved reserve and queued/running work independently, then schedules only the missing candidates within a twenty-one-day horizon.
 
+The deterministic very-easy guess-word bank contains fourteen distinct curated answers, and a generator test enforces that its fourteen-day reserve does not repeat an answer.
+
 When normal selection fails, the worker uses approved reserve first. If one type has no approved candidate, it requeues a versioned deterministic emergency candidate, applies the same validation pipeline and retries assembly. Failures retain correlation ID, error class and redacted provider metadata for retry and diagnosis.
 
 Metrics include `generation_jobs_total`, `generation_jobs_failed`, `generation_duration_seconds`, `validation_rejection_rate`, `content_reserve_days`, `provider_cost_total`, `crossword_generation_attempts`, `crossword_quality_score`, `difficulty_deviation`, `publication_failures` and `duplicate_detection_rate`. Alert on no edition tomorrow, low reserve, failed publication/close/solution, rejection rate over 50%, provider outage, excessive cost or duration and large expected/observed difficulty deviation.
