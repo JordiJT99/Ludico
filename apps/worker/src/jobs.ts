@@ -4,6 +4,7 @@ export const PUBLICATION_QUEUE = "publication.reconcile";
 export const CONTENT_PLAN_QUEUE = "content.plan";
 export const CONTENT_GENERATION_QUEUE = "content.generate";
 export const CONTENT_ASSEMBLY_QUEUE = "content.assemble";
+export const CONTENT_HEALTH_QUEUE = "content.health";
 export const NOTIFICATION_SCHEDULE_QUEUE = "notification.schedule";
 export const NOTIFICATION_DELIVERY_QUEUE = "notification.deliver";
 export const PRIVACY_RETENTION_QUEUE = "privacy.retention";
@@ -16,6 +17,7 @@ export async function configureQueues(boss: PgBoss): Promise<void> {
     CONTENT_PLAN_QUEUE,
     CONTENT_GENERATION_QUEUE,
     CONTENT_ASSEMBLY_QUEUE,
+    CONTENT_HEALTH_QUEUE,
     NOTIFICATION_SCHEDULE_QUEUE,
     NOTIFICATION_DELIVERY_QUEUE,
     PRIVACY_RETENTION_QUEUE,
@@ -57,6 +59,12 @@ export async function configureSchedules(
     "*/15 * * * *",
     { source: "schedule" },
     { key: "ES", singletonKey: "ES:content-assemble", tz: "Europe/Madrid" },
+  );
+  await boss.schedule(
+    CONTENT_HEALTH_QUEUE,
+    "*/15 * * * *",
+    { source: "schedule" },
+    { key: "ES", singletonKey: "ES:content-health", tz: "Europe/Madrid" },
   );
   await boss.schedule(
     PRIVACY_RETENTION_QUEUE,

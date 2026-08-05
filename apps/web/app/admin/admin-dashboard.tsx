@@ -21,6 +21,25 @@ interface PublicationSettings {
   reserveDays: number;
 }
 
+interface ContentHealth {
+  alerts: Array<{
+    code: "CONTENT_RESERVE_LOW" | "CONTENT_JOB_FAILURES" | "NEXT_EDITION_MISSING";
+    severity: "warning" | "critical" | "emergency";
+  }>;
+  generatedAt: string;
+  healthy: boolean;
+  jobs: {
+    failedLast24Hours: number;
+    latestSuccessfulAt: string | null;
+    queued: number;
+    running: number;
+    succeededLast24Hours: number;
+  };
+  nextEdition: { localDate: string; ready: boolean };
+  reserve: Calendar["reserve"];
+  spendMicrosToday: number;
+}
+
 interface Candidate {
   contentType: "crossword" | "quiz" | "true_false" | "guess_word" | "word_search";
   findings: Array<{ code?: string }>;
@@ -113,6 +132,7 @@ export function AdminDashboard() {
   const [audit, setAudit] = useState<AdminAuditRecord[]>([]);
   const [publicationSettings, setPublicationSettings] = useState<PublicationSettings>();
   const [publicationReason, setPublicationReason] = useState("");
+  const [contentHealth, setContentHealth] = useState<ContentHealth>();
 
   async function refresh() {
     const [
@@ -123,6 +143,7 @@ export function AdminDashboard() {
       analyticsResponse,
       auditResponse,
       publicationSettingsResponse,
+      contentHealthResponse,
     ] = await Promise.all([
       fetch("/api/admin/editions/calendar", { cache: "no-store" }),
       fetch("/api/admin/content", { cache: "no-store" }),
@@ -131,6 +152,7 @@ export function AdminDashboard() {
       fetch("/api/admin/analytics/dashboard?days=7", { cache: "no-store" }),
       fetch("/api/admin/audit?limit=25", { cache: "no-store" }),
       fetch("/api/admin/publication-settings", { cache: "no-store" }),
+      fetch("/api/admin/content/health", { cache: "no-store" }),
     ]);
     if (
       !calendarResponse.ok ||
@@ -138,7 +160,8 @@ export function AdminDashboard() {
       !blockedResponse.ok ||
       !wordBankResponse.ok ||
       !analyticsResponse.ok ||
-      !publicationSettingsResponse.ok
+      !publicationSettingsResponse.ok ||
+      !contentHealthResponse.ok
     ) {
       setMessage(
         calendarResponse.status === 401 || calendarResponse.status === 403
@@ -154,11 +177,13 @@ export function AdminDashboard() {
     const nextAnalytics: unknown = await analyticsResponse.json();
     const nextAudit: unknown = auditResponse.ok ? await auditResponse.json() : [];
     const nextPublicationSettings: unknown = await publicationSettingsResponse.json();
+    const nextContentHealth: unknown = await contentHealthResponse.json();
     if (
       !isCalendar(nextCalendar) ||
       !Array.isArray(nextContent) ||
       !isAnalyticsDashboard(nextAnalytics) ||
-      !isPublicationSettings(nextPublicationSettings)
+      !isPublicationSettings(nextPublicationSettings) ||
+      !isContentHealth(nextContentHealth)
     ) {
       setMessage("La API devolvió datos inesperados.");
       return;
@@ -170,6 +195,7 @@ export function AdminDashboard() {
     setAnalytics(nextAnalytics);
     setAudit(Array.isArray(nextAudit) ? nextAudit.filter(isAdminAuditRecord) : []);
     setPublicationSettings(nextPublicationSettings);
+    setContentHealth(nextContentHealth);
     setMessage("");
   }
 
@@ -450,6 +476,30 @@ export function AdminDashboard() {
             <p role="alert">
               Reserva baja: se requieren al menos 10 días por tipo antes de producción.
             </p>
+          ) : null}
+          {contentHealth ? (
+            <section aria-labelledby="content-health-title">
+              <h2 id="content-health-title">Salud del motor de contenido</h2>
+              <p>
+                EdiciÃ³n de {contentHealth.nextEdition.localDate}:{" "}
+                {contentHealth.nextEdition.ready ? "preparada" : "pendiente"}
+                {" Â· "}cola {contentHealth.jobs.queued} {" Â· "}en curso{" "}
+                {contentHealth.jobs.running}
+                {" Â· "}fallidos en 24 h {contentHealth.jobs.failedLast24Hours}
+                {" Â· "}coste hoy {contentHealth.spendMicrosToday} Î¼crÃ©ditos
+              </p>
+              {contentHealth.alerts.length ? (
+                <ul className="admin-calendar">
+                  {contentHealth.alerts.map((alert) => (
+                    <li key={alert.code} role={alert.severity === "warning" ? undefined : "alert"}>
+                      {alert.severity}: {contentHealthAlertLabel(alert.code)}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>Sin alertas operativas.</p>
+              )}
+            </section>
           ) : null}
           {analytics ? (
             <section aria-labelledby="analytics-title">
@@ -917,6 +967,42 @@ function isPublicationSettings(value: unknown): value is PublicationSettings {
     typeof value.contentPlanLocalTime === "string" &&
     typeof value.reserveDays === "number"
   );
+}
+
+function isContentHealth(value: unknown): value is ContentHealth {
+  return (
+    isRecord(value) &&
+    typeof value.generatedAt === "string" &&
+    typeof value.healthy === "boolean" &&
+    isCalendar({ editions: [], reserve: value.reserve }) &&
+    isRecord(value.jobs) &&
+    typeof value.jobs.failedLast24Hours === "number" &&
+    (typeof value.jobs.latestSuccessfulAt === "string" || value.jobs.latestSuccessfulAt === null) &&
+    typeof value.jobs.queued === "number" &&
+    typeof value.jobs.running === "number" &&
+    typeof value.jobs.succeededLast24Hours === "number" &&
+    isRecord(value.nextEdition) &&
+    typeof value.nextEdition.localDate === "string" &&
+    typeof value.nextEdition.ready === "boolean" &&
+    typeof value.spendMicrosToday === "number" &&
+    Array.isArray(value.alerts) &&
+    value.alerts.every(
+      (alert) =>
+        isRecord(alert) &&
+        ["CONTENT_RESERVE_LOW", "CONTENT_JOB_FAILURES", "NEXT_EDITION_MISSING"].includes(
+          String(alert.code),
+        ) &&
+        ["warning", "critical", "emergency"].includes(String(alert.severity)),
+    )
+  );
+}
+
+function contentHealthAlertLabel(code: ContentHealth["alerts"][number]["code"]): string {
+  return {
+    CONTENT_JOB_FAILURES: "Hay trabajos de generaciÃ³n fallidos recientemente.",
+    CONTENT_RESERVE_LOW: "La reserva aprobada ha bajado del umbral.",
+    NEXT_EDITION_MISSING: "La ediciÃ³n de maÃ±ana todavÃ­a no estÃ¡ preparada.",
+  }[code];
 }
 
 function isCandidate(value: unknown): value is Candidate {

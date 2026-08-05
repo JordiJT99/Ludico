@@ -4,6 +4,7 @@ export * from "./admin-audit.js";
 export * from "./analytics-dashboard.js";
 export * from "./client.js";
 export * from "./content-pipeline.js";
+export * from "./content-health.js";
 export * from "./crossword-attempts.js";
 export * from "./editions.js";
 export * from "./guests.js";

@@ -71,6 +71,7 @@ import {
   type GuestMigrationResult,
   GuestTokenError,
   type GeneratedContentRecord,
+  type ContentGenerationHealth,
   type PublicationSettings,
   LeaderboardSettingsError,
   NotificationSettingsError,
@@ -93,6 +94,7 @@ interface AppOptions {
   readonly adminApiKey?: string;
   readonly metricsToken?: string;
   readonly getAdminContentCalendar?: () => Promise<AdminContentCalendar>;
+  readonly getContentGenerationHealth?: (now: Date) => Promise<ContentGenerationHealth>;
   readonly getPublicationSettings?: () => Promise<PublicationSettings>;
   readonly listAdminAudit?: (limit: number) => Promise<readonly AdminAuditRecord[]>;
   readonly getAnalyticsDashboard?: (days: number, now: Date) => Promise<AnalyticsDashboard>;
@@ -1707,6 +1709,24 @@ export function buildApp(options: AppOptions = {}) {
         request.body.days,
         request.body.budgetMicros,
       );
+    },
+  );
+
+  app.get<{
+    Headers: AdminHeaders;
+    Reply: ContentGenerationHealth | { code: string };
+  }>(
+    "/v1/admin/content/health",
+    {
+      schema: {
+        headers: adminHeadersSchema,
+      },
+    },
+    async (request, reply) => {
+      if (!options.getContentGenerationHealth) return reply.code(503).send({ code: "UNAVAILABLE" });
+      await authorizeAdmin(request.headers, options, ["editor", "superadmin"]);
+      reply.header("Cache-Control", "private, no-store");
+      return options.getContentGenerationHealth((options.now ?? (() => new Date()))());
     },
   );
 

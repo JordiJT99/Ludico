@@ -124,6 +124,7 @@ El worker configura una reconciliación cada minuto. Una edición `scheduled` pa
 ## Fallos
 
 - Reserva por debajo de 10 días: el job nocturno cuenta solo candidatos aprobados, no seleccionados y con fecha de hoy o posterior en Madrid; emite `CONTENT_RESERVE_LOW` con ambas cantidades. Revisar candidatos pendientes, aprobar una reserva completa o programarla manualmente antes de las 00:00 Europe/Madrid.
+- Salud de contenido: cada quince minutos el worker registra un resumen sin payloads de reserva, cola, fallos recientes, coste y edición de mañana. El mismo resumen se ve en `/admin` y `GET /v1/admin/content/health`; `NEXT_EDITION_MISSING` exige ensamblar o programar la edición completa antes de la apertura.
 - Sin edición pública: la API devuelve 404 y los clientes muestran estado de preparación.
 - Sin base de datos: API y worker no arrancan; no se simula contenido de producción.
 - Worker detenido: reiniciar; la reconciliación recupera publicación/cierre pendiente.

@@ -1435,6 +1435,39 @@ describe("human content administration", () => {
     expect(supportSummary.statusCode).toBe(200);
   });
 
+  it("exposes content operations health to editors without content payloads", async () => {
+    const health = {
+      alerts: [{ code: "CONTENT_RESERVE_LOW" as const, severity: "warning" as const }],
+      generatedAt: now.toISOString(),
+      healthy: true,
+      jobs: {
+        failedLast24Hours: 0,
+        latestSuccessfulAt: now.toISOString(),
+        queued: 1,
+        running: 0,
+        succeededLast24Hours: 5,
+      },
+      nextEdition: { localDate: "2026-08-02", ready: true },
+      reserve: { crossword: 10, guess_word: 10, quiz: 10, true_false: 10, word_search: 10 },
+      spendMicrosToday: 0,
+    };
+    const getContentGenerationHealth = vi.fn().mockResolvedValue(health);
+    const app = buildApp({ getContentGenerationHealth, now: () => now, resolveAdminAccessToken });
+    apps.push(app);
+
+    const response = await app.inject({
+      headers: { authorization: "Bearer editor" },
+      method: "GET",
+      url: "/v1/admin/content/health",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["cache-control"]).toBe("private, no-store");
+    expect(response.json()).toEqual(health);
+    expect(getContentGenerationHealth).toHaveBeenCalledWith(now);
+    expect(response.body).not.toMatch(/payload|answer|solution/i);
+  });
+
   it("lets a recently reauthenticated editor schedule an approved edition", async () => {
     const editionId = "55555555-5555-4555-8555-555555555555";
     const scheduleReserveEdition = vi.fn().mockResolvedValue({

@@ -1,6 +1,7 @@
 import {
   getAdminContentCalendar,
   claimDailyContentPlanRun,
+  getContentGenerationHealth,
   getPublicationSettings,
   PostgresClient,
   purgeExpiredOperationalData,
@@ -24,6 +25,7 @@ import {
   configureSchedules,
   CONTENT_ASSEMBLY_QUEUE,
   CONTENT_GENERATION_QUEUE,
+  CONTENT_HEALTH_QUEUE,
   CONTENT_PLAN_QUEUE,
   PUBLICATION_QUEUE,
   NOTIFICATION_DELIVERY_QUEUE,
@@ -118,6 +120,14 @@ await boss.work(CONTENT_PLAN_QUEUE, async (jobs) => {
     console.log(
       JSON.stringify({ jobId: job.id, planned: planned.length, queue: CONTENT_PLAN_QUEUE }),
     );
+  }
+});
+await boss.work(CONTENT_HEALTH_QUEUE, async (jobs) => {
+  for (const job of jobs) {
+    const health = await getContentGenerationHealth(database, new Date());
+    const log = JSON.stringify({ jobId: job.id, queue: CONTENT_HEALTH_QUEUE, ...health });
+    if (health.alerts.length) console.error(log);
+    else console.log(log);
   }
 });
 const contentGenerator = new ContentProviderCircuitBreaker(fakeContentGenerator);

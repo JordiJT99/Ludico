@@ -4,7 +4,7 @@ import { rejectCrossSiteMutation } from "../../csrf";
 
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 const readPath =
-  /^(analytics\/dashboard|audit|blocked-terms|content|editions\/calendar|publication-settings|word-bank)$/;
+  /^(analytics\/dashboard|audit|blocked-terms|content(?:\/health)?|editions\/calendar|publication-settings|word-bank)$/;
 const reviewPath = new RegExp(`^content/${uuid}/(approve|regenerate|reject)$`, "i");
 const revisionPath = new RegExp(`^content/${uuid}$`, "i");
 const previewPath = new RegExp(`^content/${uuid}/preview[.]svg$`, "i");

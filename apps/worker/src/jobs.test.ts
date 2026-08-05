@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   CONTENT_ASSEMBLY_QUEUE,
   CONTENT_GENERATION_QUEUE,
+  CONTENT_HEALTH_QUEUE,
   CONTENT_PLAN_QUEUE,
   configureQueues,
   configureSchedules,
@@ -48,6 +49,7 @@ describe("worker queues", () => {
     });
     expect(await boss.getSchedules(CONTENT_PLAN_QUEUE, "ES")).toHaveLength(1);
     expect(await boss.getSchedules(CONTENT_ASSEMBLY_QUEUE, "ES")).toHaveLength(1);
+    expect(await boss.getSchedules(CONTENT_HEALTH_QUEUE, "ES")).toHaveLength(1);
     expect(await boss.getSchedules(NOTIFICATION_SCHEDULE_QUEUE, "ES")).toHaveLength(1);
     expect(await boss.getSchedules(NOTIFICATION_DELIVERY_QUEUE, "global")).toHaveLength(1);
     expect(await boss.getSchedules(PRIVACY_RETENTION_QUEUE, "global")).toHaveLength(1);
