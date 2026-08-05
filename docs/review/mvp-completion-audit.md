@@ -28,12 +28,12 @@ La edición diaria selecciona quiz, verdadero/falso, adivina la palabra, crucigr
 - Los cinco formatos se generan, validan, mantienen en reserva, publican y son jugables en web y móvil.
 - Las soluciones de todos se mantienen privadas hasta el cierre.
 
-## Verificación ejecutada el 2026-08-04
+## Verificación ejecutada el 2026-08-05
 
 | Comprobación | Resultado |
 |---|---|
 | Fixture E2E | Cubre consentimiento, quiz, verdadero/falso, adivina la palabra, sopa de letras, crucigrama, cuenta y administración; su próxima ejecución completa sigue siendo una puerta de release |
-| Pruebas de dominio, API, base y worker | Verificadas el 2026-08-05: 42 de dominio, 46 de base, 45 de API y 26 de worker |
+| Pruebas de dominio, API, base y worker | Verificadas el 2026-08-05: 44 de dominio, 47 de base, 45 de API y 36 de worker |
 | Lint, tipos, build, formato, runtime, seguridad y documentos | Verificados el 2026-08-05: documentación válida, Prettier, lint, tipos, builds web/móvil/API/worker, runtime y `pnpm audit --prod` sin vulnerabilidades conocidas |
 
 El fixture E2E no depende de la fecha fija de julio: el archivo y la sección de soluciones de ayer se construyen con la fecha real de `Europe/Madrid`. También cubre el contrato de reserva de los cinco formatos. La ejecución integral en navegador se mantiene como evidencia de release, no como una afirmación documental sin una corrida reciente.

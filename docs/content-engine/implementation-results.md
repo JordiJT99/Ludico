@@ -33,3 +33,7 @@ Closed-game reviews now calculate observed difficulty in the shared domain engin
 ## Crossword target difficulty
 
 The deterministic crossword constructor now filters the validated word bank by its requested target difficulty before search, rejects an invalid or undersupplied level and preserves the target in the public payload. This makes the configured level auditable without exposing answers; existing historical payloads remain valid when the optional field is absent.
+
+## Curated difficulty coverage
+
+The deterministic fallback now has validated curated variants for every level from 1 to 5 in quiz, crossword, verdadero/falso, adivina la palabra and sopa de letras. The fourteen-day daily reserve keeps its independent non-repetition checks; alternate levels are validated as playable variants and do not replace that reserve.
