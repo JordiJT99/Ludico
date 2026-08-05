@@ -1,5 +1,11 @@
 import type { Session } from "@supabase/supabase-js";
-import { isStreakSummary, isUserLeaderboardSettings, type StreakSummary } from "@ludico/contracts";
+import {
+  isPlayerProgression,
+  isStreakSummary,
+  isUserLeaderboardSettings,
+  type PlayerProgression,
+  type StreakSummary,
+} from "@ludico/contracts";
 import * as Crypto from "expo-crypto";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -21,6 +27,7 @@ export default function AccountScreen() {
   const [alias, setAlias] = useState("");
   const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [streak, setStreak] = useState<StreakSummary>();
+  const [progression, setProgression] = useState<PlayerProgression>();
   const [deletionPassword, setDeletionPassword] = useState("");
   const [deletionConfirmation, setDeletionConfirmation] = useState("");
 
@@ -40,6 +47,7 @@ export default function AccountScreen() {
     void loadProfile(controller.signal).then((profile) => {
       if (!profile) return;
       setStreak(profile.streak);
+      setProgression(profile.progression);
       setAlias(profile.settings.alias ?? "");
       setLeaderboardOptIn(profile.settings.leaderboardOptIn);
     });
@@ -188,6 +196,14 @@ export default function AccountScreen() {
           {streak ? (
             <Text style={styles.body}>
               Racha actual: {streak.current} días · Mejor: {streak.best}
+            </Text>
+          ) : null}
+          {progression ? (
+            <Text style={styles.body}>
+              Nivel {progression.level} · {progression.experience} XP
+              {progression.achievements.length
+                ? ` · Logros: ${progression.achievements.map((achievement) => (achievement.key === "first-game" ? "Primer reto" : "Doble diario")).join(", ")}`
+                : ""}
             </Text>
           ) : null}
           {migrationPending ? (
@@ -355,17 +371,21 @@ const styles = StyleSheet.create({
 async function loadProfile(signal: AbortSignal) {
   const headers = await getPlayerHeaders(signal);
   if (!headers) return null;
-  const [streakResponse, settingsResponse] = await Promise.all([
+  const [streakResponse, settingsResponse, progressionResponse] = await Promise.all([
     fetch(`${apiUrl()}/me/streaks`, { headers, signal }),
     fetch(`${apiUrl()}/me/leaderboard-settings`, { headers, signal }),
+    fetch(`${apiUrl()}/me/achievements`, { headers, signal }),
   ]);
   const streak: unknown = await streakResponse.json();
   const settings: unknown = await settingsResponse.json();
+  const progression: unknown = await progressionResponse.json();
   return streakResponse.ok &&
     settingsResponse.ok &&
+    progressionResponse.ok &&
     isStreakSummary(streak) &&
-    isUserLeaderboardSettings(settings)
-    ? { settings, streak }
+    isUserLeaderboardSettings(settings) &&
+    isPlayerProgression(progression)
+    ? { progression, settings, streak }
     : null;
 }
 

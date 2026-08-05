@@ -20,7 +20,7 @@ const leaderboardPath = new RegExp(
   "i",
 );
 const profilePath =
-  /^me\/(data-export|streaks|leaderboard-settings|notification-preferences|previous-results)$/;
+  /^me\/(achievements|data-export|streaks|leaderboard-settings|notification-preferences|previous-results)$/;
 const consentReadPath = /^consents\/current$/;
 
 type RouteContext = { params: Promise<{ path: string[] }> };
