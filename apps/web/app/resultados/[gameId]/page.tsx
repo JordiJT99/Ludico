@@ -104,6 +104,12 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
               <strong>{solution.statistics.averageScore} puntos</strong> en{" "}
               {formatDuration(solution.statistics.averageDurationMs)}.
             </p>
+            {solution.statistics.observedDifficulty !== undefined ? (
+              <p>
+                Dificultad observada:{" "}
+                <strong>{formatDifficulty(solution.statistics.observedDifficulty)}</strong>.
+              </p>
+            ) : null}
           </section>
         ) : (
           <p>Aún no hay suficientes partidas para publicar estadísticas agregadas.</p>
@@ -295,6 +301,11 @@ function formatPublishedAt(value: string): string {
 function formatDuration(value: number): string {
   const seconds = Math.round(value / 1_000);
   return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+}
+
+function formatDifficulty(value: number): string {
+  const labels = ["Muy fácil", "Fácil", "Media", "Difícil", "Experto"];
+  return `${labels[Math.round(value) - 1] ?? "Media"} (${value.toLocaleString("es-ES")} / 5)`;
 }
 
 function gameTitle(type: PublicSolution["game"]["type"]): string {

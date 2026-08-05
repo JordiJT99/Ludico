@@ -87,6 +87,8 @@ export interface PublicSolution {
     readonly attemptCount: number;
     readonly averageDurationMs: number;
     readonly averageScore: number;
+    readonly observedDifficulty?: number;
+    readonly difficultyConfidence?: number;
     readonly crosswordEntries?: readonly {
       readonly entryId: string;
       readonly incorrectPercent: number;
@@ -115,6 +117,8 @@ export const publicSolutionSchema = {
         attemptCount: { type: "integer", minimum: 20 },
         averageDurationMs: { type: "integer", minimum: 0 },
         averageScore: { type: "integer", minimum: 0 },
+        observedDifficulty: { type: "number", minimum: 1, maximum: 5 },
+        difficultyConfidence: { type: "number", minimum: 0, maximum: 1 },
         crosswordEntries: {
           type: "array",
           items: {
@@ -1729,7 +1733,15 @@ export function isPublicSolution(value: unknown): value is PublicSolution {
       !Number.isInteger(value.statistics.averageDurationMs) ||
       Number(value.statistics.averageDurationMs) < 0 ||
       !Number.isInteger(value.statistics.averageScore) ||
-      Number(value.statistics.averageScore) < 0)
+      Number(value.statistics.averageScore) < 0 ||
+      (value.statistics.observedDifficulty !== undefined &&
+        (!Number.isFinite(Number(value.statistics.observedDifficulty)) ||
+          Number(value.statistics.observedDifficulty) < 1 ||
+          Number(value.statistics.observedDifficulty) > 5)) ||
+      (value.statistics.difficultyConfidence !== undefined &&
+        (!Number.isFinite(Number(value.statistics.difficultyConfidence)) ||
+          Number(value.statistics.difficultyConfidence) < 0 ||
+          Number(value.statistics.difficultyConfidence) > 1)))
   ) {
     return false;
   }

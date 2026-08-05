@@ -93,9 +93,31 @@ export default function ReviewScreen() {
           La revisión publicada no tiene un formato válido.
         </Text>
       )}
+      {solution.statistics ? <GlobalStatistics solution={solution} /> : null}
       {state.review ? <PersonalReview review={state.review} /> : null}
       <Action label="Volver al inicio" onPress={() => router.replace("/")} />
     </ScrollView>
+  );
+}
+
+function GlobalStatistics({ solution }: Readonly<{ solution: PublicSolution }>) {
+  const statistics = solution.statistics;
+  if (!statistics) return null;
+  return (
+    <View accessibilityLabel="Comparación global" style={styles.card}>
+      <Text accessibilityRole="header" style={styles.subtitle}>
+        Comparación global
+      </Text>
+      <Text style={styles.body}>
+        Media de {statistics.attemptCount} partidas competitivas: {statistics.averageScore} puntos
+        en {formatDuration(statistics.averageDurationMs)}.
+      </Text>
+      {statistics.observedDifficulty !== undefined ? (
+        <Text style={styles.body}>
+          Dificultad observada: {formatDifficulty(statistics.observedDifficulty)}.
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
@@ -298,6 +320,16 @@ async function loadSolution(
 
 function apiUrl(): string {
   return process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000/v1";
+}
+
+function formatDuration(value: number): string {
+  const seconds = Math.round(value / 1_000);
+  return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+}
+
+function formatDifficulty(value: number): string {
+  const labels = ["Muy fácil", "Fácil", "Media", "Difícil", "Experto"];
+  return `${labels[Math.round(value) - 1] ?? "Media"} (${value.toLocaleString("es-ES")} / 5)`;
 }
 
 const styles = StyleSheet.create({

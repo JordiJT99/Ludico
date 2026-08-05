@@ -6,7 +6,7 @@ import {
   type PublicGame,
   type PublicSolution,
 } from "@ludico/contracts";
-import { foldCrosswordLetter } from "@ludico/domain";
+import { calculateObservedDifficulty, foldCrosswordLetter } from "@ludico/domain";
 import type { QueryResultRow } from "pg";
 import type { SqlClient, TransactionClient } from "./sql-client.js";
 
@@ -35,9 +35,13 @@ interface SolutionRow extends QueryResultRow {
 }
 
 interface SolutionStatisticsRow extends QueryResultRow {
+  abandonedAttemptCount: number;
   attemptCount: number;
   averageDurationMs: number;
   averageScore: number;
+  hintedAttemptCount: number;
+  incorrectGuessCount: number;
+  medianDurationMs: number;
 }
 
 interface QuizAnswerCountRow extends QueryResultRow {
@@ -261,7 +265,15 @@ export async function getGameSolution(
   const statisticResult = await client.query<SolutionStatisticsRow>(
     `select count(*)::integer as "attemptCount",
             round(avg(score.duration_ms))::integer as "averageDurationMs",
-            round(avg(score.points))::integer as "averageScore"
+            round(percentile_cont(0.5) within group (order by score.duration_ms))::integer as "medianDurationMs",
+            round(avg(score.points))::integer as "averageScore",
+            count(*) filter (where score.breakdown ->> 'correct' = 'false')::integer as "incorrectGuessCount",
+            count(*) filter (where exists (
+              select 1 from attempt_events event
+              where event.attempt_id = attempt.id and event.event_type = 'hint_revealed'
+            ))::integer as "hintedAttemptCount",
+            (select count(*)::integer from game_attempts
+             where game_id = $1 and mode = 'competitive' and status = 'in_progress') as "abandonedAttemptCount"
      from game_attempts attempt
      join scores score on score.attempt_id = attempt.id and score.competitive = true
      where attempt.game_id = $1 and attempt.status in ('accepted', 'finalized')
@@ -279,6 +291,18 @@ export async function getGameSolution(
   const details = statistics
     ? await getSolutionStatisticDetails(client, game, row.payload, statistics.attemptCount)
     : {};
+  const observedDifficulty =
+    statistics && statistics.attemptCount >= 100
+      ? calculateObservedDifficulty({
+          abandonmentRate:
+            statistics.abandonedAttemptCount /
+            (statistics.attemptCount + statistics.abandonedAttemptCount),
+          completedStarts: statistics.attemptCount,
+          failureRate: failureRate(game, details, statistics),
+          hintUsageRate: statistics.hintedAttemptCount / statistics.attemptCount,
+          normalizedMedianTime: Math.min(1, statistics.medianDurationMs / 600_000),
+        })
+      : undefined;
 
   return {
     status: "available",
@@ -287,9 +311,46 @@ export async function getGameSolution(
       game,
       payload: row.payload,
       publishedAt: new Date(row.publishedAt).toISOString(),
-      ...(statistics ? { statistics: { ...statistics, ...details } } : {}),
+      ...(statistics
+        ? {
+            statistics: {
+              attemptCount: statistics.attemptCount,
+              averageDurationMs: statistics.averageDurationMs,
+              averageScore: statistics.averageScore,
+              ...(observedDifficulty === undefined
+                ? {}
+                : {
+                    difficultyConfidence:
+                      Math.round(Math.min(0.95, statistics.attemptCount / 200) * 100) / 100,
+                    observedDifficulty,
+                  }),
+              ...details,
+            },
+          }
+        : {}),
     },
   };
+}
+
+function failureRate(
+  game: PublicGame,
+  details: Pick<NonNullable<PublicSolution["statistics"]>, "crosswordEntries" | "quizQuestions">,
+  statistics: SolutionStatisticsRow,
+): number {
+  if (details.quizQuestions?.length) {
+    return (
+      1 -
+      details.quizQuestions.reduce((total, question) => total + question.correctPercent, 0) /
+        (100 * details.quizQuestions.length)
+    );
+  }
+  if (details.crosswordEntries?.length) {
+    return (
+      details.crosswordEntries.reduce((total, entry) => total + entry.incorrectPercent, 0) /
+      (100 * details.crosswordEntries.length)
+    );
+  }
+  return game.type === "guess_word" ? statistics.incorrectGuessCount / statistics.attemptCount : 0;
 }
 
 async function getSolutionStatisticDetails(

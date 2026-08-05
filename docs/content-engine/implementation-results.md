@@ -23,3 +23,7 @@ The generation repository and job schema now accept the five MVP types. Planning
 `AI_PROVIDER=disabled` now explicitly selects the deterministic generator in the worker. Disabling an external AI provider therefore cannot leave the daily edition without fresh reserve content.
 
 Daily edition assembly includes quiz, verdadero/falso, adivina la palabra, crucigrama and sopa de letras. Verdadero/falso uses the same server-verified question-attempt pipeline with an explicit three-to-twenty-question, two-option validation rule. Adivina la palabra has an isolated typed-answer attempt flow with idempotent guesses, a server-side score and no answer disclosure before close. Sopa de letras has an isolated coordinate-selection attempt: public payloads carry only the grid and word list; the server holds directions/coordinates, validates every selection and only reveals those coordinates after closing. Web and mobile players, personal review, data export and E2E coverage use the same contract.
+
+## Difficulty observation
+
+Closed-game reviews now calculate observed difficulty in the shared domain engine from competitive failure rate, median duration, unfinished starts and hint usage. Aggregate score and time require 20 competitive results; observed difficulty and confidence require 100, so a small cohort never presents a misleading calibration. The value is exposed only after the edition has closed and is rendered in both web and mobile reviews.

@@ -146,7 +146,7 @@ describe("daily edition publication", () => {
          insert into users (auth_provider, external_subject, email_normalized)
          select 'supabase', 'statistics-' || value::text,
                 'statistics-' || value::text || '@example.com'
-         from generate_series(1, 20) value
+         from generate_series(1, 100) value
          returning id
        )
        insert into game_attempts
@@ -164,7 +164,7 @@ describe("daily edition publication", () => {
     await database.query(
       `insert into answers (attempt_id, question_id, selected_option_id, elapsed_ms)
        select ranked.id, $2,
-              case when ranked.position <= 15 then $3::uuid else $4::uuid end, 1000
+              case when ranked.position <= 75 then $3::uuid else $4::uuid end, 1000
        from (
          select id, row_number() over (order by id) as position
          from game_attempts where game_id = $1 and mode = 'competitive'
@@ -180,9 +180,11 @@ describe("daily edition publication", () => {
     expect(withStatistics.status).toBe("available");
     if (withStatistics.status === "available") {
       expect(withStatistics.solution.statistics).toEqual({
-        attemptCount: 20,
+        attemptCount: 100,
         averageDurationMs: 30000,
         averageScore: 800,
+        difficultyConfidence: 0.5,
+        observedDifficulty: 1.5,
         quizQuestions: [{ correctPercent: 75, questionId: "66666666-6666-4666-8666-666666666666" }],
       });
     }
@@ -281,6 +283,7 @@ describe("daily edition publication", () => {
     const result = await getGameSolution(client, gameId, new Date("2026-07-29T12:00:00Z"));
     expect(result.status).toBe("available");
     if (result.status === "available") {
+      expect(result.solution.statistics?.observedDifficulty).toBeUndefined();
       expect(result.solution.statistics?.crosswordEntries).toEqual([
         { entryId, incorrectPercent: 50 },
       ]);

@@ -137,6 +137,8 @@ const crosswordPublishedSolution = {
     attemptCount: 20,
     averageDurationMs: 45000,
     averageScore: 1200,
+    difficultyConfidence: 0.5,
+    observedDifficulty: 2.5,
     crosswordEntries: crossword.entries.map((entry, index) => ({
       entryId: entry.id,
       incorrectPercent: 20 + index * 5,
