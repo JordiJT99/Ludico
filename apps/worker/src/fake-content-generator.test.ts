@@ -1,4 +1,4 @@
-import { isQuizPublicPayload } from "@ludico/contracts";
+import { isQuizPublicPayload, isWordSearchPublicPayload } from "@ludico/contracts";
 import { validateGeneratedContent } from "@ludico/domain";
 import { describe, expect, it } from "vitest";
 import {
@@ -17,6 +17,7 @@ describe("curated deterministic content provider", () => {
           id: `job-${type}-${targetDate}`,
           promptVersion: "v1",
           provider: "deterministic",
+          targetDifficulty: targetDifficulty(type),
           targetDate,
         });
         expect(generated.costMicros).toBe(0);
@@ -38,6 +39,7 @@ describe("curated deterministic content provider", () => {
       id: "first",
       promptVersion: "v1",
       provider: "deterministic",
+      targetDifficulty: 2,
       targetDate: "2026-08-03",
     });
     const next = await deterministicContentGenerator.generate({
@@ -46,6 +48,7 @@ describe("curated deterministic content provider", () => {
       id: "next",
       promptVersion: "v1",
       provider: "deterministic",
+      targetDifficulty: 2,
       targetDate: "2026-08-04",
     });
     if (first.candidate.type !== "quiz" || next.candidate.type !== "quiz") throw new Error("quiz");
@@ -61,6 +64,7 @@ describe("curated deterministic content provider", () => {
       id: "all-levels",
       promptVersion: "v1",
       provider: "deterministic",
+      targetDifficulty: 2,
       targetDate: "2026-08-03",
     });
     if (generated.candidate.type !== "quiz") throw new Error("quiz");
@@ -75,6 +79,21 @@ describe("curated deterministic content provider", () => {
       }),
     ).toBe(true);
   });
+
+  it("publishes the configured word-search difficulty through the public contract", async () => {
+    const generated = await deterministicContentGenerator.generate({
+      budgetMicros: 0,
+      contentType: "word_search",
+      id: "word-search-level",
+      promptVersion: "v1",
+      provider: "deterministic",
+      targetDifficulty: 2,
+      targetDate: "2026-08-03",
+    });
+    if (generated.candidate.type !== "word_search") throw new Error("word_search");
+    expect(generated.candidate.publicPayload.difficulty).toBe(2);
+    expect(isWordSearchPublicPayload(generated.candidate.publicPayload)).toBe(true);
+  });
 });
 
 function reserveHorizon(): readonly string[] {
@@ -83,4 +102,16 @@ function reserveHorizon(): readonly string[] {
     date.setUTCDate(date.getUTCDate() + index);
     return date.toISOString().slice(0, 10);
   });
+}
+
+const defaultDifficulties = {
+  crossword: 2,
+  guess_word: 1,
+  quiz: 2,
+  true_false: 1,
+  word_search: 2,
+} as const;
+
+function targetDifficulty(type: keyof typeof defaultDifficulties) {
+  return defaultDifficulties[type];
 }

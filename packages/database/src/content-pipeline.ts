@@ -2,6 +2,7 @@ import type {
   GeneratedContentCandidate,
   ContentFinding,
   GeneratedContentType,
+  GameDifficulty,
 } from "@ludico/domain";
 import type { QuizPrivateSolution } from "@ludico/domain";
 import type { QuizPublicPayload } from "@ludico/contracts";
@@ -13,11 +14,33 @@ import type { SqlClient, TransactionClient } from "./sql-client.js";
 export interface ContentJob {
   readonly id: string;
   readonly contentType: GeneratedContentType;
+  readonly targetDifficulty: GameDifficulty;
   readonly targetDate: string;
   readonly provider: string;
   readonly promptVersion: string;
   readonly budgetMicros: number;
 }
+
+const fixedTargetDifficulties: Readonly<Record<GeneratedContentType, GameDifficulty>> = {
+  crossword: 2,
+  guess_word: 1,
+  quiz: 2,
+  true_false: 1,
+  word_search: 2,
+};
+
+export function fixedTargetDifficulty(contentType: GeneratedContentType): GameDifficulty {
+  return fixedTargetDifficulties[contentType];
+}
+
+const targetDifficultyProjection = `
+  coalesce(
+    case when config->>'targetDifficulty' ~ '^[1-5]$'
+      then (config->>'targetDifficulty')::integer end,
+    case content_type
+      when 'crossword' then 2 when 'guess_word' then 1 when 'quiz' then 2
+      when 'true_false' then 1 when 'word_search' then 2
+    end)::int as "targetDifficulty"`;
 
 export interface GeneratedContentRecord {
   readonly id: string;
@@ -83,13 +106,14 @@ export async function planContentGenerationJobs(
       for (const contentType of generatedContentTypes) {
         const result = await transaction.query<ContentJob & QueryResultRow>(
           `insert into content_generation_jobs
-             (content_type, target_date, provider, budget_micros)
-           values ($1, $2::date, $3, $4)
+             (content_type, target_date, provider, config, budget_micros)
+           values ($1, $2::date, $3, jsonb_build_object('targetDifficulty', $4::int), $5)
            on conflict (content_type, target_date) do update
              set provider = content_generation_jobs.provider
            returning id, content_type as "contentType", target_date::text as "targetDate",
-                     provider, prompt_version as "promptVersion", budget_micros as "budgetMicros"`,
-          [contentType, targetDate, provider, budgetMicros],
+                     provider, prompt_version as "promptVersion", budget_micros as "budgetMicros",
+                     ${targetDifficultyProjection}`,
+          [contentType, targetDate, provider, fixedTargetDifficulty(contentType), budgetMicros],
         );
         jobs.push(result.rows[0]!);
       }
@@ -175,11 +199,12 @@ export async function planContentReserveJobs(
         if (datesByType.get(contentType)?.has(targetDate)) continue;
         const result = await transaction.query<ContentJob & QueryResultRow>(
           `insert into content_generation_jobs
-             (content_type, target_date, provider, budget_micros)
-           values ($1, $2::date, $3, $4)
+             (content_type, target_date, provider, config, budget_micros)
+           values ($1, $2::date, $3, jsonb_build_object('targetDifficulty', $4::int), $5)
            returning id, content_type as "contentType", target_date::text as "targetDate",
-                     provider, prompt_version as "promptVersion", budget_micros as "budgetMicros"`,
-          [contentType, targetDate, provider, budgetMicros],
+                     provider, prompt_version as "promptVersion", budget_micros as "budgetMicros",
+                     ${targetDifficultyProjection}`,
+          [contentType, targetDate, provider, fixedTargetDifficulty(contentType), budgetMicros],
         );
         jobs.push(result.rows[0]!);
         needed -= 1;
@@ -211,7 +236,8 @@ export async function requeueEmergencyContentJobs(
              and content.status = 'approved' and content.selected_edition_id is null
          )
        returning job.id, job.content_type as "contentType", job.target_date::text as "targetDate",
-                 job.provider, job.prompt_version as "promptVersion", job.budget_micros as "budgetMicros"`,
+                 job.provider, job.prompt_version as "promptVersion", job.budget_micros as "budgetMicros",
+                 ${targetDifficultyProjection}`,
       [targetDate, now],
     );
     return result.rows;
@@ -229,7 +255,8 @@ export async function claimContentGenerationJob(
          updated_at = $2, version = version + 1
      where id = $1 and status = 'queued'
      returning id, content_type as "contentType", target_date::text as "targetDate",
-               provider, prompt_version as "promptVersion", budget_micros as "budgetMicros"`,
+               provider, prompt_version as "promptVersion", budget_micros as "budgetMicros",
+               ${targetDifficultyProjection}`,
     [jobId, now],
   );
   return result.rows[0] ?? null;
@@ -249,11 +276,12 @@ export async function recordGeneratedContent(
         budgetMicros: number;
         contentType: string;
         provider: string;
+        targetDifficulty: GameDifficulty;
         targetDate: string;
       } & QueryResultRow
     >(
       `select budget_micros as "budgetMicros", content_type as "contentType", provider,
-              target_date::text as "targetDate"
+              target_date::text as "targetDate", ${targetDifficultyProjection}
        from content_generation_jobs where id = $1 and status = 'running' for update`,
       [jobId],
     );
@@ -270,6 +298,7 @@ export async function recordGeneratedContent(
     );
     const validation = validateGeneratedContent(candidate, {
       blockedTerms: blocked.rows.map(({ normalizedTerm }) => normalizedTerm),
+      targetDifficulty: current.targetDifficulty,
       ...(current.provider === "fake" || current.provider === "deterministic"
         ? {}
         : { knownSemanticCandidates: await listSemanticCandidates(transaction, candidate.type) }),

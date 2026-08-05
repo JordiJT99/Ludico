@@ -61,6 +61,7 @@ type GuessWordPrivatePayload = {
 };
 type WordSearchPublicPayload = {
   readonly columns: number;
+  readonly difficulty: 1 | 2 | 3 | 4 | 5;
   readonly grid: readonly (readonly string[])[];
   readonly kind: "word-search";
   readonly rows: number;
@@ -107,6 +108,7 @@ export type GeneratedContentCandidate =
 
 export type ContentFindingCode =
   | "BLOCKED_TERM"
+  | "DIFFICULTY_MISMATCH"
   | "DUPLICATE_CONTENT"
   | "SEMANTIC_DUPLICATE"
   | "HIGH_RISK_REVIEW"
@@ -135,6 +137,7 @@ export function validateGeneratedContent(
     blockedTerms?: readonly string[];
     knownCanonicalContents?: ReadonlySet<string>;
     knownSemanticCandidates?: readonly GeneratedContentCandidate[];
+    targetDifficulty?: 1 | 2 | 3 | 4 | 5;
   }> = {},
 ): ContentValidation {
   const findings: ContentFinding[] = [];
@@ -142,6 +145,12 @@ export function validateGeneratedContent(
     validateCandidateStructure(candidate);
   } catch {
     findings.push({ code: "INVALID_STRUCTURE" });
+  }
+  if (
+    options.targetDifficulty !== undefined &&
+    !matchesTargetDifficulty(candidate, options.targetDifficulty)
+  ) {
+    findings.push({ code: "DIFFICULTY_MISMATCH" });
   }
 
   const requiredItemIds = candidateItemIds(candidate);
@@ -200,6 +209,22 @@ export function validateGeneratedContent(
         ? "review"
         : "valid",
   };
+}
+
+function matchesTargetDifficulty(
+  candidate: GeneratedContentCandidate,
+  targetDifficulty: 1 | 2 | 3 | 4 | 5,
+): boolean {
+  if (candidate.type === "quiz") {
+    return candidate.publicPayload.questions.every(
+      (question) =>
+        ({ very_easy: 1, easy: 2, medium: 3, hard: 4, expert: 5 })[question.difficulty] ===
+        targetDifficulty,
+    );
+  }
+  if (candidate.type === "true_false")
+    return candidate.publicPayload.items.every((item) => item.difficulty === targetDifficulty);
+  return candidate.publicPayload.difficulty === targetDifficulty;
 }
 
 export function semanticContentSimilarity(

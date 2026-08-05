@@ -136,6 +136,7 @@ async function setupGame() {
   }));
   const publicPayload: WordSearchPublicPayload = {
     columns: game.columns,
+    difficulty: 2,
     grid: game.grid,
     kind: "word-search",
     rows: game.rows,

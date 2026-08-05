@@ -19,7 +19,12 @@ export const deterministicContentAssurance: ContentAssurancePort = {
 export const deterministicContentGenerator: ContentGeneratorPort = {
   async generate(job) {
     return {
-      candidate: fakeCandidate(job.contentType, job.targetDate, job.promptVersion),
+      candidate: fakeCandidate(
+        job.contentType,
+        job.targetDate,
+        job.promptVersion,
+        job.targetDifficulty,
+      ),
       costMicros: 0,
     };
   },
@@ -29,23 +34,28 @@ function fakeCandidate(
   type: GeneratedContentCandidate["type"],
   targetDate: string,
   promptVersion: string,
+  targetDifficulty: 1 | 2 | 3 | 4 | 5,
 ) {
   switch (type) {
     case "quiz":
-      return fakeQuiz(targetDate, promptVersion);
+      return fakeQuiz(targetDate, promptVersion, targetDifficulty);
     case "crossword":
-      return fakeCrossword(targetDate, promptVersion);
+      return fakeCrossword(targetDate, promptVersion, targetDifficulty);
     case "true_false":
-      return fakeTrueFalse(targetDate, promptVersion);
+      return fakeTrueFalse(targetDate, promptVersion, targetDifficulty);
     case "guess_word":
-      return fakeGuessWord(targetDate, promptVersion);
+      return fakeGuessWord(targetDate, promptVersion, targetDifficulty);
     case "word_search":
-      return fakeWordSearch(targetDate, promptVersion);
+      return fakeWordSearch(targetDate, promptVersion, targetDifficulty);
   }
 }
 
-function fakeQuiz(targetDate: string, promptVersion: string) {
-  const selected = cyclic(quizFacts, targetDate, 5);
+function fakeQuiz(targetDate: string, promptVersion: string, targetDifficulty: 1 | 2 | 3 | 4 | 5) {
+  const selected = cyclic(
+    quizFacts.filter((fact) => quizDifficultyLevel(fact.difficulty) === targetDifficulty),
+    targetDate,
+    5,
+  );
   const questions: QuizPublicPayload["questions"] = selected.map((fact, index) => ({
     id: uuid(targetDate, 100 + index),
     prompt: fact.prompt,
@@ -78,17 +88,36 @@ function fakeQuiz(targetDate: string, promptVersion: string) {
   };
 }
 
-function fakeCrossword(targetDate: string, promptVersion: string) {
-  return constructCrossword(cyclic(crosswordBanks, targetDate, 1)[0]!, {
-    entryCount: 3,
-    seed: label(targetDate, promptVersion),
-    title: `Crucigrama diario ${label(targetDate, promptVersion)}`,
-    vocabularyVersion: "curated-v1",
-  });
+function fakeCrossword(
+  targetDate: string,
+  promptVersion: string,
+  targetDifficulty: 1 | 2 | 3 | 4 | 5,
+) {
+  return constructCrossword(
+    cyclic(crosswordBanks, targetDate, 1)[0]!.map((entry) => ({
+      ...entry,
+      difficulty: targetDifficulty,
+    })),
+    {
+      entryCount: 3,
+      seed: label(targetDate, promptVersion),
+      targetDifficulty,
+      title: `Crucigrama diario ${label(targetDate, promptVersion)}`,
+      vocabularyVersion: "curated-v1",
+    },
+  );
 }
 
-function fakeTrueFalse(targetDate: string, promptVersion: string): GeneratedContentCandidate {
-  const items = cyclic(trueFalseFacts, targetDate, 5);
+function fakeTrueFalse(
+  targetDate: string,
+  promptVersion: string,
+  targetDifficulty: 1 | 2 | 3 | 4 | 5,
+): GeneratedContentCandidate {
+  const items = cyclic(
+    trueFalseFacts.filter((item) => item.difficulty === targetDifficulty),
+    targetDate,
+    5,
+  );
   return {
     type: "true_false",
     publicPayload: {
@@ -116,9 +145,17 @@ function fakeTrueFalse(targetDate: string, promptVersion: string): GeneratedCont
   };
 }
 
-function fakeGuessWord(targetDate: string, promptVersion: string): GeneratedContentCandidate {
+function fakeGuessWord(
+  targetDate: string,
+  promptVersion: string,
+  targetDifficulty: 1 | 2 | 3 | 4 | 5,
+): GeneratedContentCandidate {
   const id = uuid(targetDate, 400);
-  const game = cyclic(guessWords, targetDate, 1)[0]!;
+  const game = cyclic(
+    guessWords.filter((item) => item.difficulty === targetDifficulty),
+    targetDate,
+    1,
+  )[0]!;
   return {
     type: "guess_word",
     publicPayload: {
@@ -141,7 +178,11 @@ function fakeGuessWord(targetDate: string, promptVersion: string): GeneratedCont
   };
 }
 
-function fakeWordSearch(targetDate: string, promptVersion: string): GeneratedContentCandidate {
+function fakeWordSearch(
+  targetDate: string,
+  promptVersion: string,
+  targetDifficulty: 1 | 2 | 3 | 4 | 5,
+): GeneratedContentCandidate {
   const words = cyclic(wordSearchWords, targetDate, 5);
   const game = constructWordSearch({
     columns: 8,
@@ -154,6 +195,7 @@ function fakeWordSearch(targetDate: string, promptVersion: string): GeneratedCon
     type: "word_search",
     publicPayload: {
       columns: game.columns,
+      difficulty: targetDifficulty,
       grid: game.grid,
       kind: "word-search",
       rows: game.rows,
@@ -490,6 +532,10 @@ function fact(
   sourceUrl: string,
 ) {
   return { category, difficulty, prompt, options, correctIndex, explanation, sourceUrl };
+}
+
+function quizDifficultyLevel(difficulty: "easy" | "medium"): 2 | 3 {
+  return difficulty === "easy" ? 2 : 3;
 }
 
 function trueFalse(

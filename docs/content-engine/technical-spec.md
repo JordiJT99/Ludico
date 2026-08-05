@@ -34,6 +34,8 @@ Adapters own JSON-schema validation, timeout, exponential backoff with jitter, c
 
 The existing PostgreSQL job records and transaction locks are retained. Claiming changes `queued` to `running` conditionally; publishing uses `FOR UPDATE SKIP LOCKED`. A singleton job uses an advisory lock keyed by job name and market/date. All handlers are safe to retry because writes use unique keys and state preconditions.
 
+`content_generation_jobs.config.targetDifficulty` is the persisted fixed-difficulty input. Jobs created before the field was populated use the same deterministic per-type defaults. The repository returns it on plan, claim and emergency requeue, while validation rejects a payload whose quiz questions, crossword, true/false items, guess-word or word-search difficulty differs from it.
+
 Jobs are versioned (`job_type`, `schema_version`, payload) and cancellable before claim. A watchdog moves expired leases to retry with bounded attempts. Permanent errors are recorded and raise an alert rather than looping indefinitely.
 
 ## Provider fallback

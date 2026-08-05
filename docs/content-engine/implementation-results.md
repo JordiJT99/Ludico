@@ -26,6 +26,8 @@ Daily edition assembly includes quiz, verdadero/falso, adivina la palabra, cruci
 
 ## Difficulty observation
 
+Generation jobs now carry a persisted target difficulty through planning, reserve replenishment, claim and emergency requeue. The deterministic fallback generates its configured fixed level, and structural validation rejects candidates that do not match it. Word-search payloads now expose their selected level too, matching the other four MVP games.
+
 Closed-game reviews now calculate observed difficulty in the shared domain engine from competitive failure rate, median duration, unfinished starts and hint usage. Aggregate score and time require 20 competitive results; observed difficulty and confidence require 100, so a small cohort never presents a misleading calibration. The value is exposed only after the edition has closed and is rendered in both web and mobile reviews.
 
 ## Crossword target difficulty

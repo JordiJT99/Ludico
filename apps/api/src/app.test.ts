@@ -1116,6 +1116,7 @@ describe("human content administration", () => {
         id: "99999999-9999-4999-8999-999999999999",
         promptVersion: "v1",
         provider: "fake",
+        targetDifficulty: 2,
         targetDate: "2026-08-03",
       },
     ]);

@@ -32,6 +32,8 @@ stateDiagram-v2
 
 At least once daily, planning measures eligible reserve per type, locale and difficulty. It queues only the shortage plus a small candidate surplus. Generation produces dated candidates; validation precedes selection. A recovery pass continuously reconciles due editions, so an outage at midnight is repaired as soon as a worker returns.
 
+The MVP uses an explicit fixed daily target per game type: crossword and word search use level 2, quiz uses level 2, and true/false plus guess-word use level 1. The target is stored with each job, survives retries and emergency requeues, and is checked against the generated payload before approval. Adaptive selection remains a later opt-in mode.
+
 At close, competitive attempts are finalized and new competitive attempts are refused. Solutions are exposed atomically at close by default; an installation may configure a small delay, in which case the solution job is still idempotent and must run after close.
 
 ## Administration

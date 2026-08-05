@@ -91,6 +91,15 @@ describe("content generation pipeline", () => {
     const repeated = await planContentGenerationJobs(client, "2026-08-03", 1, "other", 2_000);
     expect(firstPlan).toHaveLength(5);
     expect(repeated.map(({ id }) => id)).toEqual(firstPlan.map(({ id }) => id));
+    expect(
+      Object.fromEntries(firstPlan.map((job) => [job.contentType, job.targetDifficulty])),
+    ).toEqual({
+      crossword: 2,
+      guess_word: 1,
+      quiz: 2,
+      true_false: 1,
+      word_search: 2,
+    });
 
     for (const job of firstPlan.filter(
       (job) =>
@@ -426,6 +435,7 @@ function crosswordCandidate(): GeneratedContentCandidate {
       cell(6, 2, 2),
     ],
     columns: 3,
+    difficulty: 2,
     entries: [
       entry(1, "Astro que ilumina el día", "across", [0, 1, 2]),
       entry(2, "Condimento mineral", "down", [0, 3, 4], 1),
@@ -544,6 +554,7 @@ function wordSearchCandidate(): GeneratedContentCandidate {
     type: "word_search",
     publicPayload: {
       columns: game.columns,
+      difficulty: 2,
       grid: game.grid,
       kind: "word-search",
       rows: game.rows,

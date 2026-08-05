@@ -355,6 +355,7 @@ function makeWordSearch(): { payload: WordSearchPublicPayload; solution: unknown
   return {
     payload: {
       columns: game.columns,
+      difficulty: 2,
       grid: game.grid,
       kind: "word-search",
       rows: game.rows,

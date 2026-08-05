@@ -50,6 +50,12 @@ describe("generated content validation", () => {
     expect(result.findings).toEqual([{ code: "HIGH_RISK_REVIEW" }]);
   });
 
+  it("rejects content whose declared difficulty differs from its generation job", () => {
+    const result = validateGeneratedContent(quizCandidate(), { targetDifficulty: 3 });
+    expect(result.status).toBe("rejected");
+    expect(result.findings).toContainEqual({ code: "DIFFICULTY_MISMATCH" });
+  });
+
   it("rejects a near-duplicate after deterministic token similarity", () => {
     const original = quizCandidate();
     const nearDuplicate: GeneratedContentCandidate = {
