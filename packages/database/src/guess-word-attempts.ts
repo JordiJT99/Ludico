@@ -71,7 +71,8 @@ export async function startGuestGuessWordAttempt(
 ): Promise<GuessWordAttemptState> {
   return client.transaction(async (transaction) => {
     const guest = await authenticateGuestSession(transaction, guestToken, now);
-    if (!guest) throw new GuessWordAttemptError("UNAUTHORIZED", "Sesi\u00f3n invitada no v\u00e1lida");
+    if (!guest)
+      throw new GuessWordAttemptError("UNAUTHORIZED", "Sesi\u00f3n invitada no v\u00e1lida");
     return startAttempt(transaction, gameId, { kind: "guest", id: guest.guestSessionId }, now);
   });
 }
@@ -96,7 +97,8 @@ export async function recordGuestGuessWordGuess(
 ): Promise<GuessWordGuessResult> {
   return client.transaction(async (transaction) => {
     const guest = await authenticateGuestSession(transaction, guestToken, now);
-    if (!guest) throw new GuessWordAttemptError("UNAUTHORIZED", "Sesi\u00f3n invitada no v\u00e1lida");
+    if (!guest)
+      throw new GuessWordAttemptError("UNAUTHORIZED", "Sesi\u00f3n invitada no v\u00e1lida");
     return recordGuess(
       transaction,
       attemptId,

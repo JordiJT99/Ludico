@@ -13,7 +13,9 @@ import { lowReserveAlert } from "./reserve-alert.js";
 describe("content provider circuit breaker", () => {
   it("uses the curated generator when the primary provider fails", async () => {
     const fallback = new FallbackContentGenerator(
-      { generate: vi.fn<ContentGeneratorPort["generate"]>(async () => Promise.reject(new Error())) },
+      {
+        generate: vi.fn<ContentGeneratorPort["generate"]>(async () => Promise.reject(new Error())),
+      },
       {
         generate: vi.fn<ContentGeneratorPort["generate"]>(async () => ({
           candidate: {} as never,
@@ -27,7 +29,9 @@ describe("content provider circuit breaker", () => {
 
   it("records provider failures before falling back", async () => {
     const primary = new ContentProviderCircuitBreaker(
-      { generate: vi.fn<ContentGeneratorPort["generate"]>(async () => Promise.reject(new Error())) },
+      {
+        generate: vi.fn<ContentGeneratorPort["generate"]>(async () => Promise.reject(new Error())),
+      },
       { failureThreshold: 1 },
     );
     const fallback = new FallbackContentGenerator(primary, {

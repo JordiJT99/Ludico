@@ -59,19 +59,21 @@ describe("curated deterministic content provider", () => {
 
   it("keeps the very-easy guess-word reserve free of repeated answers for fourteen days", async () => {
     const answers = await Promise.all(
-      reserveHorizon().slice(0, 14).map(async (targetDate) => {
-        const generated = await deterministicContentGenerator.generate({
-          budgetMicros: 0,
-          contentType: "guess_word",
-          id: `guess-${targetDate}`,
-          promptVersion: "v1",
-          provider: "deterministic",
-          targetDifficulty: 1,
-          targetDate,
-        });
-        if (generated.candidate.type !== "guess_word") throw new Error("guess_word");
-        return generated.candidate.privatePayload.answer;
-      }),
+      reserveHorizon()
+        .slice(0, 14)
+        .map(async (targetDate) => {
+          const generated = await deterministicContentGenerator.generate({
+            budgetMicros: 0,
+            contentType: "guess_word",
+            id: `guess-${targetDate}`,
+            promptVersion: "v1",
+            provider: "deterministic",
+            targetDifficulty: 1,
+            targetDate,
+          });
+          if (generated.candidate.type !== "guess_word") throw new Error("guess_word");
+          return generated.candidate.privatePayload.answer;
+        }),
     );
     expect(new Set(answers)).toHaveLength(14);
   });
@@ -79,19 +81,21 @@ describe("curated deterministic content provider", () => {
   it("keeps the word-search reserve free of repeated words for fourteen days", async () => {
     const answers = (
       await Promise.all(
-        reserveHorizon().slice(0, 14).map(async (targetDate) => {
-          const generated = await deterministicContentGenerator.generate({
-            budgetMicros: 0,
-            contentType: "word_search",
-            id: `word-search-${targetDate}`,
-            promptVersion: "v1",
-            provider: "deterministic",
-            targetDifficulty: 2,
-            targetDate,
-          });
-          if (generated.candidate.type !== "word_search") throw new Error("word_search");
-          return generated.candidate.publicPayload.words.map((word) => word.answer);
-        }),
+        reserveHorizon()
+          .slice(0, 14)
+          .map(async (targetDate) => {
+            const generated = await deterministicContentGenerator.generate({
+              budgetMicros: 0,
+              contentType: "word_search",
+              id: `word-search-${targetDate}`,
+              promptVersion: "v1",
+              provider: "deterministic",
+              targetDifficulty: 2,
+              targetDate,
+            });
+            if (generated.candidate.type !== "word_search") throw new Error("word_search");
+            return generated.candidate.publicPayload.words.map((word) => word.answer);
+          }),
       )
     ).flat();
     expect(new Set(answers)).toHaveLength(70);
@@ -100,19 +104,21 @@ describe("curated deterministic content provider", () => {
   it("keeps the crossword reserve free of repeated answers for fourteen days", async () => {
     const answers = (
       await Promise.all(
-        reserveHorizon().slice(0, 14).map(async (targetDate) => {
-          const generated = await deterministicContentGenerator.generate({
-            budgetMicros: 0,
-            contentType: "crossword",
-            id: `crossword-${targetDate}`,
-            promptVersion: "v1",
-            provider: "deterministic",
-            targetDifficulty: 2,
-            targetDate,
-          });
-          if (generated.candidate.type !== "crossword") throw new Error("crossword");
-          return generated.candidate.privatePayload.entries.map((entry) => entry.answer);
-        }),
+        reserveHorizon()
+          .slice(0, 14)
+          .map(async (targetDate) => {
+            const generated = await deterministicContentGenerator.generate({
+              budgetMicros: 0,
+              contentType: "crossword",
+              id: `crossword-${targetDate}`,
+              promptVersion: "v1",
+              provider: "deterministic",
+              targetDifficulty: 2,
+              targetDate,
+            });
+            if (generated.candidate.type !== "crossword") throw new Error("crossword");
+            return generated.candidate.privatePayload.entries.map((entry) => entry.answer);
+          }),
       )
     ).flat();
     expect(new Set(answers)).toHaveLength(42);
@@ -121,25 +127,27 @@ describe("curated deterministic content provider", () => {
   it("keeps the true-false reserve balanced and free of repeated statements for fourteen days", async () => {
     const items = (
       await Promise.all(
-        reserveHorizon().slice(0, 14).map(async (targetDate) => {
-          const generated = await deterministicContentGenerator.generate({
-            budgetMicros: 0,
-            contentType: "true_false",
-            id: `true-false-${targetDate}`,
-            promptVersion: "v1",
-            provider: "deterministic",
-            targetDifficulty: 1,
-            targetDate,
-          });
-          if (generated.candidate.type !== "true_false") throw new Error("true_false");
-          const values = new Map(
-            generated.candidate.privatePayload.items.map((item) => [item.id, item.value]),
-          );
-          return generated.candidate.publicPayload.items.map((item) => ({
-            statement: item.statement,
-            value: values.get(item.id),
-          }));
-        }),
+        reserveHorizon()
+          .slice(0, 14)
+          .map(async (targetDate) => {
+            const generated = await deterministicContentGenerator.generate({
+              budgetMicros: 0,
+              contentType: "true_false",
+              id: `true-false-${targetDate}`,
+              promptVersion: "v1",
+              provider: "deterministic",
+              targetDifficulty: 1,
+              targetDate,
+            });
+            if (generated.candidate.type !== "true_false") throw new Error("true_false");
+            const values = new Map(
+              generated.candidate.privatePayload.items.map((item) => [item.id, item.value]),
+            );
+            return generated.candidate.publicPayload.items.map((item) => ({
+              statement: item.statement,
+              value: values.get(item.id),
+            }));
+          }),
       )
     ).flat();
     expect(new Set(items.map(({ statement }) => statement))).toHaveLength(42);
@@ -149,19 +157,21 @@ describe("curated deterministic content provider", () => {
   it("keeps the quiz reserve free of repeated prompts for fourteen days", async () => {
     const prompts = (
       await Promise.all(
-        reserveHorizon().slice(0, 14).map(async (targetDate) => {
-          const generated = await deterministicContentGenerator.generate({
-            budgetMicros: 0,
-            contentType: "quiz",
-            id: `quiz-${targetDate}`,
-            promptVersion: "v1",
-            provider: "deterministic",
-            targetDifficulty: 2,
-            targetDate,
-          });
-          if (generated.candidate.type !== "quiz") throw new Error("quiz");
-          return generated.candidate.publicPayload.questions.map((question) => question.prompt);
-        }),
+        reserveHorizon()
+          .slice(0, 14)
+          .map(async (targetDate) => {
+            const generated = await deterministicContentGenerator.generate({
+              budgetMicros: 0,
+              contentType: "quiz",
+              id: `quiz-${targetDate}`,
+              promptVersion: "v1",
+              provider: "deterministic",
+              targetDifficulty: 2,
+              targetDate,
+            });
+            if (generated.candidate.type !== "quiz") throw new Error("quiz");
+            return generated.candidate.publicPayload.questions.map((question) => question.prompt);
+          }),
       )
     ).flat();
     expect(new Set(prompts)).toHaveLength(70);

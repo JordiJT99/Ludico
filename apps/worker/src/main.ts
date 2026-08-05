@@ -154,7 +154,11 @@ const contentGenerator =
     : primaryContentCircuit;
 const contentAssurance =
   contentProvider === "openai" ? reviewRequiredContentAssurance : deterministicContentAssurance;
-if (contentProvider === "fake" || contentProvider === "deterministic" || contentProvider === "openai") {
+if (
+  contentProvider === "fake" ||
+  contentProvider === "deterministic" ||
+  contentProvider === "openai"
+) {
   await boss.work(CONTENT_GENERATION_QUEUE, async (jobs) => {
     for (const job of jobs) {
       const jobId = (job.data as { jobId?: unknown }).jobId;

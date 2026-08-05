@@ -45,7 +45,9 @@ describe("OpenAI content generator", () => {
 
     const malformed = new OpenAIContentGenerator({
       apiKey: "secret",
-      fetch: vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ output_text: "{}" }))),
+      fetch: vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(new Response(JSON.stringify({ output_text: "{}" }))),
       model: "test-model",
     });
     await expect(malformed.generate(job())).rejects.toEqual(

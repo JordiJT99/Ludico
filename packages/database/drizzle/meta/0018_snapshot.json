@@ -268,12 +268,8 @@
           "name": "answers_attempt_id_game_attempts_id_fk",
           "tableFrom": "answers",
           "tableTo": "game_attempts",
-          "columnsFrom": [
-            "attempt_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["attempt_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -387,12 +383,8 @@
           "name": "attempt_events_attempt_id_game_attempts_id_fk",
           "tableFrom": "attempt_events",
           "tableTo": "game_attempts",
-          "columnsFrom": [
-            "attempt_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["attempt_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -962,12 +954,8 @@
           "name": "crossword_cells_attempt_id_game_attempts_id_fk",
           "tableFrom": "crossword_cells",
           "tableTo": "game_attempts",
-          "columnsFrom": [
-            "attempt_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["attempt_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1288,12 +1276,8 @@
           "name": "game_attempts_game_id_games_id_fk",
           "tableFrom": "game_attempts",
           "tableTo": "games",
-          "columnsFrom": [
-            "game_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["game_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1301,12 +1285,8 @@
           "name": "game_attempts_guest_session_id_guest_sessions_id_fk",
           "tableFrom": "game_attempts",
           "tableTo": "guest_sessions",
-          "columnsFrom": [
-            "guest_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["guest_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1314,12 +1294,8 @@
           "name": "game_attempts_user_id_users_id_fk",
           "tableFrom": "game_attempts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1399,12 +1375,8 @@
           "name": "game_solutions_game_id_games_id_fk",
           "tableFrom": "game_solutions",
           "tableTo": "games",
-          "columnsFrom": [
-            "game_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["game_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1508,12 +1480,8 @@
           "name": "games_edition_id_daily_editions_id_fk",
           "tableFrom": "games",
           "tableTo": "daily_editions",
-          "columnsFrom": [
-            "edition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["edition_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1683,12 +1651,8 @@
           "name": "generated_contents_generation_job_id_content_generation_jobs_id_fk",
           "tableFrom": "generated_contents",
           "tableTo": "content_generation_jobs",
-          "columnsFrom": [
-            "generation_job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["generation_job_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1696,12 +1660,8 @@
           "name": "generated_contents_selected_edition_id_daily_editions_id_fk",
           "tableFrom": "generated_contents",
           "tableTo": "daily_editions",
-          "columnsFrom": [
-            "selected_edition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["selected_edition_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1857,12 +1817,8 @@
           "name": "guest_sessions_previous_session_id_guest_sessions_id_fk",
           "tableFrom": "guest_sessions",
           "tableTo": "guest_sessions",
-          "columnsFrom": [
-            "previous_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["previous_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1870,12 +1826,8 @@
           "name": "guest_sessions_migrated_user_id_users_id_fk",
           "tableFrom": "guest_sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "migrated_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["migrated_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2151,12 +2103,8 @@
           "name": "notification_deliveries_user_id_users_id_fk",
           "tableFrom": "notification_deliveries",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2164,12 +2112,8 @@
           "name": "notification_deliveries_endpoint_id_notification_endpoints_id_fk",
           "tableFrom": "notification_deliveries",
           "tableTo": "notification_endpoints",
-          "columnsFrom": [
-            "endpoint_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["endpoint_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2314,12 +2258,8 @@
           "name": "notification_endpoints_user_id_users_id_fk",
           "tableFrom": "notification_endpoints",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2419,12 +2359,8 @@
           "name": "notification_preferences_user_id_users_id_fk",
           "tableFrom": "notification_preferences",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2685,12 +2621,8 @@
           "name": "scores_attempt_id_game_attempts_id_fk",
           "tableFrom": "scores",
           "tableTo": "game_attempts",
-          "columnsFrom": [
-            "attempt_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["attempt_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2910,12 +2842,8 @@
           "name": "validation_results_generated_content_id_generated_contents_id_fk",
           "tableFrom": "validation_results",
           "tableTo": "generated_contents",
-          "columnsFrom": [
-            "generated_content_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["generated_content_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3221,12 +3149,8 @@
           "name": "word_guesses_attempt_id_game_attempts_id_fk",
           "tableFrom": "word_guesses",
           "tableTo": "game_attempts",
-          "columnsFrom": [
-            "attempt_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["attempt_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3325,12 +3249,8 @@
           "name": "word_search_finds_attempt_id_game_attempts_id_fk",
           "tableFrom": "word_search_finds",
           "tableTo": "game_attempts",
-          "columnsFrom": [
-            "attempt_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["attempt_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
