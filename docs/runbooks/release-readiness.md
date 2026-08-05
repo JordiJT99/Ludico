@@ -4,7 +4,7 @@ Estado: `DRAFT-EVIDENCE` · La aplicación está preparada para staging; G5 no e
 
 ## Evidencia automatizada disponible
 
-Última ejecución local: 2026-07-30. `pnpm check` validó 17 documentos, 32 tests de dominio, 37 de base de datos, 43 de API, 8 de worker, builds Next/Expo web+Android+iOS/API/worker, imports de producción API/worker y 5 E2E Chromium. `pnpm security:check` pasó el umbral alto/crítico con el residual moderado documentado.
+Última ejecución integral: 2026-07-30. La validación parcial más reciente es del 2026-08-05: 38 documentos, 45 tests de dominio, 2 web, 47 de base de datos, 45 de API y 36 de worker; `pnpm security:check` pasó sin vulnerabilidades altas ni críticas. La siguiente corrida integral de `pnpm check`, incluida E2E Chromium, sigue siendo una puerta de release porque los contratos y jugadores cambiaron desde la última ejecución integral.
 
 | Área | Estado | Evidencia |
 |---|---|---|
