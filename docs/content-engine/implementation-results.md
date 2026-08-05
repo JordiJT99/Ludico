@@ -27,3 +27,7 @@ Daily edition assembly includes quiz, verdadero/falso, adivina la palabra, cruci
 ## Difficulty observation
 
 Closed-game reviews now calculate observed difficulty in the shared domain engine from competitive failure rate, median duration, unfinished starts and hint usage. Aggregate score and time require 20 competitive results; observed difficulty and confidence require 100, so a small cohort never presents a misleading calibration. The value is exposed only after the edition has closed and is rendered in both web and mobile reviews.
+
+## Crossword target difficulty
+
+The deterministic crossword constructor now filters the validated word bank by its requested target difficulty before search, rejects an invalid or undersupplied level and preserves the target in the public payload. This makes the configured level auditable without exposing answers; existing historical payloads remain valid when the optional field is absent.

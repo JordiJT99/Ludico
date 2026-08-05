@@ -75,6 +75,27 @@ describe("bounded deterministic crossword construction", () => {
     ).toThrow(new CrosswordConstructionError("SEARCH_LIMIT"));
   });
 
+  it("builds only from the requested difficulty and publishes that target", () => {
+    const levelFour = bank.map((entry) => ({ ...entry, difficulty: 4 as const }));
+    const built = constructCrossword(levelFour, {
+      entryCount: 3,
+      seed: "level-four",
+      targetDifficulty: 4,
+      title: "Crucigrama difícil",
+      vocabularyVersion: "bank-es-v1",
+    });
+    expect(built.publicPayload.difficulty).toBe(4);
+    expect(() =>
+      constructCrossword(levelFour, {
+        entryCount: 3,
+        seed: "invalid-level",
+        targetDifficulty: 6 as never,
+        title: "Crucigrama inválido",
+        vocabularyVersion: "bank-es-v1",
+      }),
+    ).toThrow(new CrosswordConstructionError("INVALID_BANK"));
+  });
+
   it("enforces configured geometry and rejects equivalent answers in the word bank", () => {
     expect(foldCrosswordLetter("ÁRBOL")).toBe("ARBOL");
     expect(foldCrosswordLetter("NIÑO")).toBe("NIÑO");

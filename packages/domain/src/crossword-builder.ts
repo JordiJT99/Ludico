@@ -58,17 +58,25 @@ export function constructCrossword(
   options: CrosswordBuildOptions,
 ): CrosswordCandidate {
   const prepared = prepareBank(bank);
-  const entryCount = options.entryCount ?? Math.min(7, prepared.length);
+  const entries =
+    options.targetDifficulty === undefined
+      ? prepared
+      : prepared.filter(({ difficulty }) => difficulty === options.targetDifficulty);
+  const entryCount = options.entryCount ?? Math.min(7, entries.length);
   if (
     entryCount < 2 ||
-    entryCount > prepared.length ||
+    entryCount > entries.length ||
     !options.seed ||
     !options.title.trim() ||
-    !options.vocabularyVersion.trim()
+    !options.vocabularyVersion.trim() ||
+    (options.targetDifficulty !== undefined &&
+      (!Number.isInteger(options.targetDifficulty) ||
+        options.targetDifficulty < 1 ||
+        options.targetDifficulty > 5))
   ) {
     throw new CrosswordConstructionError("INVALID_BANK");
   }
-  const ordered = shuffle(prepared, options.seed);
+  const ordered = shuffle(entries, options.seed);
   const maxNodes = options.maxSearchNodes ?? 20_000;
   const deadline = Date.now() + (options.timeLimitMs ?? 100);
   const constraints = {
@@ -360,6 +368,7 @@ function toCandidate(
       blocks,
       cells,
       columns: bounds.columns,
+      ...(options.targetDifficulty === undefined ? {} : { difficulty: options.targetDifficulty }),
       entries,
       kind: "crossword",
       rows: bounds.rows,

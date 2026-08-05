@@ -409,6 +409,7 @@ export interface CrosswordEntryPublic {
 export interface CrosswordPublicPayload {
   readonly kind: "crossword";
   readonly title: string;
+  readonly difficulty?: 1 | 2 | 3 | 4 | 5;
   readonly rows: number;
   readonly columns: number;
   readonly cells: readonly CrosswordCellPublic[];
@@ -659,6 +660,7 @@ export const crosswordPublicPayloadSchema = {
   properties: {
     kind: { const: "crossword" },
     title: { type: "string", minLength: 1, maxLength: 120 },
+    difficulty: { type: "integer", minimum: 1, maximum: 5 },
     rows: { type: "integer", minimum: 3, maximum: 21 },
     columns: { type: "integer", minimum: 3, maximum: 21 },
     cells: {
@@ -1673,6 +1675,10 @@ export function isCrosswordPublicPayload(value: unknown): value is CrosswordPubl
     !isRecord(value) ||
     value.kind !== "crossword" ||
     typeof value.title !== "string" ||
+    (value.difficulty !== undefined &&
+      (!Number.isInteger(value.difficulty) ||
+        Number(value.difficulty) < 1 ||
+        Number(value.difficulty) > 5)) ||
     !Number.isInteger(value.rows) ||
     Number(value.rows) < 3 ||
     Number(value.rows) > 21 ||
