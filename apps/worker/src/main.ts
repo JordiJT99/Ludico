@@ -10,6 +10,7 @@ import {
   ContentCircuitOpenError,
   ContentProviderCircuitBreaker,
   localDateInMadrid,
+  missingEditionDates,
   runContentGenerationJob,
   runContentPlan,
   runEditionAssemblyWithFallback,
@@ -149,18 +150,30 @@ if (contentProvider === "fake" || contentProvider === "deterministic") {
 }
 await boss.work(CONTENT_ASSEMBLY_QUEUE, async (jobs) => {
   for (const job of jobs) {
-    const targetDate = addDays(localDateInMadrid(new Date()), 1);
     const now = new Date();
-    const result = await runEditionAssemblyWithFallback(
-      database,
-      contentGenerator,
-      fakeContentAssurance,
-      targetDate,
-      contentProvider,
-      Number(process.env.AI_JOB_BUDGET_MICROS ?? 0),
-      now,
+    const today = localDateInMadrid(now);
+    const targets = missingEditionDates(
+      [today, addDays(today, 1)],
+      (await getAdminContentCalendar(database)).editions,
     );
-    console.log(JSON.stringify({ jobId: job.id, queue: CONTENT_ASSEMBLY_QUEUE, result }));
+    const results = [];
+    for (const targetDate of targets) {
+      results.push(
+        await runEditionAssemblyWithFallback(
+          database,
+          contentGenerator,
+          fakeContentAssurance,
+          targetDate,
+          contentProvider,
+          Number(process.env.AI_JOB_BUDGET_MICROS ?? 0),
+          now,
+        ),
+      );
+    }
+    const transitions = await reconcileDueEditions(database, now);
+    console.log(
+      JSON.stringify({ jobId: job.id, queue: CONTENT_ASSEMBLY_QUEUE, results, transitions }),
+    );
   }
 });
 if (pushProviderName !== "disabled" && pushEncryptionKey) {

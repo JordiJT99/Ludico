@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   ContentCircuitOpenError,
   ContentProviderCircuitBreaker,
+  missingEditionDates,
   type ContentGeneratorPort,
 } from "./content-jobs.js";
 import { lowReserveAlert } from "./reserve-alert.js";
@@ -71,6 +72,20 @@ describe("content reserve alert", () => {
       severity: "emergency",
       thresholdDays: 2,
     });
+  });
+});
+
+describe("edition recovery", () => {
+  it("repairs the current and next edition without touching a published one", () => {
+    expect(
+      missingEditionDates(
+        ["2026-08-03", "2026-08-04"],
+        [
+          { localDate: "2026-08-03", status: "published" },
+          { localDate: "2026-08-02", status: "cancelled" },
+        ],
+      ),
+    ).toEqual(["2026-08-04"]);
   });
 });
 

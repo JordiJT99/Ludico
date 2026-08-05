@@ -217,6 +217,14 @@ export function addDays(localDate: string, offset: number): string {
   return new Date(Date.UTC(year, month - 1, day + offset)).toISOString().slice(0, 10);
 }
 
+export function missingEditionDates(
+  dates: readonly string[],
+  editions: readonly { readonly localDate: string; readonly status: string }[],
+): readonly string[] {
+  const existing = new Set(editions.map((edition) => edition.localDate));
+  return dates.filter((date) => !existing.has(date));
+}
+
 function errorCode(error: unknown): string {
   if (typeof error === "object" && error !== null && "code" in error) {
     return String(error.code).slice(0, 80);
