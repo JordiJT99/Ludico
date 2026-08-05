@@ -183,7 +183,7 @@ function fakeWordSearch(
   promptVersion: string,
   targetDifficulty: 1 | 2 | 3 | 4 | 5,
 ): GeneratedContentCandidate {
-  const words = cyclic(wordSearchWords, targetDate, 5);
+  const words = cyclicDaily(wordSearchWords, targetDate, 5);
   const game = constructWordSearch({
     columns: 8,
     directions: ["east", "south", "southEast"],
@@ -572,6 +572,60 @@ const wordSearchWords = [
   "NORTE",
   "SUR",
   "ESTRELLA",
+  "CASA",
+  "MESA",
+  "PERRO",
+  "GATO",
+  "PAN",
+  "RELOJ",
+  "BOSQUE",
+  "PUENTE",
+  "VENTANA",
+  "CAMINO",
+  "TREN",
+  "AVION",
+  "BARCO",
+  "PLAYA",
+  "LAGO",
+  "ISLA",
+  "LLUVIA",
+  "VIENTO",
+  "FUEGO",
+  "NIEVE",
+  "CAMPO",
+  "CIELO",
+  "NOCHE",
+  "DIA",
+  "FRUTA",
+  "MANZANA",
+  "UVA",
+  "QUESO",
+  "LECHE",
+  "CAFE",
+  "PLATO",
+  "CUCHARA",
+  "ESCUELA",
+  "MUSICA",
+  "PINTURA",
+  "TEATRO",
+  "CIENCIA",
+  "NUMERO",
+  "LETRA",
+  "CUENTO",
+  "JUEGO",
+  "PELOTA",
+  "RAQUETA",
+  "JARDIN",
+  "SEMILLA",
+  "ABEJA",
+  "MARIPOSA",
+  "NARANJA",
+  "LIMON",
+  "TOMATE",
+  "PATATA",
+  "AZUCAR",
+  "CEREZA",
+  "CONEJO",
 ];
 
 const crosswordBanks: readonly (readonly WordBankEntry[])[] = [
@@ -655,6 +709,12 @@ function cyclic<T>(items: readonly T[], targetDate: string, count: number): read
     { length: count },
     (_, index) => items[(Math.floor(start) + index) % items.length]!,
   );
+}
+
+function cyclicDaily<T>(items: readonly T[], targetDate: string, count: number): readonly T[] {
+  const day = Math.floor(Date.parse(`${targetDate}T12:00:00Z`) / 86_400_000);
+  const start = Math.abs(day * count) % items.length;
+  return Array.from({ length: count }, (_, index) => items[(start + index) % items.length]!);
 }
 
 function positionedOptions(

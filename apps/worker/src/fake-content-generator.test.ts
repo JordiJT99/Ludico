@@ -76,6 +76,27 @@ describe("curated deterministic content provider", () => {
     expect(new Set(answers)).toHaveLength(14);
   });
 
+  it("keeps the word-search reserve free of repeated words for fourteen days", async () => {
+    const answers = (
+      await Promise.all(
+        reserveHorizon().slice(0, 14).map(async (targetDate) => {
+          const generated = await deterministicContentGenerator.generate({
+            budgetMicros: 0,
+            contentType: "word_search",
+            id: `word-search-${targetDate}`,
+            promptVersion: "v1",
+            provider: "deterministic",
+            targetDifficulty: 2,
+            targetDate,
+          });
+          if (generated.candidate.type !== "word_search") throw new Error("word_search");
+          return generated.candidate.publicPayload.words.map((word) => word.answer);
+        }),
+      )
+    ).flat();
+    expect(new Set(answers)).toHaveLength(70);
+  });
+
   it("keeps every supported quiz difficulty playable through the public contract", async () => {
     const generated = await deterministicContentGenerator.generate({
       budgetMicros: 0,
