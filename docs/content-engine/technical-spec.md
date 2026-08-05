@@ -42,4 +42,6 @@ Jobs are versioned (`job_type`, `schema_version`, payload) and cancellable befor
 
 Priority is configured as primary AI, secondary AI, local model, deterministic generator and prevalidated bank. A circuit opens after consecutive retriable errors, then permits one half-open probe after cooldown. Budget exhaustion skips expensive providers. Deterministic/prevalidated output receives the identical validation pipeline.
 
+The worker now exposes an OpenAI Responses adapter behind the same generator port. It requests JSON-schema output, applies a timeout and re-runs domain validation at the trust boundary. OpenAI output remains pending editorial review until an independent factual verifier is configured; an OpenAI outage falls back to the curated deterministic generator, whose already verified output remains eligible for automatic approval.
+
 No provider secret is persisted in a prompt or audit payload. Only template/version, redacted request metadata, model, tokens, latency, status and cost are stored.

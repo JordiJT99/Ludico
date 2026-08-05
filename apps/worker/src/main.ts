@@ -12,17 +12,20 @@ import {
   addDays,
   ContentCircuitOpenError,
   ContentProviderCircuitBreaker,
+  FallbackContentGenerator,
   isMadridTimeDue,
   localDateInMadrid,
   missingEditionDates,
   runContentGenerationJob,
   runContentPlan,
   runEditionAssemblyWithFallback,
+  reviewRequiredContentAssurance,
 } from "./content-jobs.js";
 import {
   deterministicContentAssurance,
   deterministicContentGenerator,
 } from "./fake-content-generator.js";
+import { OpenAIContentGenerator } from "./openai-content-generator.js";
 import {
   configureQueues,
   configureSchedules,
@@ -51,7 +54,9 @@ const boss = new PgBoss({ application_name: "ludico-worker", connectionString })
 const database = new PostgresClient(connectionString);
 const configuredContentProvider = process.env.AI_PROVIDER ?? "deterministic";
 if (
-  !(["disabled", "deterministic", "fake"] as const).includes(configuredContentProvider as never)
+  !(["disabled", "deterministic", "fake", "openai"] as const).includes(
+    configuredContentProvider as never,
+  )
 ) {
   throw new Error(
     "AI_PROVIDER no soportado; use deterministic, disabled o fake fuera de producción",
@@ -133,8 +138,23 @@ await boss.work(CONTENT_HEALTH_QUEUE, async (jobs) => {
     else console.log(log);
   }
 });
-const contentGenerator = new ContentProviderCircuitBreaker(deterministicContentGenerator);
-if (contentProvider === "fake" || contentProvider === "deterministic") {
+const primaryContentGenerator =
+  contentProvider === "openai"
+    ? new OpenAIContentGenerator({
+        apiKey: requiredEnvironment("OPENAI_API_KEY"),
+        inputTokenMicros: optionalNonNegativeInteger("OPENAI_INPUT_TOKEN_MICROS"),
+        model: requiredEnvironment("OPENAI_CONTENT_MODEL"),
+        outputTokenMicros: optionalNonNegativeInteger("OPENAI_OUTPUT_TOKEN_MICROS"),
+      })
+    : deterministicContentGenerator;
+const primaryContentCircuit = new ContentProviderCircuitBreaker(primaryContentGenerator);
+const contentGenerator =
+  contentProvider === "openai"
+    ? new FallbackContentGenerator(primaryContentCircuit, deterministicContentGenerator)
+    : primaryContentCircuit;
+const contentAssurance =
+  contentProvider === "openai" ? reviewRequiredContentAssurance : deterministicContentAssurance;
+if (contentProvider === "fake" || contentProvider === "deterministic" || contentProvider === "openai") {
   await boss.work(CONTENT_GENERATION_QUEUE, async (jobs) => {
     for (const job of jobs) {
       const jobId = (job.data as { jobId?: unknown }).jobId;
@@ -143,13 +163,14 @@ if (contentProvider === "fake" || contentProvider === "deterministic") {
         const result = await runContentGenerationJob(
           database,
           contentGenerator,
+          contentAssurance,
           deterministicContentAssurance,
           jobId,
           new Date(),
         );
         console.log(
           JSON.stringify({
-            circuit: contentGenerator.snapshot(),
+            circuit: primaryContentCircuit.snapshot(),
             jobId,
             queue: CONTENT_GENERATION_QUEUE,
             result,
@@ -158,7 +179,7 @@ if (contentProvider === "fake" || contentProvider === "deterministic") {
       } catch (error) {
         console.error(
           JSON.stringify({
-            circuit: contentGenerator.snapshot(),
+            circuit: primaryContentCircuit.snapshot(),
             errorCode:
               error instanceof ContentCircuitOpenError ? error.code : "CONTENT_GENERATION_FAILED",
             jobId,
@@ -185,6 +206,7 @@ await boss.work(CONTENT_ASSEMBLY_QUEUE, async (jobs) => {
         await runEditionAssemblyWithFallback(
           database,
           contentGenerator,
+          contentAssurance,
           deterministicContentAssurance,
           targetDate,
           contentProvider,
@@ -231,4 +253,18 @@ process.once("SIGTERM", stop);
 async function logLowReserve(jobId: string): Promise<void> {
   const alert = lowReserveAlert((await getAdminContentCalendar(database)).reserve);
   if (alert) console.error(JSON.stringify({ ...alert, jobId, queue: CONTENT_PLAN_QUEUE }));
+}
+
+function requiredEnvironment(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) throw new Error(`${name}_REQUIRED`);
+  return value;
+}
+
+function optionalNonNegativeInteger(name: string): number {
+  const value = process.env[name];
+  if (value === undefined || value === "") return 0;
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) throw new Error(`${name}_INVALID`);
+  return parsed;
 }

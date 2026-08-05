@@ -16,12 +16,37 @@ export interface ContentGeneratorPort {
   generate(job: ContentJob): Promise<{
     candidate: GeneratedContentCandidate;
     costMicros: number;
+    origin?: "curated";
   }>;
 }
 
 export interface ContentAssurancePort {
   evaluate(candidate: GeneratedContentCandidate): Promise<boolean>;
   verifySources(candidate: GeneratedContentCandidate): Promise<boolean>;
+}
+
+export const reviewRequiredContentAssurance: ContentAssurancePort = {
+  async evaluate() {
+    return false;
+  },
+  async verifySources() {
+    return false;
+  },
+};
+
+export class FallbackContentGenerator implements ContentGeneratorPort {
+  constructor(
+    private readonly primary: ContentGeneratorPort,
+    private readonly fallback: ContentGeneratorPort,
+  ) {}
+
+  async generate(job: ContentJob) {
+    try {
+      return await this.primary.generate(job);
+    } catch {
+      return this.fallback.generate(job);
+    }
+  }
 }
 
 interface CircuitState {
@@ -135,6 +160,7 @@ export async function runContentGenerationJob(
   database: SqlClient,
   generator: ContentGeneratorPort,
   assurance: ContentAssurancePort,
+  curatedAssurance: ContentAssurancePort,
   jobId: string,
   now: Date,
 ) {
@@ -142,9 +168,10 @@ export async function runContentGenerationJob(
   if (!job) return { status: "skipped" as const };
   try {
     const generated = await generator.generate(job);
+    const selectedAssurance = generated.origin === "curated" ? curatedAssurance : assurance;
     const [evaluatorPassed, sourcesVerified] = await Promise.all([
-      assurance.evaluate(generated.candidate),
-      assurance.verifySources(generated.candidate),
+      selectedAssurance.evaluate(generated.candidate),
+      selectedAssurance.verifySources(generated.candidate),
     ]);
     const content = await recordGeneratedContent(
       database,
@@ -187,6 +214,7 @@ export async function runEditionAssemblyWithFallback(
   database: SqlClient,
   generator: ContentGeneratorPort,
   assurance: ContentAssurancePort,
+  curatedAssurance: ContentAssurancePort,
   localDate: string,
   provider: string,
   budgetMicros: number,
@@ -205,7 +233,7 @@ export async function runEditionAssemblyWithFallback(
   }
   const jobs = await requeueEmergencyContentJobs(database, localDate, provider, budgetMicros, now);
   for (const job of jobs) {
-    await runContentGenerationJob(database, generator, assurance, job.id, now);
+    await runContentGenerationJob(database, generator, assurance, curatedAssurance, job.id, now);
   }
   return {
     emergency: true,

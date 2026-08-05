@@ -26,6 +26,7 @@ export const deterministicContentGenerator: ContentGeneratorPort = {
         job.targetDifficulty,
       ),
       costMicros: 0,
+      origin: "curated" as const,
     };
   },
 };

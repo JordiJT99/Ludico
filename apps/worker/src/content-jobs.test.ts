@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   ContentCircuitOpenError,
   ContentProviderCircuitBreaker,
+  FallbackContentGenerator,
   isMadridTime,
   isMadridTimeDue,
   missingEditionDates,
@@ -10,6 +11,39 @@ import {
 import { lowReserveAlert } from "./reserve-alert.js";
 
 describe("content provider circuit breaker", () => {
+  it("uses the curated generator when the primary provider fails", async () => {
+    const fallback = new FallbackContentGenerator(
+      { generate: vi.fn<ContentGeneratorPort["generate"]>(async () => Promise.reject(new Error())) },
+      {
+        generate: vi.fn<ContentGeneratorPort["generate"]>(async () => ({
+          candidate: {} as never,
+          costMicros: 0,
+          origin: "curated",
+        })),
+      },
+    );
+    await expect(fallback.generate(job("quiz"))).resolves.toMatchObject({ origin: "curated" });
+  });
+
+  it("records provider failures before falling back", async () => {
+    const primary = new ContentProviderCircuitBreaker(
+      { generate: vi.fn<ContentGeneratorPort["generate"]>(async () => Promise.reject(new Error())) },
+      { failureThreshold: 1 },
+    );
+    const fallback = new FallbackContentGenerator(primary, {
+      generate: vi.fn<ContentGeneratorPort["generate"]>(async () => ({
+        candidate: {} as never,
+        costMicros: 0,
+        origin: "curated",
+      })),
+    });
+    await fallback.generate(job("quiz"));
+    await fallback.generate(job("quiz"));
+    expect(primary.snapshot()).toContainEqual(
+      expect.objectContaining({ blockedCalls: 1, failures: 1, state: "open" }),
+    );
+  });
+
   it("opens per provider/type, blocks calls, then closes after one successful probe", async () => {
     let now = Date.parse("2026-07-29T12:00:00Z");
     let fail = true;
