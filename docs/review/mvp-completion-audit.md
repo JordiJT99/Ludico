@@ -14,7 +14,7 @@ La base operativa del MVP está implementada y comprobada localmente: edición d
 | Cinco juegos públicos, guardado y revisión sin filtraciones | Implementada | `apps/web/app/jugar`, `apps/mobile`, intentos tipados y pruebas E2E |
 | Sesión invitada, cuenta y migración | Implementada | `apps/api/src/app.ts`, E2E 4 |
 | Racha, resultados, ranking y compartir seguro | Implementada | `packages/domain/src/scoring.ts`, `apps/api/src/app.ts` |
-| PWA, caché segura y reconexión | Parcial | `apps/web/public/sw.js`; el quiz, verdadero/falso y crucigrama guardan borradores locales. La cola offline de adivina la palabra y sopa de letras sigue pendiente porque sus verificaciones deben permanecer en servidor. |
+| PWA, caché segura y reconexión | Implementada | `apps/web/public/sw.js`; los cinco juegos guardan borradores. Adivina la palabra y sopa de letras conservan sólo eventos pendientes y el servidor los verifica al reconectar, sin exponer solución ni coordenadas. |
 | Consentimiento, anuncios de prueba y analítica sin respuestas | Implementada | `packages/domain/src/consent.ts`, E2E 1 |
 | Administración, calendario, auditoría, banco y revisión | Implementada | `apps/web/app/admin`, E2E 5 |
 | Planificación, reserva, emergencia y validación de contenido | Implementada | `packages/database/src/content-pipeline.ts`, `apps/worker/src/content-jobs.ts` |
@@ -33,7 +33,8 @@ La edición diaria selecciona quiz, verdadero/falso, adivina la palabra, crucigr
 | Comprobación | Resultado |
 |---|---|
 | Fixture E2E | Cubre consentimiento, quiz, verdadero/falso, adivina la palabra, sopa de letras, crucigrama, cuenta y administración; necesita una ejecución completa posterior a los cambios del 2026-08-05 antes de liberar |
-| Pruebas de dominio, web, API, base y worker | Verificadas el 2026-08-05: 45 de dominio, 2 web, 47 de base, 45 de API y 36 de worker |
+| Pruebas de dominio, web, API, base y worker | Verificadas el 2026-08-05: 46 de dominio, 2 web, 47 de base, 45 de API y 36 de worker |
+| Builds de clientes | Verificados el 2026-08-05: Next web y Expo web, Android e iOS tras añadir la cola offline |
 | Documentación y seguridad de dependencias | Verificadas el 2026-08-05: 38 documentos válidos y `pnpm audit --prod` sin vulnerabilidades altas o críticas |
 | Prueba remota de juego | Verificada el 2026-08-05: sesión invitada, consentimiento y una selección correcta de sopa de letras a través de un túnel temporal; no sustituye una prueba E2E de release |
 
@@ -54,6 +55,5 @@ El detalle y la evidencia de cada puerta permanecen en [el plan de implementaci�
 
 ## Próximo orden de ejecución
 
-1. Añadir cola offline verificable para adivina la palabra y sopa de letras sin exponer soluciones.
-2. Repetir la batería E2E completa y actualizar la evidencia de trazabilidad y release.
-3. Preparar y verificar las puertas externas de staging sin inventar proveedores o credenciales.
+1. Repetir la batería E2E completa y actualizar la evidencia de trazabilidad y release.
+2. Preparar y verificar las puertas externas de staging sin inventar proveedores o credenciales.

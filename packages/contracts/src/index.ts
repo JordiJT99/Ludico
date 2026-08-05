@@ -388,6 +388,24 @@ export interface WordSearchSelectionResult {
   readonly outcome: "found" | "incorrect" | "already_found";
 }
 
+export interface GuessWordLocalDraft {
+  readonly attempt: GuessWordAttemptState;
+  readonly contentVersion: number;
+  readonly game: GuessWordPublicPayload;
+  readonly gameId: string;
+  readonly pendingEvents: readonly GuessWordGuessEvent[];
+  readonly savedAt: string;
+}
+
+export interface WordSearchLocalDraft {
+  readonly attempt: WordSearchAttemptState;
+  readonly contentVersion: number;
+  readonly game: WordSearchPublicPayload;
+  readonly gameId: string;
+  readonly pendingEvents: readonly WordSearchSelectionEvent[];
+  readonly savedAt: string;
+}
+
 export type CrosswordDirection = "across" | "down";
 
 export interface CrosswordCoordinate {
@@ -1614,6 +1632,24 @@ export function isWordSearchSelectionResult(value: unknown): value is WordSearch
   );
 }
 
+export function isWordSearchSelectionEvent(value: unknown): value is WordSearchSelectionEvent {
+  return (
+    isRecord(value) &&
+    typeof value.clientEventId === "string" &&
+    (value.clientOccurredAt === undefined || typeof value.clientOccurredAt === "string") &&
+    typeof value.entryId === "string" &&
+    Number.isInteger(value.elapsedMs) &&
+    Number(value.elapsedMs) >= 0 &&
+    Number(value.elapsedMs) <= 3_600_000 &&
+    Number.isInteger(value.startRow) &&
+    Number.isInteger(value.startColumn) &&
+    Number.isInteger(value.endRow) &&
+    Number.isInteger(value.endColumn) &&
+    Number.isInteger(value.version) &&
+    Number(value.version) >= 1
+  );
+}
+
 export function isGuessWordGuessResult(value: unknown): value is GuessWordGuessResult {
   return (
     isRecord(value) &&
@@ -1621,6 +1657,56 @@ export function isGuessWordGuessResult(value: unknown): value is GuessWordGuessR
       value.outcome === "incorrect" ||
       value.outcome === "exhausted") &&
     isGuessWordAttemptState(value.attempt)
+  );
+}
+
+export function isGuessWordGuessEvent(value: unknown): value is GuessWordGuessEvent {
+  return (
+    isRecord(value) &&
+    typeof value.clientEventId === "string" &&
+    (value.clientOccurredAt === undefined || typeof value.clientOccurredAt === "string") &&
+    typeof value.guess === "string" &&
+    value.guess.length >= 1 &&
+    value.guess.length <= 21 &&
+    Number.isInteger(value.elapsedMs) &&
+    Number(value.elapsedMs) >= 0 &&
+    Number(value.elapsedMs) <= 3_600_000 &&
+    Number.isInteger(value.version) &&
+    Number(value.version) >= 1
+  );
+}
+
+export function isGuessWordLocalDraft(
+  value: unknown,
+  gameId: string,
+): value is GuessWordLocalDraft {
+  return (
+    isRecord(value) &&
+    value.gameId === gameId &&
+    Number.isInteger(value.contentVersion) &&
+    Number(value.contentVersion) >= 1 &&
+    typeof value.savedAt === "string" &&
+    isGuessWordPublicPayload(value.game) &&
+    isGuessWordAttemptState(value.attempt) &&
+    Array.isArray(value.pendingEvents) &&
+    value.pendingEvents.every(isGuessWordGuessEvent)
+  );
+}
+
+export function isWordSearchLocalDraft(
+  value: unknown,
+  gameId: string,
+): value is WordSearchLocalDraft {
+  return (
+    isRecord(value) &&
+    value.gameId === gameId &&
+    Number.isInteger(value.contentVersion) &&
+    Number(value.contentVersion) >= 1 &&
+    typeof value.savedAt === "string" &&
+    isWordSearchPublicPayload(value.game) &&
+    isWordSearchAttemptState(value.attempt) &&
+    Array.isArray(value.pendingEvents) &&
+    value.pendingEvents.every(isWordSearchSelectionEvent)
   );
 }
 

@@ -4,6 +4,8 @@ import {
   isGuessWordAttemptState,
   isGuessWordGuessResult,
   isPublicGuessWordGame,
+  type GuessWordGuessEvent,
+  type GuessWordLocalDraft,
   type GuessWordAttemptState,
   type GuessWordPublicPayload,
 } from "@ludico/contracts";
@@ -13,10 +15,17 @@ import { durationBucket, scoreBucket, trackAnalytics } from "../../analytics";
 import { ensurePlayerSession, renewGuestSession } from "../../player-session";
 import { LeaderboardPanel } from "../../leaderboard-panel";
 import { ShareButton } from "../../share-button";
+import {
+  readGuessWordDraft,
+  removeGuessWordDraft,
+  writeGuessWordDraft,
+} from "./guess-word-storage";
 
 type Session = {
   attempt: GuessWordAttemptState;
+  contentVersion: number;
   game: GuessWordPublicPayload;
+  pendingEvents: readonly GuessWordGuessEvent[];
 };
 
 export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
@@ -48,51 +57,62 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
     return () => controller.abort();
   }, [gameId]);
 
+  useEffect(() => {
+    if (!session) return;
+    writeGuessWordDraft(toDraft(gameId, session));
+  }, [gameId, session]);
+
+  useEffect(() => {
+    if (!session?.pendingEvents.length) return;
+    const syncOnReconnect = () => void syncPending(session);
+    window.addEventListener("online", syncOnReconnect);
+    return () => window.removeEventListener("online", syncOnReconnect);
+  }, [session]);
+
+  function syncPending(source: Session) {
+    void sync(source)
+      .then((next) => setSession(next))
+      .catch(() => setNotice("El intento sigue pendiente de sincronizar."));
+  }
+
   async function submit() {
     if (!session || saving || !value.trim()) return;
     setSaving(true);
     setNotice(undefined);
+    const event: GuessWordGuessEvent = {
+      clientEventId: crypto.randomUUID(),
+      clientOccurredAt: new Date().toISOString(),
+      elapsedMs: Math.max(0, Date.now() - startedAt.current),
+      guess: value,
+      version: session.attempt.version,
+    };
     try {
-      const response = await fetch(`/api/player/attempts/${session.attempt.attemptId}/guesses`, {
-        body: JSON.stringify({
-          clientEventId: crypto.randomUUID(),
-          clientOccurredAt: new Date().toISOString(),
-          elapsedMs: Math.max(0, Date.now() - startedAt.current),
-          guess: value,
-          version: session.attempt.version,
-        }),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      const body: unknown = await response.json();
-      if (!response.ok || !isGuessWordGuessResult(body)) throw new Error("guess");
-      const next = { ...session, attempt: body.attempt };
+      const ready = session.pendingEvents.length ? await sync(session) : session;
+      const next = await sendGuess(ready, event);
       setSession(next);
       setValue("");
-      if (body.outcome === "incorrect") {
+      const outcome = next.attempt.result ? "complete" : "incorrect";
+      if (outcome === "incorrect") {
         setNotice("No es la palabra. Prueba de nuevo o consulta la siguiente pista.");
         return;
       }
-      if (body.attempt.result) {
+      if (next.attempt.result) {
+        removeGuessWordDraft(gameId);
         void trackAnalytics("GameCompleted", {
           aidsCount: 0,
-          attemptId: body.attempt.attemptId,
-          competitive: body.attempt.result.competitive,
+          attemptId: next.attempt.attemptId,
+          competitive: next.attempt.result.competitive,
           durationBucket: durationBucket(Date.now() - startedAt.current),
           gameId,
           gameType: "guess_word",
-          scoreBucket: scoreBucket(body.attempt.result.provisional.score),
+          scoreBucket: scoreBucket(next.attempt.result.provisional.score),
         });
       }
-      setNotice(
-        body.outcome === "correct"
-          ? "\u00a1Correcto! Has resuelto el reto."
-          : "Se han acabado los intentos. La soluci\u00f3n se publicar\u00e1 al cierre de la edici\u00f3n.",
-      );
+      setNotice("Reto enviado. La solución se publicará al cierre de la edición.");
     } catch {
-      setNotice(
-        "No se ha podido enviar el intento. Comprueba tu conexi\u00f3n y vuelve a intentarlo.",
-      );
+      setSession({ ...session, pendingEvents: [...session.pendingEvents, event] });
+      setValue("");
+      setNotice("Intento guardado. Se comprobará automáticamente al recuperar la conexión.");
     } finally {
       setSaving(false);
     }
@@ -119,6 +139,7 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
 
   const { attempt, game } = session;
   const completed = attempt.status === "accepted";
+  const pending = session.pendingEvents.length > 0;
   const visibleHints = game.hints.filter(
     (hint) => hint.unlockAfterAttempts <= attempt.guesses.length,
   );
@@ -144,7 +165,7 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
           <input
             autoCapitalize="characters"
             autoComplete="off"
-            disabled={completed || saving}
+            disabled={completed || saving || pending}
             maxLength={21}
             onChange={(event) => setValue(event.target.value.toLocaleUpperCase("es-ES"))}
             onKeyDown={(event) => {
@@ -155,12 +176,17 @@ export function GuessWordPlayer({ gameId }: Readonly<{ gameId: string }>) {
         </label>
         <button
           className="primary-action"
-          disabled={completed || saving || !value.trim()}
+          disabled={completed || saving || pending || !value.trim()}
           onClick={() => void submit()}
           type="button"
         >
-          {saving ? "Comprobando\u2026" : "Comprobar palabra"}
+          {saving ? "Comprobando\u2026" : pending ? "Intento pendiente" : "Comprobar palabra"}
         </button>
+        {pending ? (
+          <button disabled={saving} onClick={() => syncPending(session)} type="button">
+            Sincronizar intento
+          </button>
+        ) : null}
         {notice ? <p role="status">{notice}</p> : null}
         {visibleHints.length ? (
           <section aria-labelledby="hints-heading">
@@ -199,18 +225,70 @@ async function start(
   signal: AbortSignal,
   canRenewGuestSession = true,
 ): Promise<Session> {
-  if (!(await ensurePlayerSession(signal))) throw new Error("session");
-  const gameResponse = await fetch(`/api/player/games/${gameId}`, { signal });
-  const game: unknown = await gameResponse.json();
-  if (!gameResponse.ok || !isPublicGuessWordGame(game)) throw new Error("game");
-  const attemptResponse = await fetch(`/api/player/games/${gameId}/attempts`, {
-    method: "POST",
-    signal,
-  });
-  if (attemptResponse.status === 401 && canRenewGuestSession && (await renewGuestSession(signal))) {
-    return start(gameId, signal, false);
+  const cached = readGuessWordDraft(gameId);
+  try {
+    if (!(await ensurePlayerSession(signal))) throw new Error("session");
+    const gameResponse = await fetch(`/api/player/games/${gameId}`, { signal });
+    const game: unknown = await gameResponse.json();
+    if (!gameResponse.ok || !isPublicGuessWordGame(game)) throw new Error("game");
+    const attemptResponse = await fetch(`/api/player/games/${gameId}/attempts`, {
+      method: "POST",
+      signal,
+    });
+    if (
+      attemptResponse.status === 401 &&
+      canRenewGuestSession &&
+      (await renewGuestSession(signal))
+    ) {
+      return start(gameId, signal, false);
+    }
+    const attempt: unknown = await attemptResponse.json();
+    if (!attemptResponse.ok || !isGuessWordAttemptState(attempt)) throw new Error("attempt");
+    return {
+      attempt,
+      contentVersion: game.contentVersion,
+      game: game.payload,
+      pendingEvents:
+        cached?.attempt.attemptId === attempt.attemptId &&
+        cached.contentVersion === game.contentVersion
+          ? cached.pendingEvents
+          : [],
+    };
+  } catch {
+    if (!cached) throw new Error("session");
+    return {
+      attempt: cached.attempt,
+      contentVersion: cached.contentVersion,
+      game: cached.game,
+      pendingEvents: cached.pendingEvents,
+    };
   }
-  const attempt: unknown = await attemptResponse.json();
-  if (!attemptResponse.ok || !isGuessWordAttemptState(attempt)) throw new Error("attempt");
-  return { attempt, game: game.payload };
+}
+
+async function sync(session: Session): Promise<Session> {
+  let next = { ...session, pendingEvents: [] as readonly GuessWordGuessEvent[] };
+  for (const event of session.pendingEvents) next = await sendGuess(next, event);
+  return next;
+}
+
+async function sendGuess(session: Session, event: GuessWordGuessEvent): Promise<Session> {
+  const response = await fetch(`/api/player/attempts/${session.attempt.attemptId}/guesses`, {
+    body: JSON.stringify({ ...event, version: session.attempt.version }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  const body: unknown = await response.json();
+  if (!response.ok || !isGuessWordGuessResult(body)) throw new Error("guess");
+  return { ...session, attempt: body.attempt };
+}
+
+function toDraft(gameId: string, session: Session): GuessWordLocalDraft {
+  return {
+    attempt: session.attempt,
+    contentVersion: session.contentVersion,
+    game: session.game,
+    gameId,
+    pendingEvents: session.pendingEvents,
+    savedAt: new Date().toISOString(),
+  };
 }
