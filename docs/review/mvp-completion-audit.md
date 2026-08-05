@@ -1,6 +1,6 @@
 # Auditoría de completitud del MVP
 
-Fecha de revisión: 2026-08-04. Alcance: requisitos del plan de producto y del motor de contenido, contrastados con código, pruebas y la matriz de trazabilidad.
+Fecha de revisión: 2026-08-05. Alcance: requisitos del plan de producto y del motor de contenido, contrastados con código, pruebas y la matriz de trazabilidad.
 
 ## Resultado
 
@@ -32,11 +32,11 @@ La edición diaria selecciona quiz, verdadero/falso, adivina la palabra, crucigr
 
 | Comprobación | Resultado |
 |---|---|
-| `pnpm test:e2e` | Se repetirá tras integrar la sopa de letras en el fixture E2E |
-| Pruebas de dominio, API, base y worker | Verificadas en el ciclo anterior, incluyendo los cinco generadores |
-| Lint, tipos, build, formato, runtime y documentos | Verificados en el ciclo anterior; se repetirán antes del siguiente commit de implementación |
+| Fixture E2E | Cubre consentimiento, quiz, verdadero/falso, adivina la palabra, sopa de letras, crucigrama, cuenta y administración; su próxima ejecución completa sigue siendo una puerta de release |
+| Pruebas de dominio, API, base y worker | Verificadas el 2026-08-05: 42 de dominio, 46 de base, 45 de API y 26 de worker |
+| Lint, tipos, build, formato, runtime, seguridad y documentos | Verificados el 2026-08-05: documentación válida, Prettier, lint, tipos, builds web/móvil/API/worker, runtime y `pnpm audit --prod` sin vulnerabilidades conocidas |
 
-El fixture E2E dejó de depender de la fecha fija de julio: el archivo y la sección de soluciones de ayer se construyen con la fecha real de `Europe/Madrid`. También se actualizó su contrato de reserva para los cinco formatos.
+El fixture E2E no depende de la fecha fija de julio: el archivo y la sección de soluciones de ayer se construyen con la fecha real de `Europe/Madrid`. También cubre el contrato de reserva de los cinco formatos. La ejecución integral en navegador se mantiene como evidencia de release, no como una afirmación documental sin una corrida reciente.
 
 ## Puertas externas de producción
 
