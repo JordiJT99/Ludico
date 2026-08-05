@@ -146,6 +146,27 @@ describe("curated deterministic content provider", () => {
     expect(items.filter(({ value }) => value)).toHaveLength(21);
   });
 
+  it("keeps the quiz reserve free of repeated prompts for fourteen days", async () => {
+    const prompts = (
+      await Promise.all(
+        reserveHorizon().slice(0, 14).map(async (targetDate) => {
+          const generated = await deterministicContentGenerator.generate({
+            budgetMicros: 0,
+            contentType: "quiz",
+            id: `quiz-${targetDate}`,
+            promptVersion: "v1",
+            provider: "deterministic",
+            targetDifficulty: 2,
+            targetDate,
+          });
+          if (generated.candidate.type !== "quiz") throw new Error("quiz");
+          return generated.candidate.publicPayload.questions.map((question) => question.prompt);
+        }),
+      )
+    ).flat();
+    expect(new Set(prompts)).toHaveLength(70);
+  });
+
   it("keeps every supported quiz difficulty playable through the public contract", async () => {
     const generated = await deterministicContentGenerator.generate({
       budgetMicros: 0,

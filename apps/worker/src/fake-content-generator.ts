@@ -52,7 +52,7 @@ function fakeCandidate(
 }
 
 function fakeQuiz(targetDate: string, promptVersion: string, targetDifficulty: 1 | 2 | 3 | 4 | 5) {
-  const selected = cyclic(
+  const selected = cyclicDaily(
     quizFacts.filter((fact) => quizDifficultyLevel(fact.difficulty) === targetDifficulty),
     targetDate,
     5,
@@ -215,7 +215,7 @@ function fakeWordSearch(
   };
 }
 
-const quizFacts = [
+const baseQuizFacts = [
   fact(
     "Ciencia",
     "easy",
@@ -325,6 +325,72 @@ const quizFacts = [
     "https://www.lamoncloa.gob.es/espana/",
   ),
 ] as const;
+
+const additionalQuizFacts = [
+  easyQuiz("Geografía", "¿Cuál es la capital de Portugal?", ["Lisboa", "Oporto", "Coímbra", "Faro"], "Lisboa es la capital portuguesa.", "https://www.britannica.com/place/Lisbon"),
+  easyQuiz("Geografía", "¿Cuál es la capital de Japón?", ["Tokio", "Kioto", "Osaka", "Nara"], "Tokio es la capital de Japón.", "https://www.britannica.com/place/Tokyo"),
+  easyQuiz("Geografía", "¿Cuál es la capital de Canadá?", ["Ottawa", "Toronto", "Vancouver", "Montreal"], "Ottawa es la capital canadiense.", "https://www.britannica.com/place/Ottawa"),
+  easyQuiz("Geografía", "¿Cuál es la capital de Australia?", ["Canberra", "Sídney", "Melbourne", "Perth"], "Canberra es la capital de Australia.", "https://www.britannica.com/place/Canberra"),
+  easyQuiz("Geografía", "¿Cuál es la capital de Francia?", ["París", "Lyon", "Marsella", "Niza"], "París es la capital francesa.", "https://www.britannica.com/place/Paris"),
+  easyQuiz("Geografía", "¿Cuál es la capital de Alemania?", ["Berlín", "Hamburgo", "Múnich", "Colonia"], "Berlín es la capital alemana.", "https://www.britannica.com/place/Berlin"),
+  easyQuiz("Geografía", "¿Cuál es la capital de Brasil?", ["Brasilia", "Río de Janeiro", "São Paulo", "Salvador"], "Brasilia es la capital federal de Brasil.", "https://www.britannica.com/place/Brasilia"),
+  easyQuiz("Geografía", "¿En qué continente está Brasil?", ["América del Sur", "Europa", "Asia", "África"], "Brasil ocupa gran parte de América del Sur.", "https://www.britannica.com/place/Brazil"),
+  easyQuiz("Geografía", "¿Qué cordillera alberga el Everest?", ["Himalaya", "Andes", "Alpes", "Pirineos"], "El Everest forma parte del Himalaya.", "https://www.britannica.com/place/Mount-Everest"),
+  easyQuiz("Geografía", "¿Qué río atraviesa Egipto antes de llegar al Mediterráneo?", ["Nilo", "Danubio", "Tajo", "Sena"], "El Nilo atraviesa Egipto hacia el mar Mediterráneo.", "https://www.britannica.com/place/Nile-River"),
+  easyQuiz("Ciencia", "¿Cuál es el planeta más grande del sistema solar?", ["Júpiter", "Marte", "Venus", "Mercurio"], "Júpiter es el planeta de mayor tamaño.", "https://science.nasa.gov/jupiter/"),
+  easyQuiz("Ciencia", "¿Cuál es la estrella más cercana a la Tierra?", ["El Sol", "Sirio", "Vega", "Polaris"], "El Sol es la estrella de nuestro sistema solar.", "https://science.nasa.gov/sun/"),
+  easyQuiz("Ciencia", "¿Cuál es el satélite natural de la Tierra?", ["La Luna", "Fobos", "Europa", "Titán"], "La Luna orbita la Tierra.", "https://science.nasa.gov/moon/"),
+  easyQuiz("Ciencia", "¿Qué planeta tiene anillos muy visibles?", ["Saturno", "Mercurio", "Marte", "Venus"], "Saturno posee un sistema de anillos destacado.", "https://science.nasa.gov/saturn/"),
+  easyQuiz("Ciencia", "¿Cuál es la fórmula química del agua?", ["H₂O", "CO₂", "O₂", "NaCl"], "El agua está formada por hidrógeno y oxígeno.", "https://www.usgs.gov/special-topics/water-science-school/science/water-properties"),
+  easyQuiz("Ciencia", "¿Qué gas es más abundante en la atmósfera terrestre?", ["Nitrógeno", "Oxígeno", "Helio", "Hidrógeno"], "El nitrógeno es el gas principal de la atmósfera.", "https://science.nasa.gov/earth/"),
+  easyQuiz("Ciencia", "¿Qué instrumento mide la temperatura?", ["Termómetro", "Barómetro", "Brújula", "Regla"], "Un termómetro sirve para medir la temperatura.", "https://www.britannica.com/science/thermometer"),
+  easyQuiz("Ciencia", "¿Qué instrumento indica la hora?", ["Reloj", "Microscopio", "Altavoz", "Prisma"], "Un reloj mide o indica el tiempo.", "https://www.britannica.com/technology/clock"),
+  easyQuiz("Ciencia", "¿Qué pigmento permite a las plantas captar luz?", ["Clorofila", "Melanina", "Hemoglobina", "Queratina"], "La clorofila participa en la fotosíntesis.", "https://science.nasa.gov/earth/"),
+  easyQuiz("Ciencia", "¿Qué unidad se usa para medir una distancia muy grande en astronomía?", ["Año luz", "Minuto", "Gramo", "Litro"], "Un año luz es una unidad de distancia.", "https://science.nasa.gov/exoplanets/"),
+  easyQuiz("Matemáticas", "¿Cuántos lados tiene un triángulo?", ["Tres", "Cuatro", "Cinco", "Seis"], "Un triángulo es un polígono de tres lados.", "https://www.britannica.com/science/triangle"),
+  easyQuiz("Matemáticas", "¿Cuántos lados tiene un hexágono?", ["Seis", "Cinco", "Siete", "Ocho"], "Un hexágono tiene seis lados.", "https://www.britannica.com/science/hexagon"),
+  easyQuiz("Matemáticas", "¿Cuántos centímetros tiene un metro?", ["Cien", "Diez", "Mil", "Milímetros"], "Un metro equivale a cien centímetros.", "https://www.britannica.com/science/metre"),
+  easyQuiz("Matemáticas", "¿Cuántos metros tiene un kilómetro?", ["Mil", "Cien", "Diez", "Diez mil"], "Un kilómetro equivale a mil metros.", "https://www.britannica.com/science/kilometre"),
+  easyQuiz("Matemáticas", "¿Cuánto es 2 más 3?", ["5", "4", "6", "7"], "La suma de 2 y 3 es 5.", "https://www.britannica.com/science/arithmetic"),
+  easyQuiz("Matemáticas", "¿Cuánto es 9 por 9?", ["81", "72", "90", "99"], "Nueve multiplicado por nueve es 81.", "https://www.britannica.com/science/arithmetic"),
+  easyQuiz("Matemáticas", "¿Cuál es la raíz cuadrada de 64?", ["8", "6", "7", "9"], "Ocho por ocho es 64.", "https://www.britannica.com/science/square-root"),
+  easyQuiz("Matemáticas", "¿Cuántos minutos tiene una hora?", ["60", "30", "90", "100"], "Una hora se divide convencionalmente en 60 minutos.", "https://www.britannica.com/science/time-measurement"),
+  easyQuiz("Matemáticas", "¿Cuántos días tiene una semana?", ["7", "5", "6", "8"], "La semana convencional tiene siete días.", "https://www.britannica.com/science/week"),
+  easyQuiz("Matemáticas", "¿Cuántos meses tiene un año?", ["12", "10", "11", "13"], "El calendario civil tiene doce meses.", "https://www.britannica.com/science/calendar"),
+  easyQuiz("Naturaleza", "¿Qué animal produce miel?", ["Abeja", "Mariposa", "Hormiga", "Libélula"], "Las abejas producen miel.", "https://www.britannica.com/animal/bee-insect"),
+  easyQuiz("Naturaleza", "¿Qué animal es un anfibio?", ["Rana", "Águila", "Tiburón", "Gato"], "Las ranas son anfibios.", "https://www.britannica.com/animal/frog"),
+  easyQuiz("Naturaleza", "¿Qué grupo animal tiene plumas?", ["Aves", "Peces", "Reptiles", "Anfibios"], "Las plumas son una característica de las aves.", "https://www.britannica.com/animal/bird-animal"),
+  easyQuiz("Naturaleza", "¿Qué mamífero vive habitualmente en el mar?", ["Ballena", "Atún", "Pulpo", "Trucha"], "Las ballenas son mamíferos marinos.", "https://www.britannica.com/animal/whale"),
+  easyQuiz("Naturaleza", "¿Qué árbol produce bellotas?", ["Roble", "Pino", "Palmera", "Abeto"], "Las bellotas son frutos de los robles.", "https://www.britannica.com/plant/oak"),
+  easyQuiz("Naturaleza", "¿En qué se transforma una oruga?", ["Mariposa", "Pez", "Rana", "Lagarto"], "Muchas orugas realizan metamorfosis y se convierten en mariposas.", "https://www.britannica.com/animal/butterfly-insect"),
+  easyQuiz("Lengua", "¿Cuál es el antónimo de frío?", ["Caliente", "Helado", "Fresco", "Gélido"], "Caliente expresa la idea opuesta a frío.", "https://dle.rae.es/caliente"),
+  easyQuiz("Lengua", "¿Cuál es un sinónimo de rápido?", ["Veloz", "Lento", "Pesado", "Quieto"], "Veloz y rápido tienen significados próximos.", "https://dle.rae.es/veloz"),
+  easyQuiz("Lengua", "¿Qué palabra nombra una vivienda?", ["Casa", "Río", "Nube", "Puente"], "Casa es el nombre habitual de una vivienda.", "https://dle.rae.es/casa"),
+  easyQuiz("Lengua", "¿Qué palabra nombra un recipiente para beber?", ["Taza", "Mapa", "Rama", "Reloj"], "Una taza es un recipiente pequeño para beber.", "https://dle.rae.es/taza"),
+  easyQuiz("Lengua", "¿Qué palabra nombra una corriente natural de agua?", ["Río", "Roca", "Ropa", "Rosa"], "Un río es una corriente natural de agua.", "https://dle.rae.es/río"),
+  easyQuiz("Lengua", "¿Qué palabra nombra una parte de un árbol?", ["Rama", "Nube", "Mesa", "Seda"], "Una rama nace del tronco de un árbol.", "https://dle.rae.es/rama"),
+  easyQuiz("Cultura", "¿Quién compuso la Novena Sinfonía?", ["Beethoven", "Velázquez", "Cervantes", "Newton"], "Ludwig van Beethoven compuso la Novena Sinfonía.", "https://www.britannica.com/biography/Ludwig-van-Beethoven"),
+  easyQuiz("Cultura", "¿Qué pintor creó Guernica?", ["Pablo Picasso", "Salvador Dalí", "Francisco de Goya", "Joan Miró"], "Guernica es una obra de Pablo Picasso.", "https://www.britannica.com/biography/Pablo-Picasso"),
+  easyQuiz("Cultura", "¿Qué escritor creó a Don Quijote?", ["Miguel de Cervantes", "Federico García Lorca", "Lope de Vega", "Antonio Machado"], "Cervantes es el autor de Don Quijote de la Mancha.", "https://www.cervantes.es/"),
+  easyQuiz("Cultura", "¿Qué arte utiliza sonidos y silencios organizados?", ["Música", "Escultura", "Arquitectura", "Pintura"], "La música organiza sonidos y silencios.", "https://www.britannica.com/art/music"),
+  easyQuiz("Cultura", "¿Qué obra se proyecta en una sala de cine?", ["Película", "Novela", "Mapa", "Escultura"], "El cine proyecta obras audiovisuales.", "https://www.britannica.com/art/motion-picture"),
+  easyQuiz("Tecnología", "¿Qué dispositivo mueve el puntero en muchos ordenadores?", ["Ratón", "Altavoz", "Impresora", "Micrófono"], "El ratón permite controlar el puntero.", "https://www.britannica.com/technology/computer-mouse"),
+  easyQuiz("Tecnología", "¿Qué aparato muestra información visual de un ordenador?", ["Monitor", "Teclado", "Router", "Batería"], "El monitor muestra la salida visual.", "https://www.britannica.com/technology/computer-monitor"),
+  easyQuiz("Tecnología", "¿Qué dispositivo imprime documentos en papel?", ["Impresora", "Escáner", "Teclado", "Auricular"], "Una impresora produce copias en papel.", "https://www.britannica.com/technology/printer-computer"),
+  easyQuiz("Tecnología", "¿Qué aparato captura sonido para un ordenador?", ["Micrófono", "Monitor", "Ratón", "Proyector"], "Un micrófono transforma sonido en señal.", "https://www.britannica.com/technology/microphone"),
+  easyQuiz("Historia", "¿En qué continente surgió la civilización del antiguo Egipto?", ["África", "Europa", "Asia", "Oceanía"], "El antiguo Egipto se desarrolló en el noreste de África.", "https://www.britannica.com/place/ancient-Egypt"),
+  easyQuiz("Historia", "¿Qué ciudad fue la capital del Imperio romano?", ["Roma", "Atenas", "Cartago", "Toledo"], "Roma fue el centro político del Imperio romano.", "https://www.britannica.com/place/Rome"),
+  easyQuiz("Vida cotidiana", "¿Qué estación sucede al verano en España?", ["Otoño", "Primavera", "Invierno", "Verano"], "En el hemisferio norte el otoño sucede al verano.", "https://www.britannica.com/science/season"),
+  easyQuiz("Vida cotidiana", "¿Qué mes inicia el año civil?", ["Enero", "Marzo", "Junio", "Diciembre"], "Enero es el primer mes del año civil.", "https://www.britannica.com/science/calendar"),
+  easyQuiz("España", "¿Qué idioma es oficial en toda España?", ["Español", "Euskera", "Catalán", "Gallego"], "El castellano es la lengua española oficial del Estado.", "https://www.lamoncloa.gob.es/espana/"),
+  easyQuiz("España", "¿Qué mar baña la costa este de España?", ["Mediterráneo", "Báltico", "Negro", "Rojo"], "El mar Mediterráneo baña gran parte de la costa oriental española.", "https://www.britannica.com/place/Spain"),
+  easyQuiz("Deportes", "¿Cuántos jugadores tiene un equipo de fútbol en el campo?", ["11", "9", "10", "12"], "Cada equipo comienza un partido con once jugadores.", "https://www.fifa.com/"),
+  easyQuiz("Deportes", "¿Con qué objeto se juega al tenis?", ["Raqueta", "Bate", "Palo", "Guante"], "En tenis se golpea la pelota con una raqueta.", "https://www.britannica.com/sports/tennis"),
+  easyQuiz("Gastronomía", "¿Qué producto se obtiene principalmente de la leche?", ["Queso", "Pan", "Arroz", "Aceite"], "El queso se elabora a partir de leche.", "https://www.britannica.com/topic/cheese-food"),
+  easyQuiz("Gastronomía", "¿Qué fruto se usa para producir aceite de oliva?", ["Aceituna", "Uva", "Naranja", "Fresa"], "El aceite de oliva procede de las aceitunas.", "https://www.britannica.com/topic/olive"),
+] as const;
+
+const quizFacts = [...baseQuizFacts, ...additionalQuizFacts] as const;
 
 const trueFalseFacts = [
   trueFalse("La Tierra gira alrededor del Sol.", true, "La Tierra completa una órbita solar cada año.", "Ciencia", 1, "https://science.nasa.gov/earth/"),
@@ -678,6 +744,16 @@ function fact(
   sourceUrl: string,
 ) {
   return { category, difficulty, prompt, options, correctIndex, explanation, sourceUrl };
+}
+
+function easyQuiz(
+  category: string,
+  prompt: string,
+  options: readonly [string, string, string, string],
+  explanation: string,
+  sourceUrl: string,
+) {
+  return fact(category, "easy", prompt, options, 0, explanation, sourceUrl);
 }
 
 function quizDifficultyLevel(difficulty: "easy" | "medium"): 2 | 3 {
