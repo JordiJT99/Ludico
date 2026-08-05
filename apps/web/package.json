@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "node --conditions=development ../../node_modules/next/dist/bin/next dev",
+    "dev": "node --conditions=development ./node_modules/next/dist/bin/next dev",
     "start": "next start",
     "test": "vitest run app",
     "typecheck": "tsc --noEmit"
