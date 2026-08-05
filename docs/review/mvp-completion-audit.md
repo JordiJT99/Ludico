@@ -33,6 +33,7 @@ La edición diaria selecciona quiz, verdadero/falso, adivina la palabra, crucigr
 | Comprobación | Resultado |
 |---|---|
 | Fixture E2E | 8 pruebas Chromium superadas el 2026-08-05: consentimiento, quiz, verdadero/falso, adivina la palabra, sopa de letras, crucigrama offline, migración de cuenta y administración. |
+| CI remota | [GitHub Actions #31003801103](https://github.com/JordiJT99/Ludico/actions/runs/31003801103) superó `secrets`, `check` y `containers` sobre `29aab0e7a20e229ef1a6b14cf1258a429d21198f`. |
 | Pruebas de dominio, web, API, base y worker | Verificadas el 2026-08-05: 46 de dominio, 2 web, 47 de base, 45 de API y 36 de worker |
 | Builds de clientes | Verificados el 2026-08-05: Next web y Expo web, Android e iOS tras añadir la cola offline |
 | Documentación y seguridad de dependencias | Verificadas el 2026-08-05: 38 documentos válidos y `pnpm audit --prod` sin vulnerabilidades altas o críticas |

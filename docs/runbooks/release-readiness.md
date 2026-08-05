@@ -4,14 +4,14 @@ Estado: `DRAFT-EVIDENCE` · La aplicación está preparada para staging; G5 no e
 
 ## Evidencia automatizada disponible
 
-Última ejecución integral: 2026-07-30. La validación parcial más reciente es del 2026-08-05: 38 documentos, 45 tests de dominio, 2 web, 47 de base de datos, 45 de API y 36 de worker; `pnpm security:check` pasó sin vulnerabilidades altas ni críticas. La siguiente corrida integral de `pnpm check`, incluida E2E Chromium, sigue siendo una puerta de release porque los contratos y jugadores cambiaron desde la última ejecución integral.
+Última ejecución integral: 2026-08-05. [GitHub Actions #31003801103](https://github.com/JordiJT99/Ludico/actions/runs/31003801103) ejecutó `secrets`, `check` y `containers` correctamente sobre `29aab0e7a20e229ef1a6b14cf1258a429d21198f`. La misma fecha tiene evidencia local adicional: 46 tests de dominio, 2 web, 47 de base de datos, 45 de API, 36 de worker, 8 E2E Chromium, 38 documentos y `pnpm security:check` sin vulnerabilidades altas ni críticas.
 
 | Área | Estado | Evidencia |
 |---|---|---|
 | especificación/trazabilidad | verificada | `pnpm docs:check` |
 | formato, lint y tipos | verificada | `pnpm format:check`, `pnpm lint`, `pnpm typecheck` |
-| artefactos OCI | verificada | `Dockerfile` con objetivos `api`, `worker` y `web`; el job [`containers`](https://github.com/JordiJT99/Ludico/actions/runs/30499913479) construyó los tres sin secretos, sin base embebida y con `dist` en producción, y arrancó API/web para comprobar `/health` y `robots.txt` |
-| CI remota | verificada | [GitHub Actions #30499913479](https://github.com/JordiJT99/Ludico/actions/runs/30499913479), SHA `7d5962ec6724acb1928ccc154c1def7a7db03e9b`: jobs `secrets`, `check` y `containers` correctos; `check` migró PostgreSQL 18 efímero y ejecutó `pnpm check` |
+| artefactos OCI | verificada | `Dockerfile` con objetivos `api`, `worker` y `web`; el job [`containers`](https://github.com/JordiJT99/Ludico/actions/runs/31003801103) construyó los tres sin secretos, sin base embebida y con `dist` en producción, y arrancó API/web para comprobar `/health` y `robots.txt` |
+| CI remota | verificada | [GitHub Actions #31003801103](https://github.com/JordiJT99/Ludico/actions/runs/31003801103), SHA `29aab0e7a20e229ef1a6b14cf1258a429d21198f`: jobs `secrets`, `check` y `containers` correctos; `check` migró PostgreSQL 18 efímero y ejecutó `pnpm check` |
 | dominio/API/DB/worker | verificada localmente | tests unitarios e integración PGlite serializados, más migración/seed, restore aislado y API diaria contra PostgreSQL 18 local |
 | web/PWA | verificada | build Next + E2E Chromium online/offline, caché sensible excluida |
 | Android/base iOS | verificada en compilación JS | Expo export Android/iOS/web; no equivale a build firmado ni prueba física |
@@ -29,7 +29,7 @@ El 2026-07-30 se auditó `http://127.0.0.1:3101/` con Lighthouse 12.8.2, Chrome 
 
 ### CI remota confirmada
 
-La última ejecución con evidencia está completada: [GitHub Actions #30499913479](https://github.com/JordiJT99/Ludico/actions/runs/30499913479) sobre `7d5962ec6724acb1928ccc154c1def7a7db03e9b`, con `secrets`, `check` y `containers` verdes. `check` instaló dependencias bloqueadas, aplicó las migraciones en PostgreSQL 18 efímero, ejecutó la comprobación de seguridad, instaló Chromium y terminó `pnpm check` correctamente; `containers` construyó las imágenes OCI de API, worker y web con dependencias de producción y arrancó API/web para sus smoke tests.
+La última ejecución con evidencia está completada: [GitHub Actions #31003801103](https://github.com/JordiJT99/Ludico/actions/runs/31003801103) sobre `29aab0e7a20e229ef1a6b14cf1258a429d21198f`, con `secrets`, `check` y `containers` verdes. `check` instaló dependencias bloqueadas, aplicó las migraciones en PostgreSQL 18 efímero, ejecutó la comprobación de seguridad, instaló Chromium y terminó `pnpm check` correctamente; `containers` construyó las imágenes OCI de API, worker y web con dependencias de producción y arrancó API/web para sus smoke tests.
 
 Cada cambio posterior en `main` debe conservar los tres jobs verdes. Si el repositorio pasa a una organización que lo requiera, configurar `GITLEAKS_LICENSE` antes del siguiente push.
 
