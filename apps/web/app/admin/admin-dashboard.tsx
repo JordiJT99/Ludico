@@ -480,7 +480,7 @@ export function AdminDashboard() {
           <ul className="admin-calendar">
             {calendar.editions.map((edition) => (
               <li key={edition.id}>
-                {edition.localDate} · {edition.status} · {edition.gameCount}/2 juegos
+                {edition.localDate} · {edition.status} · {edition.gameCount}/5 juegos
                 {edition.status === "approved" ? (
                   <button
                     disabled={pending}

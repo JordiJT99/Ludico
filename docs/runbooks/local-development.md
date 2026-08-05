@@ -36,7 +36,7 @@ El crucigrama `fake` usa un banco sintético embebido solo para desarrollo. El f
 
 `/admin` requiere una cuenta Supabase cuyo `app_metadata.admin_role` esté provisionado por un proceso servidor. Para mutar, `admin_reauthenticated_at` debe haberse renovado de forma confiable en los 15 minutos anteriores. El flujo local fake prueba la UI, pero staging debe validar el hook/provisioning MFA real antes de habilitar operadores. No usar la llave `ADMIN_API_KEY` como cuenta humana.
 
-El calendario marca reserva baja cuando cualquier tipo tiene menos de 10 días aprobados; avisa como crítico bajo 5 y emergencia bajo 2. Programar una edición completa exige un motivo y deja `actor_type=admin` con el ID verificado; la misma ruta conserva la alternativa `emergency_admin` para recuperación. Antes de usarla, confirmar fecha Madrid, ventana, cinco juegos activos y soluciones presentes.
+El calendario marca reserva baja cuando cualquier tipo tiene menos de 10 días aprobados; avisa como crítico bajo 5 y emergencia bajo 2. Programar una edición completa exige un motivo y deja `actor_type=admin` con el ID verificado; la misma ruta conserva la alternativa `emergency_admin` para recuperación. Antes de usarla, confirmar fecha Madrid, ventana, los cinco juegos activos y sus soluciones presentes.
 
 El feed de auditoría pide como máximo 200 registros recientes, no devuelve `metadata` y solo responde a `superadmin`; para otros roles `/admin` ignora el 403 del feed y conserva las herramientas autorizadas. La respuesta es siempre `private,no-store`. Los datos completos se conservan en PostgreSQL conforme a la política de auditoría, no en el navegador.
 

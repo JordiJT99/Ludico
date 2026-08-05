@@ -33,10 +33,10 @@ export async function scheduleReserveEdition(
     );
     const row = ready.rows[0];
     if (row?.status === "scheduled") return { changed: false, status: "scheduled" };
-    if (row?.status !== "approved" || row.gameCount !== 2) {
+    if (row?.status !== "approved" || row.gameCount !== 5) {
       throw new AdminCommandError(
         "EDITION_NOT_READY",
-        "La edición necesita quiz y crucigrama activos, con solución, y estado approved",
+        "La edición necesita sus cinco juegos activos, con solución, y estado approved",
       );
     }
 

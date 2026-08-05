@@ -29,10 +29,30 @@ describe("emergency administration", () => {
        values ($1, '2026-07-28', 'approved', $2, $3)`,
       [editionId, "2026-07-27T22:00:00Z", "2026-07-28T22:00:00Z"],
     );
-    for (const [id, type] of [
+    const gameTypes = [
       [quizId, "quiz"],
       [crosswordId, "crossword"],
-    ]) {
+      ["44444444-4444-4444-8444-444444444444", "true_false"],
+      ["55555555-5555-4555-8555-555555555555", "guess_word"],
+      ["66666666-6666-4666-8666-666666666666", "word_search"],
+    ] as const;
+    for (const [id, type] of gameTypes.slice(0, 2)) {
+      await database.query(
+        "insert into games (id, edition_id, type, public_payload) values ($1, $2, $3, '{}'::jsonb)",
+        [id, editionId, type],
+      );
+      await database.query(
+        "insert into game_solutions (game_id, private_payload) values ($1, '{}'::jsonb)",
+        [id],
+      );
+    }
+
+    await expect(
+      scheduleReserveEdition(client, editionId, "reserva incompleta", "test-0"),
+    ).rejects.toMatchObject({
+      code: "EDITION_NOT_READY",
+    });
+    for (const [id, type] of gameTypes.slice(2)) {
       await database.query(
         "insert into games (id, edition_id, type, public_payload) values ($1, $2, $3, '{}'::jsonb)",
         [id, editionId, type],
