@@ -30,6 +30,7 @@ type PlayingState = {
   attempt: QuizAttemptState;
   contentVersion: number;
   current: number;
+  gameType: "quiz" | "true_false";
   headers: PlayerHeaders;
   quiz: QuizPublicPayload;
 };
@@ -70,7 +71,7 @@ export default function QuizScreen() {
           attemptId: state.playing.attempt.attemptId,
           entryPoint: state.playing.attempt.answers.length ? "resume" : "daily",
           gameId,
-          gameType: "quiz",
+          gameType: state.playing.gameType,
           offline: state.syncStatus === "pending",
           platform: clientPlatform(),
         });
@@ -229,7 +230,7 @@ export default function QuizScreen() {
         attemptId: body.attemptId,
         competitive: body.competitive,
         durationBucket: durationBucket(Date.now() - startedAt.current),
-        gameType: "quiz",
+        gameType: ready.playing.gameType,
         gameId,
         scoreBucket: scoreBucket(body.provisional.score),
       });
@@ -288,7 +289,7 @@ export default function QuizScreen() {
       ) : null}
       <Action
         disabled={!selected || saving}
-        label={saving ? "Guardando…" : last ? "Enviar quiz" : "Siguiente"}
+        label={saving ? "Guardando…" : last ? "Enviar reto" : "Siguiente"}
         onPress={() => void advance()}
       />
     </ScrollView>
@@ -319,7 +320,9 @@ async function start(gameId: string, signal: AbortSignal): Promise<SessionState>
     const gameResponse = await fetch(`${apiUrl()}/games/${gameId}`, { signal });
     if (!gameResponse.ok) throw new Error(gameResponse.status === 404 ? "game" : "offline");
     const game: unknown = await gameResponse.json();
-    if (!isPublicQuizStyleGame(game)) throw new Error("game");
+    if (!isPublicQuizStyleGame(game) || (game.type !== "quiz" && game.type !== "true_false")) {
+      throw new Error("game");
+    }
     const attemptResponse = await fetch(`${apiUrl()}/games/${gameId}/attempts`, {
       method: "POST",
       headers: commandHeaders(headers),
@@ -345,6 +348,7 @@ async function start(gameId: string, signal: AbortSignal): Promise<SessionState>
             ? Math.min(cached.current, game.payload.questions.length - 1)
             : firstUnansweredQuizQuestion(game.payload, mergedAttempt),
         headers,
+        gameType: game.type,
         quiz: game.payload,
       },
       syncStatus: pendingEvents.length ? "pending" : "saved",
@@ -358,6 +362,7 @@ async function start(gameId: string, signal: AbortSignal): Promise<SessionState>
         attempt: cached.attempt,
         contentVersion: cached.contentVersion,
         current: cached.current,
+        gameType: "quiz",
         headers,
         quiz: cached.quiz,
       },
