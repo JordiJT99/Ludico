@@ -8,6 +8,7 @@ import {
   getAnalyticsDashboard,
   getEditionByDate,
   getAdminContentCalendar,
+  getPublicationSettings,
   getGuestConsent,
   getGuestAttemptReview,
   getGuestLeaderboard,
@@ -70,6 +71,7 @@ import {
   updateUserConsent,
   updateUserLeaderboardSettings,
   updateUserNotificationPreferences,
+  updatePublicationSettings,
   upsertBlockedTerm,
   upsertWordBankEntry,
 } from "@ludico/database";
@@ -111,6 +113,7 @@ const app = buildApp({
   getTodayEdition: (now) => getPublishedEdition(database, now),
   getEditionByDate: (localDate, now) => getEditionByDate(database, localDate, now),
   getAdminContentCalendar: () => getAdminContentCalendar(database),
+  getPublicationSettings: () => getPublicationSettings(database),
   getAnalyticsDashboard: (days, now) => getAnalyticsDashboard(database, now, days),
   getAccountData: (userId, now) => getUserAccountData(database, userId, now),
   getGameSolution: (gameId, now) => getGameSolution(database, gameId, now),
@@ -243,6 +246,8 @@ const app = buildApp({
     updateUserLeaderboardSettings(database, userId, settings, now),
   updateNotificationPreferences: (userId, preferences, now) =>
     updateUserNotificationPreferences(database, userId, preferences, now),
+  updatePublicationSettings: (settings, actorId, reason, correlationId, now) =>
+    updatePublicationSettings(database, settings, actorId, reason, correlationId, now),
   updateConsent: (player, choice, source, now) =>
     player.kind === "guest"
       ? updateGuestConsent(database, player.token, choice, source, now)

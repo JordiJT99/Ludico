@@ -4,7 +4,7 @@ import { rejectCrossSiteMutation } from "../../csrf";
 
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 const readPath =
-  /^(analytics\/dashboard|audit|blocked-terms|content|editions\/calendar|word-bank)$/;
+  /^(analytics\/dashboard|audit|blocked-terms|content|editions\/calendar|publication-settings|word-bank)$/;
 const reviewPath = new RegExp(`^content/${uuid}/(approve|regenerate|reject)$`, "i");
 const revisionPath = new RegExp(`^content/${uuid}$`, "i");
 const previewPath = new RegExp(`^content/${uuid}/preview[.]svg$`, "i");
@@ -41,7 +41,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   const rejected = rejectCrossSiteMutation(request);
   if (rejected) return rejected;
   const path = (await context.params).path.join("/");
-  if (!revisionPath.test(path)) return notFound();
+  if (path !== "publication-settings" && !revisionPath.test(path)) return notFound();
   return proxy(request, path, "PATCH");
 }
 

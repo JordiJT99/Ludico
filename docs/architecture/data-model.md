@@ -13,6 +13,7 @@ PK `uuid` (UUIDv7 cuando esté disponible); `created_at`, `updated_at`, `version
 | User, UserProfile, UserSettings | identidad mínima; 1:1 perfil/ajustes | email normalizado único donde activo; alias moderado; índice deleted_at |
 | GuestSession, Device | guest puede migrar a user; devices de user/guest | token hash único, expires_at; device external id hash; sin fingerprint crudo |
 | ConsentRecord, NotificationPreference | historial append-only; ads/analytics independientes y preferencias push actuales | consentimiento con sujeto invitado XOR usuario; preferencia por cuenta, zona IANA, quiet hours, casos y versión |
+| PublicationSettings | horario editorial y objetivo de reserva por mercado | singleton `ES`, horas locales validadas, reserva 7–21, cambio superadmin auditado y aplicado solo a ediciones futuras |
 | NotificationEndpoint, NotificationDelivery | token Expo y ledger de envío | token sólo cifrado + hash único; estado/reintentos; dedupe por usuario, fecha y versión de preferencia |
 | GameType, Game, DailyEdition | edición 1:N juegos; juego referencia contenido versionado | unique `(market,local_date)` no cancelada; índices status/publish_at |
 | Quiz, QuizQuestion, QuizOption | quiz 1:N preguntas 1:N opciones | posición única; exactamente una correcta validada en transacción; solución en esquema/rol privado |

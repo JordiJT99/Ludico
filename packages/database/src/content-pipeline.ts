@@ -98,6 +98,20 @@ export async function planContentGenerationJobs(
   });
 }
 
+export async function claimDailyContentPlanRun(
+  client: SqlClient,
+  localDate: string,
+  now: Date,
+): Promise<boolean> {
+  const result = await client.query(
+    `insert into idempotency_records (scope, key, request_hash, expires_at)
+     values ('content-plan', $1, 'v1', $2)
+     on conflict (scope, key) do nothing`,
+    [localDate, new Date(now.getTime() + 2 * 86_400_000)],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
 /** Keeps a real reserve without continually adding candidates already in flight. */
 export async function planContentReserveJobs(
   client: SqlClient,

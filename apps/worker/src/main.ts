@@ -1,5 +1,7 @@
 import {
   getAdminContentCalendar,
+  claimDailyContentPlanRun,
+  getPublicationSettings,
   PostgresClient,
   purgeExpiredOperationalData,
   reconcileDueEditions,
@@ -9,6 +11,7 @@ import {
   addDays,
   ContentCircuitOpenError,
   ContentProviderCircuitBreaker,
+  isMadridTimeDue,
   localDateInMadrid,
   missingEditionDates,
   runContentGenerationJob,
@@ -92,12 +95,18 @@ await boss.work(PRIVACY_RETENTION_QUEUE, async (jobs) => {
 });
 await boss.work(CONTENT_PLAN_QUEUE, async (jobs) => {
   for (const job of jobs) {
+    const now = new Date();
+    const settings = await getPublicationSettings(database);
+    const today = localDateInMadrid(now);
+    if (!isMadridTimeDue(now, settings.contentPlanLocalTime)) continue;
+    if (!(await claimDailyContentPlanRun(database, today, now))) continue;
     await logLowReserve(job.id);
     const planned = await runContentPlan(
       database,
-      localDateInMadrid(new Date()),
+      today,
       contentProvider,
       Number(process.env.AI_JOB_BUDGET_MICROS ?? 0),
+      settings.reserveDays,
     );
     for (const contentJob of planned) {
       await boss.send(
@@ -151,6 +160,7 @@ if (contentProvider === "fake" || contentProvider === "deterministic") {
 await boss.work(CONTENT_ASSEMBLY_QUEUE, async (jobs) => {
   for (const job of jobs) {
     const now = new Date();
+    const settings = await getPublicationSettings(database);
     const today = localDateInMadrid(now);
     const targets = missingEditionDates(
       [today, addDays(today, 1)],
@@ -167,6 +177,7 @@ await boss.work(CONTENT_ASSEMBLY_QUEUE, async (jobs) => {
           contentProvider,
           Number(process.env.AI_JOB_BUDGET_MICROS ?? 0),
           now,
+          settings,
         ),
       );
     }

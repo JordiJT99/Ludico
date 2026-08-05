@@ -1462,6 +1462,62 @@ describe("human content administration", () => {
     );
   });
 
+  it("lets a reauthenticated superadmin read and update publication settings", async () => {
+    const settings = {
+      closesAtLocalTime: "00:00",
+      contentPlanLocalTime: "02:00",
+      market: "ES" as const,
+      opensAtLocalTime: "00:00",
+      reserveDays: 14,
+    };
+    const getPublicationSettings = vi.fn().mockResolvedValue(settings);
+    const updatePublicationSettings = vi.fn().mockResolvedValue({
+      ...settings,
+      contentPlanLocalTime: "01:15",
+      reserveDays: 16,
+    });
+    const app = buildApp({
+      getPublicationSettings,
+      now: () => now,
+      resolveAdminAccessToken,
+      updatePublicationSettings,
+    });
+    apps.push(app);
+
+    const read = await app.inject({
+      headers: { authorization: "Bearer editor" },
+      method: "GET",
+      url: "/v1/admin/publication-settings",
+    });
+    expect(read.statusCode).toBe(200);
+    expect(read.json()).toEqual(settings);
+
+    const update = await app.inject({
+      headers: { authorization: "Bearer superadmin", "idempotency-key": "settings-human-1" },
+      method: "PATCH",
+      payload: {
+        ...settings,
+        contentPlanLocalTime: "01:15",
+        reason: "Ajuste nocturno revisado por operaciones",
+        reserveDays: 16,
+      },
+      url: "/v1/admin/publication-settings",
+    });
+    expect(update.statusCode).toBe(200);
+    expect(updatePublicationSettings).toHaveBeenCalledWith(
+      {
+        closesAtLocalTime: "00:00",
+        contentPlanLocalTime: "01:15",
+        opensAtLocalTime: "00:00",
+        reserveDays: 16,
+      },
+      "user-superadmin",
+      "Ajuste nocturno revisado por operaciones",
+      "settings-human-1",
+      now,
+    );
+  });
+
   it("restricts the bounded audit feed to superadmin", async () => {
     const audit = [
       {

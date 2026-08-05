@@ -48,7 +48,7 @@ export async function configureSchedules(
   );
   await boss.schedule(
     CONTENT_PLAN_QUEUE,
-    "0 2 * * *",
+    "* * * * *",
     { source: "schedule" },
     { key: "ES", singletonKey: "ES:content-plan", tz: "Europe/Madrid" },
   );

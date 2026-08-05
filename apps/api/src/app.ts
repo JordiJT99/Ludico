@@ -71,6 +71,7 @@ import {
   type GuestMigrationResult,
   GuestTokenError,
   type GeneratedContentRecord,
+  type PublicationSettings,
   LeaderboardSettingsError,
   NotificationSettingsError,
   PrivacyError,
@@ -92,6 +93,7 @@ interface AppOptions {
   readonly adminApiKey?: string;
   readonly metricsToken?: string;
   readonly getAdminContentCalendar?: () => Promise<AdminContentCalendar>;
+  readonly getPublicationSettings?: () => Promise<PublicationSettings>;
   readonly listAdminAudit?: (limit: number) => Promise<readonly AdminAuditRecord[]>;
   readonly getAnalyticsDashboard?: (days: number, now: Date) => Promise<AnalyticsDashboard>;
   readonly getGeneratedContent?: (contentId: string) => Promise<GeneratedContentRecord | null>;
@@ -182,6 +184,13 @@ interface AppOptions {
     days: number,
     budgetMicros: number,
   ) => Promise<readonly ContentJob[]>;
+  readonly updatePublicationSettings?: (
+    settings: Omit<PublicationSettings, "market">,
+    actorId: string,
+    reason: string,
+    correlationId: string,
+    now: Date,
+  ) => Promise<PublicationSettings>;
   readonly revokeGuestSession?: (token: string, now: Date) => Promise<boolean>;
   readonly revealCrosswordCell?: (
     attemptId: string,
@@ -1701,6 +1710,54 @@ export function buildApp(options: AppOptions = {}) {
     },
   );
 
+  app.get<{
+    Headers: AdminHeaders;
+    Reply: PublicationSettings | { code: string };
+  }>(
+    "/v1/admin/publication-settings",
+    {
+      schema: {
+        headers: adminHeadersSchema,
+        response: { 200: publicationSettingsSchema },
+      },
+    },
+    async (request, reply) => {
+      if (!options.getPublicationSettings) return reply.code(503).send({ code: "UNAVAILABLE" });
+      await authorizeAdmin(request.headers, options, ["editor", "superadmin"]);
+      reply.header("Cache-Control", "private, no-store");
+      return options.getPublicationSettings();
+    },
+  );
+
+  app.patch<{
+    Body: Omit<PublicationSettings, "market"> & { reason: string };
+    Headers: AdminCommandHeaders;
+    Reply: PublicationSettings | { code: string };
+  }>(
+    "/v1/admin/publication-settings",
+    { schema: publicationSettingsUpdateSchema },
+    async (request, reply) => {
+      if (!options.updatePublicationSettings) {
+        return reply.code(503).send({ code: "UNAVAILABLE" });
+      }
+      const now = (options.now ?? (() => new Date()))();
+      const admin = await authorizeAdmin(request.headers, options, ["superadmin"], now, true);
+      reply.header("Cache-Control", "private, no-store");
+      return options.updatePublicationSettings(
+        {
+          closesAtLocalTime: request.body.closesAtLocalTime,
+          contentPlanLocalTime: request.body.contentPlanLocalTime,
+          opensAtLocalTime: request.body.opensAtLocalTime,
+          reserveDays: request.body.reserveDays,
+        },
+        admin.userId,
+        request.body.reason,
+        request.headers["idempotency-key"],
+        now,
+      );
+    },
+  );
+
   app.post<{
     Body: { reason: string };
     Headers: AdminCommandHeaders;
@@ -1825,6 +1882,54 @@ function rateLimitPolicy(method: string, url: string): { bucket: string; limit: 
   if (url.startsWith("/v1/admin/")) return { bucket: "admin", limit: 30 };
   return method === "GET" ? { bucket: "read", limit: 300 } : { bucket: "command", limit: 120 };
 }
+
+const publicationSettingsSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "market",
+    "opensAtLocalTime",
+    "closesAtLocalTime",
+    "contentPlanLocalTime",
+    "reserveDays",
+  ],
+  properties: {
+    market: { const: "ES" },
+    opensAtLocalTime: { type: "string", pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" },
+    closesAtLocalTime: { type: "string", pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" },
+    contentPlanLocalTime: { type: "string", pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" },
+    reserveDays: { type: "integer", minimum: 7, maximum: 21 },
+  },
+} as const;
+
+const publicationSettingsUpdateSchema = {
+  body: {
+    type: "object",
+    additionalProperties: false,
+    required: [
+      "reason",
+      "opensAtLocalTime",
+      "closesAtLocalTime",
+      "contentPlanLocalTime",
+      "reserveDays",
+    ],
+    properties: {
+      reason: { type: "string", minLength: 10, maxLength: 500 },
+      opensAtLocalTime: publicationSettingsSchema.properties.opensAtLocalTime,
+      closesAtLocalTime: publicationSettingsSchema.properties.closesAtLocalTime,
+      contentPlanLocalTime: publicationSettingsSchema.properties.contentPlanLocalTime,
+      reserveDays: publicationSettingsSchema.properties.reserveDays,
+    },
+  },
+  headers: {
+    type: "object",
+    required: ["authorization", "idempotency-key"],
+    properties: {
+      authorization: { type: "string", minLength: 8 },
+      "idempotency-key": { type: "string", minLength: 8, maxLength: 100 },
+    },
+  },
+} as const;
 
 const adminCommandSchema = {
   body: {

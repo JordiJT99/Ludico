@@ -31,12 +31,23 @@ export interface EditionWindow {
   readonly closesAt: Date;
 }
 
-export function getEditionWindow(localDate: string, timeZone = "Europe/Madrid"): EditionWindow {
+export interface EditionSchedule {
+  readonly closesAtLocalTime?: string;
+  readonly opensAtLocalTime?: string;
+}
+
+export function getEditionWindow(
+  localDate: string,
+  timeZone = "Europe/Madrid",
+  schedule: EditionSchedule = {},
+): EditionWindow {
   const date = Temporal.PlainDate.from(localDate);
-  const opensAt = date.toZonedDateTime({ timeZone, plainTime: "00:00" }).toInstant();
-  const closesAt = date
-    .add({ days: 1 })
-    .toZonedDateTime({ timeZone, plainTime: "00:00" })
+  const opensAtLocalTime = Temporal.PlainTime.from(schedule.opensAtLocalTime ?? "00:00");
+  const closesAtLocalTime = Temporal.PlainTime.from(schedule.closesAtLocalTime ?? "00:00");
+  const closesOnNextDate = Temporal.PlainTime.compare(closesAtLocalTime, opensAtLocalTime) <= 0;
+  const opensAt = date.toZonedDateTime({ timeZone, plainTime: opensAtLocalTime }).toInstant();
+  const closesAt = (closesOnNextDate ? date.add({ days: 1 }) : date)
+    .toZonedDateTime({ timeZone, plainTime: closesAtLocalTime })
     .toInstant();
 
   return {

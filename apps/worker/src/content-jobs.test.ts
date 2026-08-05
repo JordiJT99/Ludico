@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   ContentCircuitOpenError,
   ContentProviderCircuitBreaker,
+  isMadridTime,
+  isMadridTimeDue,
   missingEditionDates,
   type ContentGeneratorPort,
 } from "./content-jobs.js";
@@ -86,6 +88,15 @@ describe("edition recovery", () => {
         ],
       ),
     ).toEqual(["2026-08-04"]);
+  });
+});
+
+describe("content plan schedule", () => {
+  it("uses the configured Madrid minute across summer time", () => {
+    const now = new Date("2026-07-29T00:30:00.000Z");
+    expect(isMadridTime(now, "02:30")).toBe(true);
+    expect(isMadridTime(now, "02:31")).toBe(false);
+    expect(isMadridTimeDue(new Date("2026-07-29T00:35:00.000Z"), "02:30")).toBe(true);
   });
 });
 

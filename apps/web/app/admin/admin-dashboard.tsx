@@ -13,6 +13,14 @@ interface Calendar {
   };
 }
 
+interface PublicationSettings {
+  closesAtLocalTime: string;
+  contentPlanLocalTime: string;
+  market: "ES";
+  opensAtLocalTime: string;
+  reserveDays: number;
+}
+
 interface Candidate {
   contentType: "crossword" | "quiz" | "true_false" | "guess_word" | "word_search";
   findings: Array<{ code?: string }>;
@@ -103,6 +111,8 @@ export function AdminDashboard() {
   const [wordReason, setWordReason] = useState("");
   const [analytics, setAnalytics] = useState<AnalyticsDashboard>();
   const [audit, setAudit] = useState<AdminAuditRecord[]>([]);
+  const [publicationSettings, setPublicationSettings] = useState<PublicationSettings>();
+  const [publicationReason, setPublicationReason] = useState("");
 
   async function refresh() {
     const [
@@ -112,6 +122,7 @@ export function AdminDashboard() {
       wordBankResponse,
       analyticsResponse,
       auditResponse,
+      publicationSettingsResponse,
     ] = await Promise.all([
       fetch("/api/admin/editions/calendar", { cache: "no-store" }),
       fetch("/api/admin/content", { cache: "no-store" }),
@@ -119,13 +130,15 @@ export function AdminDashboard() {
       fetch("/api/admin/word-bank", { cache: "no-store" }),
       fetch("/api/admin/analytics/dashboard?days=7", { cache: "no-store" }),
       fetch("/api/admin/audit?limit=25", { cache: "no-store" }),
+      fetch("/api/admin/publication-settings", { cache: "no-store" }),
     ]);
     if (
       !calendarResponse.ok ||
       !contentResponse.ok ||
       !blockedResponse.ok ||
       !wordBankResponse.ok ||
-      !analyticsResponse.ok
+      !analyticsResponse.ok ||
+      !publicationSettingsResponse.ok
     ) {
       setMessage(
         calendarResponse.status === 401 || calendarResponse.status === 403
@@ -140,10 +153,12 @@ export function AdminDashboard() {
     const nextWordBank: unknown = await wordBankResponse.json();
     const nextAnalytics: unknown = await analyticsResponse.json();
     const nextAudit: unknown = auditResponse.ok ? await auditResponse.json() : [];
+    const nextPublicationSettings: unknown = await publicationSettingsResponse.json();
     if (
       !isCalendar(nextCalendar) ||
       !Array.isArray(nextContent) ||
-      !isAnalyticsDashboard(nextAnalytics)
+      !isAnalyticsDashboard(nextAnalytics) ||
+      !isPublicationSettings(nextPublicationSettings)
     ) {
       setMessage("La API devolvió datos inesperados.");
       return;
@@ -154,6 +169,7 @@ export function AdminDashboard() {
     setWordBank(Array.isArray(nextWordBank) ? nextWordBank.filter(isWordBankEntry) : []);
     setAnalytics(nextAnalytics);
     setAudit(Array.isArray(nextAudit) ? nextAudit.filter(isAdminAuditRecord) : []);
+    setPublicationSettings(nextPublicationSettings);
     setMessage("");
   }
 
@@ -177,6 +193,38 @@ export function AdminDashboard() {
         response.status === 403
           ? "Necesitas rol editor y reautenticación reciente."
           : "No se pudo guardar el plan.",
+      );
+    }
+    setPending(false);
+  }
+
+  async function savePublicationSettings(event: SyntheticEvent) {
+    event.preventDefault();
+    if (!publicationSettings || publicationReason.trim().length < 10) {
+      setMessage("Escribe un motivo de al menos 10 caracteres.");
+      return;
+    }
+    setPending(true);
+    const settings = {
+      closesAtLocalTime: publicationSettings.closesAtLocalTime,
+      contentPlanLocalTime: publicationSettings.contentPlanLocalTime,
+      opensAtLocalTime: publicationSettings.opensAtLocalTime,
+      reserveDays: publicationSettings.reserveDays,
+    };
+    const response = await fetch("/api/admin/publication-settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...settings, reason: publicationReason.trim() }),
+    });
+    if (response.ok) {
+      setPublicationReason("");
+      await refresh();
+      setMessage("Horario editorial actualizado y auditado.");
+    } else {
+      setMessage(
+        response.status === 403
+          ? "Necesitas rol superadmin y reautenticación reciente."
+          : "No se pudo actualizar el horario editorial.",
       );
     }
     setPending(false);
@@ -442,6 +490,82 @@ export function AdminDashboard() {
                 ))}
               </ul>
             </section>
+          ) : null}
+          {publicationSettings ? (
+            <form className="admin-plan" onSubmit={savePublicationSettings}>
+              <h2>Horario editorial (Europe/Madrid)</h2>
+              <label>
+                Apertura diaria
+                <input
+                  onChange={(event) =>
+                    setPublicationSettings({
+                      ...publicationSettings,
+                      opensAtLocalTime: event.target.value,
+                    })
+                  }
+                  required
+                  type="time"
+                  value={publicationSettings.opensAtLocalTime}
+                />
+              </label>
+              <label>
+                Cierre diario
+                <input
+                  onChange={(event) =>
+                    setPublicationSettings({
+                      ...publicationSettings,
+                      closesAtLocalTime: event.target.value,
+                    })
+                  }
+                  required
+                  type="time"
+                  value={publicationSettings.closesAtLocalTime}
+                />
+              </label>
+              <label>
+                Planificación nocturna
+                <input
+                  onChange={(event) =>
+                    setPublicationSettings({
+                      ...publicationSettings,
+                      contentPlanLocalTime: event.target.value,
+                    })
+                  }
+                  required
+                  type="time"
+                  value={publicationSettings.contentPlanLocalTime}
+                />
+              </label>
+              <label>
+                Días de reserva (7-21)
+                <input
+                  max={21}
+                  min={7}
+                  onChange={(event) =>
+                    setPublicationSettings({
+                      ...publicationSettings,
+                      reserveDays: Number(event.target.value),
+                    })
+                  }
+                  required
+                  type="number"
+                  value={publicationSettings.reserveDays}
+                />
+              </label>
+              <label>
+                Motivo del cambio
+                <input
+                  maxLength={500}
+                  minLength={10}
+                  onChange={(event) => setPublicationReason(event.target.value)}
+                  required
+                  value={publicationReason}
+                />
+              </label>
+              <button disabled={pending} type="submit">
+                Guardar horario
+              </button>
+            </form>
           ) : null}
           <form className="admin-plan" onSubmit={plan}>
             <label>
@@ -781,6 +905,17 @@ function isCalendar(value: unknown): value is Calendar {
     typeof value.reserve.true_false === "number" &&
     typeof value.reserve.guess_word === "number" &&
     typeof value.reserve.word_search === "number"
+  );
+}
+
+function isPublicationSettings(value: unknown): value is PublicationSettings {
+  return (
+    isRecord(value) &&
+    value.market === "ES" &&
+    typeof value.opensAtLocalTime === "string" &&
+    typeof value.closesAtLocalTime === "string" &&
+    typeof value.contentPlanLocalTime === "string" &&
+    typeof value.reserveDays === "number"
   );
 }
 

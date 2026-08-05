@@ -20,6 +20,22 @@ const auditColumns = {
   version: integer("version").default(1).notNull(),
 };
 
+export const publicationSettings = pgTable(
+  "publication_settings",
+  {
+    market: text("market").primaryKey(),
+    opensAtLocalTime: text("opens_at_local_time").default("00:00").notNull(),
+    closesAtLocalTime: text("closes_at_local_time").default("00:00").notNull(),
+    contentPlanLocalTime: text("content_plan_local_time").default("02:00").notNull(),
+    reserveDays: integer("reserve_days").default(14).notNull(),
+    ...auditColumns,
+  },
+  (table) => [
+    check("publication_settings_market_check", sql`${table.market} = 'ES'`),
+    check("publication_settings_reserve_check", sql`${table.reserveDays} between 7 and 21`),
+  ],
+);
+
 export const dailyEditions = pgTable(
   "daily_editions",
   {

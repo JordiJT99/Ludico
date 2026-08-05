@@ -1,4 +1,4 @@
-import type { GeneratedContentCandidate } from "@ludico/domain";
+import type { EditionSchedule, GeneratedContentCandidate } from "@ludico/domain";
 import { getEditionWindow } from "@ludico/domain";
 import {
   assembleApprovedEdition,
@@ -166,12 +166,20 @@ export async function runContentPlan(
   today: string,
   provider: string,
   budgetMicros: number,
+  reserveDays = 14,
 ) {
-  return planContentReserveJobs(database, addDays(today, 1), provider, budgetMicros);
+  return planContentReserveJobs(database, addDays(today, 1), provider, budgetMicros, {
+    reserveDays,
+  });
 }
 
-export function runEditionAssembly(database: SqlClient, localDate: string, now: Date) {
-  const { opensAt, closesAt } = getEditionWindow(localDate);
+export function runEditionAssembly(
+  database: SqlClient,
+  localDate: string,
+  now: Date,
+  schedule?: EditionSchedule,
+) {
+  const { opensAt, closesAt } = getEditionWindow(localDate, "Europe/Madrid", schedule);
   return assembleApprovedEdition(database, localDate, opensAt, closesAt, now);
 }
 
@@ -183,9 +191,10 @@ export async function runEditionAssemblyWithFallback(
   provider: string,
   budgetMicros: number,
   now: Date,
+  schedule?: EditionSchedule,
 ) {
   try {
-    return { emergency: false, ...(await runEditionAssembly(database, localDate, now)) };
+    return { emergency: false, ...(await runEditionAssembly(database, localDate, now, schedule)) };
   } catch (error) {
     if (
       !(error instanceof ContentPipelineError) ||
@@ -198,7 +207,10 @@ export async function runEditionAssemblyWithFallback(
   for (const job of jobs) {
     await runContentGenerationJob(database, generator, assurance, job.id, now);
   }
-  return { emergency: true, ...(await runEditionAssembly(database, localDate, now)) };
+  return {
+    emergency: true,
+    ...(await runEditionAssembly(database, localDate, now, schedule)),
+  };
 }
 
 export function localDateInMadrid(now: Date): string {
@@ -210,6 +222,28 @@ export function localDateInMadrid(now: Date): string {
   }).formatToParts(now);
   const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${value.year}-${value.month}-${value.day}`;
+}
+
+export function isMadridTime(now: Date, localTime: string): boolean {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    hourCycle: "h23",
+    minute: "2-digit",
+    timeZone: "Europe/Madrid",
+  }).formatToParts(now);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.hour}:${value.minute}` === localTime;
+}
+
+export function isMadridTimeDue(now: Date, localTime: string): boolean {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    hourCycle: "h23",
+    minute: "2-digit",
+    timeZone: "Europe/Madrid",
+  }).formatToParts(now);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.hour}:${value.minute}` >= localTime;
 }
 
 export function addDays(localDate: string, offset: number): string {

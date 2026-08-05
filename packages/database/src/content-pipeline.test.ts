@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   assembleApprovedEdition,
+  claimDailyContentPlanRun,
   claimContentGenerationJob,
   ContentPipelineError,
   deactivateBlockedTerm,
@@ -29,6 +30,13 @@ const now = new Date("2026-08-01T10:00:00Z");
 afterEach(async () => Promise.all(databases.splice(0).map((database) => database.close())));
 
 describe("content generation pipeline", () => {
+  it("claims a missed daily plan exactly once", async () => {
+    const { client } = await setup();
+    const now = new Date("2026-08-03T01:05:00Z");
+    expect(await claimDailyContentPlanRun(client, "2026-08-03", now)).toBe(true);
+    expect(await claimDailyContentPlanRun(client, "2026-08-03", now)).toBe(false);
+  });
+
   it("plans only the missing reserve and requeues one versioned emergency batch", async () => {
     const { client } = await setup();
     const first = await planContentReserveJobs(client, "2026-08-03", "deterministic", 0);

@@ -29,4 +29,14 @@ describe("edition calendar", () => {
 
     expect(hours).toBe(expectedHours);
   });
+
+  it("honours configured local opening and closing times", () => {
+    const window = getEditionWindow("2026-03-29", "Europe/Madrid", {
+      closesAtLocalTime: "06:00",
+      opensAtLocalTime: "06:00",
+    });
+
+    expect(window.opensAt.toISOString()).toBe("2026-03-29T04:00:00.000Z");
+    expect(window.closesAt.toISOString()).toBe("2026-03-30T04:00:00.000Z");
+  });
 });
