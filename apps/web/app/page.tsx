@@ -1,4 +1,4 @@
-import { isPublicEdition, type PublicEdition } from "@ludico/contracts";
+import { isPublicEdition, isPublicQuizGame, type PublicEdition } from "@ludico/contracts";
 import Link from "next/link";
 import { AnalyticsEvent } from "./analytics-event";
 import { GuestSessionBootstrap } from "./guest-session-bootstrap";
@@ -77,7 +77,9 @@ export default async function Home() {
                       <p>
                         {game.status === "active"
                           ? game.type === "quiz"
-                            ? "Diez preguntas para despertar la curiosidad."
+                            ? isPublicQuizGame(game)
+                              ? `${game.payload.questions.length} ${game.payload.questions.length === 1 ? "pregunta" : "preguntas"} para despertar la curiosidad.`
+                              : "Preguntas para despertar la curiosidad."
                             : game.type === "true_false"
                               ? "Decide qué afirmaciones son correctas."
                               : game.type === "guess_word"
