@@ -27,7 +27,7 @@
     "@electric-sql/pglite": "0.5.4",
     "@types/pg": "8.20.0",
     "drizzle-kit": "0.31.10",
-    "tsx": "4.23.1",
+    "tsx": "4.23.11",
     "vitest": "4.1.10"
   }
 }
