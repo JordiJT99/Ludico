@@ -17,7 +17,7 @@
     "pg-boss": "12.26.3"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.4",
-    "vitest": "4.1.10"
+    "@electric-sql/pglite": "0.5.6",
+    "vitest": "4.1.11"
   }
 }
